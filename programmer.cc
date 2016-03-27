@@ -139,21 +139,25 @@ static datastring GeneratePayload(uint16_t payload) {
 	return result;
 }
 
-static void ReadId() {
+static void LoadAddress(uint32_t address) {
 	datastring command;
 	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x0E3F); // MOVLW 0x3F
+	command += GeneratePayload(0x0E00 | ((address >> 16) & 0xff)); // MOVLW <first byte of address>
 	command += GenerateCommand(0);      // Core command
 	command += GeneratePayload(0x6EF8); // MOVWF TBLPTRU
 	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x0EFF); // MOVLW 0xFF
+	command += GeneratePayload(0x0E00 | ((address >> 8) & 0xff)); // MOVLW <second byte of address>
 	command += GenerateCommand(0);      // Core command
 	command += GeneratePayload(0x6EF7); // MOVWF TBLPTRH
 	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x0EFF); // MOVLW 0xFE
+	command += GeneratePayload(0x0E00 | (address & 0xff)); // MOVLW <last byte of address>
 	command += GenerateCommand(0);      // Core command
 	command += GeneratePayload(0x6EF6); // MOVWF TBLPTRL
-	command += GenerateCommand(9);      // TBLRD *+
+	WriteData(command);
+}
+
+static uint8_t ReadBytePostInc() {
+	datastring command = GenerateCommand(9);      // TBLRD *+
 	// After TBLRD *+ the first byte to be clocked is nothing.
 	for (int i = 0; i < 8; ++i) {
 		command.push_back(nMCLR | PGC);
@@ -170,19 +174,18 @@ static void ReadId() {
     	FATAL("Couldn't write data: %s\n", ftdi_get_error_string(&ftdic));
 	}
 	uint8_t read_data[64];
-	int data_read;
-	if ((data_read = ftdi_read_data(&ftdic, read_data, sizeof(read_data))) < 0) {
+	if (ftdi_read_data(&ftdic, read_data, sizeof(read_data)) != 16) {
     	FATAL("Couldn't read data: %s\n", ftdi_get_error_string(&ftdic));
 	}
 	SetPinsWrite();
-	int bit = 1;
-	int value = 0;
-	for (int i = 1; i < data_read; i += 2, bit <<= 1) {
+	uint8_t bit = 1;
+	uint8_t value = 0;
+	for (int i = 1; i < 16; i += 2, bit <<= 1) {
 		if (read_data[i] & PGD) {
 			value |= bit;
 		}
 	}
-	printf("Value read: %x\n", value);
+	return value;
 }
 
 int main(int argc, char *argv[]) {
@@ -207,6 +210,8 @@ int main(int argc, char *argv[]) {
 
     SetPinsWrite();
     SendProgramEnable();
-    ReadId();
+    LoadAddress(0x3ffffe);
+    printf("Value read: %x\n", ReadBytePostInc());
+    printf("Value read: %x\n", ReadBytePostInc());
     return EXIT_SUCCESS;
 }

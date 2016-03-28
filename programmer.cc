@@ -5,9 +5,25 @@
 #include <ftdi.h>
 #include <gflags/gflags.h>
 
+//FIXME: abstract the interface such that different devices could potentially be used
+//FIXME: make the flushing requirements explicit, and do automatic flushing based on the buffer size (128 bytes for FT232RL)
+
 DEFINE_string(nMCLR, "TxD", "Pin to use for inverted MCLR.");
 DEFINE_string(PGC, "DTR", "Pin to use for PGC");
 DEFINE_string(PGD, "RxD", "Pin to use for PGD");
+
+enum Command {
+	CORE_INST = 0,
+	SHIFT_OUT_TABLAT = 2,
+	TABLE_READ = 8,
+	TABLE_READ_post_inc = 9,
+	TABLE_READ_post_dec = 10,
+	TABLE_READ_pre_inc = 11,
+	TABLE_WRITE = 12,
+	TABLE_WRITE_post_inc2 = 13,
+	TABLE_WRITE_post_inc2_start_pgm = 14,
+	TABLE_WRITE_start_pgm = 15,
+};
 
 struct Pin {
 	const char *name;
@@ -119,7 +135,7 @@ static void SendProgramEnable() {
 	WriteData(key_sequence);
 }
 
-static datastring GenerateCommand(int command) {
+static datastring GenerateCommand(Command command) {
 	datastring result;
 	for (int i = 0; i < 4; ++i) {
 		bool bit_set = (command >> i) & 1;
@@ -139,38 +155,42 @@ static datastring GeneratePayload(uint16_t payload) {
 	return result;
 }
 
-static void LoadAddress(uint32_t address) {
-	datastring command;
-	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x0E00 | ((address >> 16) & 0xff)); // MOVLW <first byte of address>
-	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x6EF8); // MOVWF TBLPTRU
-	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x0E00 | ((address >> 8) & 0xff)); // MOVLW <second byte of address>
-	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x6EF7); // MOVWF TBLPTRH
-	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x0E00 | (address & 0xff)); // MOVLW <last byte of address>
-	command += GenerateCommand(0);      // Core command
-	command += GeneratePayload(0x6EF6); // MOVWF TBLPTRL
-	WriteData(command);
+static datastring GenerateCommand(Command command, uint16_t payload) {
+	return GenerateCommand(command) + GeneratePayload(payload);
 }
 
-static uint8_t ReadBytePostInc() {
-	datastring command = GenerateCommand(9);      // TBLRD *+
-	// After TBLRD *+ the first byte to be clocked is nothing.
+static void LoadAddress(uint32_t address) {
+	datastring sequence;
+	// MOVLW <first byte of address>
+	sequence += GenerateCommand(CORE_INST, 0x0E00 | ((address >> 16) & 0xff));
+	// MOVWF TBLPTRU
+	sequence += GenerateCommand(CORE_INST, 0x6EF8);
+	// MOVLW <second byte of address>
+	sequence += GenerateCommand(CORE_INST, 0x0E00 | ((address >> 8) & 0xff));
+	// MOVWF TBLPTRH
+	sequence += GenerateCommand(CORE_INST, 0x6EF7);
+	 // MOVLW <last byte of address>
+	sequence += GenerateCommand(CORE_INST, 0x0E00 | (address & 0xff));
+	// MOVWF TBLPTRL
+	sequence += GenerateCommand(CORE_INST, 0x6EF6);
+	WriteData(sequence);
+}
+
+static uint8_t ReadByteUsingCommand(Command command) {
+	datastring sequence = GenerateCommand(command);
+	// After the command, the first byte to be clocked is nothing.
 	for (int i = 0; i < 8; ++i) {
-		command.push_back(nMCLR | PGC);
-		command.push_back(nMCLR);
+		sequence.push_back(nMCLR | PGC);
+		sequence.push_back(nMCLR);
 	}
-	WriteData(command);
+	WriteData(sequence);
 	SetPinsRead();
-	command.clear();
+	sequence.clear();
 	for (int i = 0; i < 8; ++i) {
-		command.push_back(nMCLR | PGC);
-		command.push_back(nMCLR);
+		sequence.push_back(nMCLR | PGC);
+		sequence.push_back(nMCLR);
 	}
-	if (ftdi_write_data(&ftdic, const_cast<uint8_t *>(command.data()), command.size()) != static_cast<int>(command.size())) {
+	if (ftdi_write_data(&ftdic, const_cast<uint8_t *>(sequence.data()), sequence.size()) != static_cast<int>(sequence.size())) {
     	FATAL("Couldn't write data: %s\n", ftdi_get_error_string(&ftdic));
 	}
 	uint8_t read_data[64];
@@ -180,12 +200,77 @@ static uint8_t ReadBytePostInc() {
 	SetPinsWrite();
 	uint8_t bit = 1;
 	uint8_t value = 0;
+	// Convert the read data into a byte. Bytes are read just before every write.
+	// This means that the first byte read contains a bogus bit value. Also, we perform
+	// two writes for every read. So we read the odd bits to determine the value.
 	for (int i = 1; i < 16; i += 2, bit <<= 1) {
 		if (read_data[i] & PGD) {
 			value |= bit;
 		}
 	}
 	return value;
+}
+
+static void BulkErase() {
+	LoadAddress(0x3C0005);
+	// 1100 0F 0F Write 0Fh to 3C0005h
+	WriteData(GenerateCommand(TABLE_WRITE, 0x0F0F));
+	LoadAddress(0x3C0004);
+	datastring sequence;
+	// 1100 8F 8F Write 8F8Fh TO 3C0004h to erase entire device.
+	sequence += GenerateCommand(TABLE_WRITE, 0x8F8F);
+	// 0000 00 00 NOP
+	sequence += GenerateCommand(CORE_INST, 0x0000);
+	// 0000 00 00 Hold PGD low until erase completes.
+	sequence += GenerateCommand(CORE_INST);
+	WriteData(sequence);
+	usleep(15000 + 200);  // FIXME: this is device dependent. 15ms is for 18f45k50
+	WriteData(GeneratePayload(0x0000));
+}
+
+static void RowErasePrepare() {
+	datastring sequence
+	// BSF EECON1, EEPGD
+	sequence += GenerateCommand(CORE_INST, 0x8EA6);
+	// BCF EECON1, CFGS
+	sequence += GenerateCommand(CORE_INST, 0x9CA6);
+	// BSF EECON1, WREN,
+	sequence += GenerateCommand(CORE_INST, 0x84A6);
+	WriteData(sequence);
+}
+
+static void RowErase(uint32_t address) {
+	LoadAddress(address);
+	datastring sequence;
+	// BSF EECON1, FREE
+	sequence += GenerateCommand(CORE_INST, 0x88A6);
+	// BSR EECON1, WR
+	sequence += GenerateCommand(CORE_INST, 0x82A6);
+	// NOP
+	sequence += GenerateCommand(CORE_INST, 0x0000);
+	// NOP
+	sequence += GenerateCommand(CORE_INST, 0x0000);
+	WriteData(sequence);
+	// Loop until the WR bit in EECON1 is clear.
+	uint8_t value;
+	do {
+		sequence.clear();
+		// MOVF EECON1, W, 0
+		sequence += GenerateCommand(CORE_INST, 0x50A6);
+		// MOVWF TABLAT
+		sequence += GenerateCommand(CORE_INST, 0x6EF5);
+		// NOP
+		sequence += GenerateCommand(CORE_INST, 0x0000);
+		WriteData(sequence);
+		// Read value from TABLAT
+		value = ReadByteUsingCommand(SHIFT_OUT_TABLAT);
+	} while (value & 2);
+	usleep(200);
+}
+
+static void RowEraseDone() {
+	// BCF EECON1, WREN
+	WriteData(GenerateCommand(CORE_INST, 0x9AA6));
 }
 
 int main(int argc, char *argv[]) {
@@ -211,7 +296,7 @@ int main(int argc, char *argv[]) {
     SetPinsWrite();
     SendProgramEnable();
     LoadAddress(0x3ffffe);
-    printf("Value read: %x\n", ReadBytePostInc());
-    printf("Value read: %x\n", ReadBytePostInc());
+    printf("Value read: %x\n", ReadByteUsingCommand(TABLE_READ_post_inc));
+    printf("Value read: %x\n", ReadByteUsingCommand(TABLE_READ_post_inc));
     return EXIT_SUCCESS;
 }

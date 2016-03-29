@@ -1,0 +1,49 @@
+#include <cerrno>
+#include <cstring>
+#include <gflags/gflags.h>
+
+#include "controller.h"
+#include "driver.h"
+#include "sequence_generator.h"
+
+DEFINE_bool(two_pin_programming, true, "Enable two-pin single-supply-voltage (LVP) programming.");
+
+int main(int argc, char **argv) {
+	google::ParseCommandLineFlags(&argc, &argv, true);
+
+	// FIXME: set this based on the chip type.
+	std::unique_ptr<SequenceGenerator> sequence_generator;
+	if (FLAGS_two_pin_programming) {
+		sequence_generator.reset(new KeySequenceGenerator);
+	} else {
+//		sequence_generator.reset(new PgmSequenceGenerator);
+	}
+	std::unique_ptr<Driver> driver = Driver::CreateFromFlags(std::move(sequence_generator));
+	driver->WriteTimedSequence(SequenceGenerator::INIT_SEQUENCE);
+	Controller controller(std::move(driver));
+	uint16_t device_id = controller.ReadDeviceId();
+	// TODO: fetch information from the device ID database.
+	printf("Device ID: %04x\n", device_id);
+
+#if 0
+	std::vector<uint8_t> program;
+	for (int i = 0; i < 64; ++i) program.push_back(i);
+
+	controller.WriteFlash(64, program);
+#else
+#if 0
+	controller.RowErase(0);
+	controller.RowErase(64);
+#else
+	std::vector<uint8_t> program;
+	controller.ReadFlashMemory(0, 256, &program);
+	FILE *out = fopen("dump.bin", "w+");
+	if (!out) {
+		FATAL("Could not open output file: %s", strerror(errno));
+	}
+	fwrite(program.data(), 1, program.size(), out);
+	fclose(out);
+#endif
+#endif
+	return EXIT_SUCCESS;
+}

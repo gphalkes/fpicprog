@@ -1,7 +1,10 @@
 SOURCES.programmer = programmer.cc
 LDLIBS.programmer := -lftdi -lgflags
 
-CXXTARGETS := programmer
+SOURCES.new_programmer = main.cc controller.cc driver.cc sequence_generator.cc util.cc
+LDLIBS.new_programmer := -lftdi -lgflags
+
+CXXTARGETS := programmer new_programmer
 #================================================#
 # NO RULES SHOULD BE DEFINED BEFORE THIS INCLUDE #
 #================================================#

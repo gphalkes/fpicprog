@@ -229,7 +229,7 @@ static void BulkErase() {
 }
 
 static void RowErasePrepare() {
-	datastring sequence
+	datastring sequence;
 	// BSF EECON1, EEPGD
 	sequence += GenerateCommand(CORE_INST, 0x8EA6);
 	// BCF EECON1, CFGS

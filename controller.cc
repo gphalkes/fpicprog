@@ -5,20 +5,14 @@
 uint16_t Controller::ReadDeviceId() {
     uint16_t result;
     LoadAddress(0x3ffffe);
-    result = driver_->ReadWithCommand(TABLE_READ_post_inc);
-    result = static_cast<uint16_t>(driver_->ReadWithCommand(TABLE_READ)) << 8;
+    datastring bytes = driver_->ReadWithCommand(TABLE_READ_post_inc, 2);
+    result = bytes[0] | static_cast<uint16_t>(bytes[1]) << 8;
     return result;
 }
 
-void Controller::ReadFlashMemory(uint32_t start_address, uint32_t end_address, std::vector<uint8_t> *data) {
+datastring Controller::ReadFlashMemory(uint32_t start_address, uint32_t end_address) {
 	LoadAddress(start_address);
-	for (uint32_t i = start_address; i < end_address; ++i) {
-		uint8_t value = driver_->ReadWithCommand(TABLE_READ_post_inc);
-		data->push_back(value);
-		if ((i % 256) == 0) {
-			printf("\r%d bytes read (%d left)\n", i - start_address, end_address - i);
-		}
-	}
+	return driver_->ReadWithCommand(TABLE_READ_post_inc, end_address - start_address);
 }
 
 void Controller::BulkErase() {
@@ -35,7 +29,7 @@ void Controller::BulkErase() {
 	driver_->WriteTimedSequence(SequenceGenerator::BULK_ERASE_SEQUENCE);
 }
 
-void Controller::WriteFlash(uint32_t address, const std::vector<uint8_t> &data) {
+void Controller::WriteFlash(uint32_t address, const datastring &data) {
 	if (address & 63) {
 		FATAL("Attempting to write at a non-aligned address\n%s", "");
 	}
@@ -79,7 +73,7 @@ void Controller::RowErase(uint32_t address) {
 	driver_->WriteCommand(CORE_INST, 0x0000);
 
 	// Loop until the WR bit in EECON1 is clear.
-	uint8_t value;
+	datastring value;
 	do {
 		// MOVF EECON1, W, 0
 		driver_->WriteCommand(CORE_INST, 0x50A6);
@@ -88,8 +82,8 @@ void Controller::RowErase(uint32_t address) {
 		// NOP
 		driver_->WriteCommand(CORE_INST, 0x0000);
 		// Read value from TABLAT
-		value = driver_->ReadWithCommand(SHIFT_OUT_TABLAT);
-	} while (value & 2);
+		value = driver_->ReadWithCommand(SHIFT_OUT_TABLAT, 1);
+	} while (value[0] & 2);
 	Sleep(MicroSeconds(200));
 	// BCF EECON1, WREN
 	driver_->WriteCommand(CORE_INST, 0x9AA6);

@@ -1,3 +1,5 @@
+DEBUG:=1
+
 SOURCES.programmer = programmer.cc
 LDLIBS.programmer := -lftdi -lgflags
 

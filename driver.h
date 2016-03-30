@@ -17,7 +17,7 @@ public:
 
 	void WriteTimedSequence(SequenceGenerator::TimedSequenceType type);
 	void WriteCommand(Command command, uint16_t payload);
-	uint8_t ReadWithCommand(Command command);
+	virtual datastring ReadWithCommand(Command command, uint32_t count);
 
 protected:
 	Driver(std::unique_ptr<SequenceGenerator> sequence_generator) : sequence_generator_(std::move(sequence_generator)) {}
@@ -26,7 +26,7 @@ protected:
 	virtual void EnableDataRead() = 0;
 	virtual void SetPins(uint8_t pins) = 0;
 	virtual void FlushOutput() = 0;
-	virtual uint8_t GetValue() = 0;
+	virtual uint8_t GetValue() { FATAL("GetValue not implemented%s\n", ""); }
 
 	std::unique_ptr<SequenceGenerator> sequence_generator_;
 

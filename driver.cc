@@ -23,15 +23,18 @@ void Driver::WriteCommand(Command command, uint16_t payload) {
 	WriteDatastring(sequence_generator_->GenerateCommand(command, payload));
 }
 
-uint8_t Driver::ReadWithCommand(Command command) {
-	WriteDatastring(sequence_generator_->GenerateBitSequence(command, 4));
-	WriteDatastring(sequence_generator_->GenerateBitSequence(0, 8));
-	EnableDataRead();
-	WriteDatastring(sequence_generator_->GenerateBitSequence(0, 8));
-	FlushOutput();
-	uint8_t value = GetValue();
-	EnableDataWrite();
-	return value;
+datastring Driver::ReadWithCommand(Command command, uint32_t count) {
+	datastring result;
+	for (uint32_t i = 0; i < count; ++i) {
+		WriteDatastring(sequence_generator_->GenerateBitSequence(command, 4));
+		WriteDatastring(sequence_generator_->GenerateBitSequence(0, 8));
+		EnableDataRead();
+		WriteDatastring(sequence_generator_->GenerateBitSequence(0, 8));
+		FlushOutput();
+		result += GetValue();
+		EnableDataWrite();
+	}
+	return result;
 }
 
 void Driver::WriteDatastring(const datastring &data) {
@@ -45,12 +48,14 @@ public:
 	FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator);
 	~FT232RDriver() override;
 
+	datastring ReadWithCommand(Command command, uint32_t count) override;
+
 protected:
 	void EnableDataWrite() override;
 	void EnableDataRead() override;
 	void SetPins(uint8_t pins) override;
 	void FlushOutput() override;
-	uint8_t GetValue() override;
+	//uint8_t GetValue() override;
 
 private:
 	struct Pin {
@@ -59,13 +64,16 @@ private:
 	};
 
 	static uint8_t PinNameToValue(const std::string &name);
-	void DrainInput();
+	void DrainInput(int expected_size);
 
 	static Pin pins_[];
 	ftdi_context ftdic_;
 	uint8_t translate_pins_[16];
 	datastring output_buffer_;
+
 	bool write_mode_ = true;
+	datastring received_data_;
+	int received_data_bit_offset_ = 0;
 };
 
 FT232RDriver::Pin FT232RDriver::pins_[] = {
@@ -92,9 +100,9 @@ FT232RDriver::FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator
 	if (ftdi_set_baudrate(&ftdic_, 100000)) {
 		FATAL("Couldn't set baud rate: %s\n", ftdi_get_error_string(&ftdic_));
 	}
-	ftdi_write_data_set_chunksize(&ftdic_, 256);
-	ftdi_read_data_set_chunksize(&ftdic_, 128);
-	ftdi_usb_purge_buffers(&ftdic_);
+	if (ftdi_usb_purge_buffers(&ftdic_) < 0) {
+		FATAL("Could not purge USB buffers: %s\n", ftdi_get_error_string(&ftdic_));
+	}
 	memset(translate_pins_, 0, sizeof(translate_pins_));
 	translate_pins_[nMCLR] = PinNameToValue(FLAGS_nMCLR);
 	translate_pins_[PGC] = PinNameToValue(FLAGS_PGC);
@@ -110,7 +118,6 @@ FT232RDriver::FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator
 	if (ftdi_set_bitmode(&ftdic_, translate_pins_[nMCLR | PGC | PGD], BITMODE_SYNCBB) < 0) {
 		FATAL("Couldn't set bitbang mode: %s\n", ftdi_get_error_string(&ftdic_));
 	}
-	EnableDataWrite();
 }
 
 FT232RDriver::~FT232RDriver() {
@@ -120,41 +127,14 @@ FT232RDriver::~FT232RDriver() {
 }
 
 void FT232RDriver::EnableDataWrite() {
-/*	int result;
-	int attempts = 0;
-	int saved_write_timeout = ftdic_.usb_write_timeout;
-	ftdic_.usb_write_timeout = 1000;
-	do {
-		result = ftdi_set_bitmode(&ftdic_, translate_pins_[nMCLR | PGC | PGD], BITMODE_SYNCBB);
-		++attempts;
-	} while (result < 0 && attempts < 5);
-	if (result < 0) {
-		FATAL("Couldn't set pins in bitbang mode for writing: %s\n", ftdi_get_error_string(&ftdic_));
-	}
-	if (attempts > 1) {
-		fprintf(stderr, "Setting bitbang mode failed at least once\n");
-	}
-	ftdic_.usb_write_timeout = saved_write_timeout;*/
 	write_mode_ = true;
 }
 
 void FT232RDriver::EnableDataRead() {
 	FlushOutput();
-/*	int result;
-	int attempts = 0;
-	int saved_write_timeout = ftdic_.usb_write_timeout;
-	ftdic_.usb_write_timeout = 1000;
-	do {
-		result = ftdi_set_bitmode(&ftdic_, translate_pins_[nMCLR | PGC], BITMODE_SYNCBB);
-		++attempts;
-	} while (result < 0 && attempts < 5);
-	if (result < 0) {
-		FATAL("Couldn't set pins in bitbang mode for writing: %s\n", ftdi_get_error_string(&ftdic_));
-	}
-	if (attempts > 1) {
-		fprintf(stderr, "Setting bitbang mode failed at least once\n");
-	}
-	ftdic_.usb_write_timeout = saved_write_timeout;*/
+	received_data_.clear();
+	received_data_.push_back(0);
+	received_data_bit_offset_ = 0;
 	write_mode_ = false;
 }
 
@@ -164,15 +144,16 @@ void FT232RDriver::SetPins(uint8_t pins) {
 
 void FT232RDriver::FlushOutput() {
 	while (!output_buffer_.empty()) {
-		int size = std::min<int>(126, output_buffer_.size());
+		int size = std::min<int>(64, output_buffer_.size());
 		if (ftdi_write_data(&ftdic_, const_cast<uint8_t *>(output_buffer_.data()), size) != size) {
 			FATAL("Wrote fewer bytes than requested: %s\n", ftdi_get_error_string(&ftdic_));
 		}
 		output_buffer_.erase(0, size);
-		if (write_mode_) DrainInput();
+		DrainInput(size);
 	}
 }
 
+#if 0
 uint8_t FT232RDriver::GetValue() {
 	uint8_t read_data[64];
 	int total_bytes_read = 0;
@@ -200,6 +181,39 @@ uint8_t FT232RDriver::GetValue() {
 	}
 	return value;
 }
+#endif
+
+uint8_t ReverseBits(uint8_t data) {
+	uint8_t result = 0;
+	for (int i = 0; i < 8; ++i) {
+		if (data & (1<<i)) {
+			result |= (1<<(7-i));
+		}
+	}
+	return result;
+}
+
+datastring FT232RDriver::ReadWithCommand(Command command, uint32_t count) {
+	EnableDataRead();
+	for (uint32_t i = 0; i < count; ++i) {
+		WriteCommand(command, 0);
+	}
+	FlushOutput();
+	EnableDataWrite();
+
+	datastring result;
+	for (uint32_t i = 0; i < count; ++i) {
+		uint16_t bits = received_data_[i * 5 + 3] | (static_cast<uint16_t>(received_data_[i * 5 + 4]) << 8);
+		uint8_t byte = 0;
+		for (int j = 0; j < 8; ++j) {
+			if (bits & (1 << (j * 2 + 1))) {
+				byte |= 1 << j;
+			}
+		}
+		result += byte;
+	}
+	return result;
+}
 
 uint8_t FT232RDriver::PinNameToValue(const std::string &name) {
 	for (const Pin &pin : pins_) {
@@ -211,12 +225,37 @@ uint8_t FT232RDriver::PinNameToValue(const std::string &name) {
 }
 
 
-void FT232RDriver::DrainInput() {
+void FT232RDriver::DrainInput(int expected_size) {
 	uint8_t buffer[128];
-	while (ftdi_read_data(&ftdic_, buffer, sizeof(buffer)) > 0) {}
+	int total_bytes_read = 0;
+	int bytes_read;
+	int retries = 0;
+	while (total_bytes_read < expected_size &&
+			(bytes_read = ftdi_read_data(&ftdic_, buffer, std::min<int>(expected_size - total_bytes_read, sizeof(buffer)))) >= 0) {
+		if (bytes_read == 0) {
+			if (++retries < 10) {
+				continue;
+			}
+			break;
+		}
+		if (!write_mode_) {
+			for (int i = 0; i < bytes_read; ++i, ++received_data_bit_offset_) {
+				if (received_data_bit_offset_ == 8) {
+					received_data_.push_back(0);
+					received_data_bit_offset_ = 0;
+				}
+				int bit = (buffer[i] & translate_pins_[PGD]) ? 1 : 0;
+				bit <<= received_data_bit_offset_;
+				received_data_.back() |= bit;
+			}
+		}
+		total_bytes_read += bytes_read;
+	}
+	if (total_bytes_read < expected_size) {
+		FATAL("Did not receive the expected number of bytes: %s (last count: %d, expected: %d, read: %d, received_data size: %zd)\n",
+				ftdi_get_error_string(&ftdic_), bytes_read, expected_size, total_bytes_read, received_data_.size());
+	}
 }
-
-
 
 std::unique_ptr<Driver> Driver::CreateFromFlags(std::unique_ptr<SequenceGenerator> sequence_generator) {
 	if (FLAGS_driver == "FT232R") {

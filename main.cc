@@ -26,17 +26,18 @@ int main(int argc, char **argv) {
 	printf("Device ID: %04x\n", device_id);
 
 #if 0
-	std::vector<uint8_t> program;
+	datastring program;
 	for (int i = 0; i < 64; ++i) program.push_back(i);
 
 	controller.WriteFlash(64, program);
+	//controller.WriteFlash(0x7F80, program);
 #else
 #if 0
 	controller.RowErase(0);
 	controller.RowErase(64);
 #else
-	std::vector<uint8_t> program;
-	controller.ReadFlashMemory(0, 256, &program);
+//	datastring program = controller.ReadFlashMemory(0, 256);
+	datastring program = controller.ReadFlashMemory(0, 0x8100);
 	FILE *out = fopen("dump.bin", "w+");
 	if (!out) {
 		FATAL("Could not open output file: %s", strerror(errno));

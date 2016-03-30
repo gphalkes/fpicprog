@@ -96,7 +96,6 @@ FT232RDriver::FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator
 	if(ftdi_usb_open(&ftdic_, 0x0403, 0x6001) < 0) {
 		FATAL("Couldn't open FT232 device: %s\n", ftdi_get_error_string(&ftdic_));
 	}
-	// TODO: the baudrate can be set much higher.
 	if (ftdi_set_baudrate(&ftdic_, 100000)) {
 		FATAL("Couldn't set baud rate: %s\n", ftdi_get_error_string(&ftdic_));
 	}
@@ -144,6 +143,11 @@ void FT232RDriver::SetPins(uint8_t pins) {
 
 void FT232RDriver::FlushOutput() {
 	while (!output_buffer_.empty()) {
+		// In theory we should be able to push this up to 128. However, reading becomes unreliable when
+		// we write more than 64 bytes at a time.
+		// TODO: test if writing does work reliably at 128. If so, then we can speed up writing, as the
+		// speed is mostly determined by this value. Also, maybe resetting the device occasionally may be
+		// faster than trying to get the device to work reliably
 		int size = std::min<int>(64, output_buffer_.size());
 		if (ftdi_write_data(&ftdic_, const_cast<uint8_t *>(output_buffer_.data()), size) != size) {
 			FATAL("Wrote fewer bytes than requested: %s\n", ftdi_get_error_string(&ftdic_));

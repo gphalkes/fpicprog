@@ -5,6 +5,7 @@
 #include "controller.h"
 #include "driver.h"
 #include "sequence_generator.h"
+#include "status.h"
 
 DEFINE_bool(two_pin_programming, true, "Enable two-pin single-supply-voltage (LVP) programming.");
 
@@ -19,9 +20,11 @@ int main(int argc, char **argv) {
 //		sequence_generator.reset(new PgmSequenceGenerator);
 	}
 	std::unique_ptr<Driver> driver = Driver::CreateFromFlags(std::move(sequence_generator));
-	driver->WriteTimedSequence(SequenceGenerator::INIT_SEQUENCE);
+	CHECK_OK(driver->WriteTimedSequence(SequenceGenerator::INIT_SEQUENCE));
 	Controller controller(std::move(driver));
-	uint16_t device_id = controller.ReadDeviceId();
+
+	uint16_t device_id;
+	CHECK_OK(controller.ReadDeviceId(&device_id));
 	// TODO: fetch information from the device ID database.
 	printf("Device ID: %04x\n", device_id);
 
@@ -37,7 +40,8 @@ int main(int argc, char **argv) {
 	controller.RowErase(64);
 #else
 //	datastring program = controller.ReadFlashMemory(0, 256);
-	datastring program = controller.ReadFlashMemory(0, 0x8100);
+	datastring program;
+	CHECK_OK(controller.ReadFlashMemory(0, 0x8100, &program));
 	FILE *out = fopen("dump.bin", "w+");
 	if (!out) {
 		FATAL("Could not open output file: %s", strerror(errno));

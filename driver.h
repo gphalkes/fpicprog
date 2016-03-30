@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "sequence_generator.h"
-#include "util.h"
+#include "status.h"
 
 class SequenceGenerator;
 
@@ -15,18 +15,20 @@ public:
 
 	static std::unique_ptr<Driver> CreateFromFlags(std::unique_ptr<SequenceGenerator> sequence_generator);
 
-	void WriteTimedSequence(SequenceGenerator::TimedSequenceType type);
-	void WriteCommand(Command command, uint16_t payload);
-	virtual datastring ReadWithCommand(Command command, uint32_t count);
+//	virtual Status Open() = 0;
+//	virtual Status Close() = 0;
+
+	Status WriteTimedSequence(SequenceGenerator::TimedSequenceType type);
+	Status WriteCommand(Command command, uint16_t payload);
+	virtual Status ReadWithCommand(Command command, uint32_t count, datastring *result) = 0;
 
 protected:
 	Driver(std::unique_ptr<SequenceGenerator> sequence_generator) : sequence_generator_(std::move(sequence_generator)) {}
 
-	virtual void EnableDataWrite() = 0;
-	virtual void EnableDataRead() = 0;
-	virtual void SetPins(uint8_t pins) = 0;
-	virtual void FlushOutput() = 0;
-	virtual uint8_t GetValue() { FATAL("GetValue not implemented%s\n", ""); }
+	Status WriteDatastring(const datastring &data);
+
+	virtual Status SetPins(uint8_t pins) = 0;
+	virtual Status FlushOutput() = 0;
 
 	std::unique_ptr<SequenceGenerator> sequence_generator_;
 
@@ -36,7 +38,6 @@ private:
 	Driver &operator=(const Driver &) = delete;
 	Driver &operator=(Driver &&) = delete;
 
-	void WriteDatastring(const datastring &data);
 };
 
 #endif

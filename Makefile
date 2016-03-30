@@ -3,7 +3,7 @@ DEBUG:=1
 SOURCES.programmer = programmer.cc
 LDLIBS.programmer := -lftdi -lgflags
 
-SOURCES.new_programmer = main.cc controller.cc driver.cc sequence_generator.cc util.cc
+SOURCES.new_programmer = main.cc controller.cc driver.cc sequence_generator.cc util.cc status.cc
 LDLIBS.new_programmer := -lftdi -lgflags
 
 CXXTARGETS := programmer new_programmer

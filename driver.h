@@ -15,8 +15,8 @@ public:
 
 	static std::unique_ptr<Driver> CreateFromFlags(std::unique_ptr<SequenceGenerator> sequence_generator);
 
-//	virtual Status Open() = 0;
-//	virtual Status Close() = 0;
+	virtual Status Open() = 0;
+	virtual void Close() = 0;
 
 	Status WriteTimedSequence(SequenceGenerator::TimedSequenceType type);
 	Status WriteCommand(Command command, uint16_t payload);

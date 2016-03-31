@@ -2,6 +2,7 @@
 #define UTIL_H_
 
 #include <cstdint>
+#include <functional>
 
 enum Command {
 	CORE_INST = 0,
@@ -36,5 +37,13 @@ void fatal(const char *fmt, ...) __attribute__((format (printf, 1, 2))) __attrib
 /*@noreturn@*/ void fatal(const char *fmt, ...);
 #endif
 #define FATAL(fmt, ...) fatal("%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
+
+class AutoClosureRunner {
+public:
+	AutoClosureRunner(std::function<void()> func) : func_(func) {}
+	~AutoClosureRunner() { func_(); }
+private:
+	std::function<void()> func_;
+};
 
 #endif

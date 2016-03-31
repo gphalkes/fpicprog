@@ -5,6 +5,7 @@
 
 enum Code {
 	OK,
+	INIT_FAILED,
 	SYNC_LOST,
 	DEVICE_NOT_FOUND,
 	USB_WRITE_ERROR,

@@ -4,6 +4,8 @@
 #include <ftdi.h>
 #include <gflags/gflags.h>
 
+#include "strings.h"
+
 DEFINE_string(driver, "FT232R", "Driver to use for programming.");
 DEFINE_string(nMCLR, "TxD", "Pin to use for inverted MCLR.");
 DEFINE_string(PGC, "DTR", "Pin to use for PGC");
@@ -31,11 +33,16 @@ Status Driver::WriteDatastring(const datastring &data) {
 	return Status::OK;
 }
 
+// ======================= FT232RDriver ===========================
 class FT232RDriver : public Driver {
 public:
-	FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator);
-	~FT232RDriver() override;
+	FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator) : Driver(std::move(sequence_generator)) {}
+	~FT232RDriver() override {
+		Close();
+	}
 
+	Status Open() override;
+	void Close() override;
 	Status ReadWithCommand(Command command, uint32_t count, datastring *result) override;
 
 protected:
@@ -52,11 +59,13 @@ private:
 	Status DrainInput(int expected_size);
 
 	static Pin pins_[];
-	ftdi_context ftdic_;
-	uint8_t translate_pins_[16];
-	datastring output_buffer_;
 
+
+	uint8_t translate_pins_[16];
+	ftdi_context ftdic_;
 	bool write_mode_ = true;
+	bool open_ = false;
+	datastring output_buffer_;
 	datastring received_data_;
 	int received_data_bit_offset_ = 0;
 };
@@ -72,20 +81,23 @@ FT232RDriver::Pin FT232RDriver::pins_[] = {
 	{ "RI", 7 },
 };
 
-FT232RDriver::FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator) : Driver(std::move(sequence_generator)) {
+Status FT232RDriver::Open() {
+	if (open_) return Status(INIT_FAILED, "Device already open");
 	int init_result;
 	if ((init_result = ftdi_init(&ftdic_)) < 0) {
-		FATAL("Couldn't initialize ftdi_context struct: %d\n", init_result);
+		return Status(Code::INIT_FAILED, strings::Cat("Couldn't initialize ftdi_context struct: ", ftdi_get_error_string(&ftdic_)));
 	}
 	// TODO: allow more specification of which device to open.
 	if(ftdi_usb_open(&ftdic_, 0x0403, 0x6001) < 0) {
-		FATAL("Couldn't open FT232 device: %s\n", ftdi_get_error_string(&ftdic_));
+		return Status(Code::INIT_FAILED, strings::Cat("Couldn't open FT232 device: ", ftdi_get_error_string(&ftdic_)));
 	}
 	if (ftdi_set_baudrate(&ftdic_, 100000)) {
-		FATAL("Couldn't set baud rate: %s\n", ftdi_get_error_string(&ftdic_));
+		AutoClosureRunner deinit([this] {ftdi_deinit(&ftdic_);});
+		return Status(Code::INIT_FAILED, strings::Cat("Couldn't set baud rate: ", ftdi_get_error_string(&ftdic_)));
 	}
 	if (ftdi_usb_purge_buffers(&ftdic_) < 0) {
-		FATAL("Could not purge USB buffers: %s\n", ftdi_get_error_string(&ftdic_));
+		AutoClosureRunner deinit([this] {ftdi_deinit(&ftdic_);});
+		return Status(Code::INIT_FAILED, strings::Cat("Could not purge USB buffers: ", ftdi_get_error_string(&ftdic_)));
 	}
 	memset(translate_pins_, 0, sizeof(translate_pins_));
 	translate_pins_[nMCLR] = PinNameToValue(FLAGS_nMCLR);
@@ -100,14 +112,21 @@ FT232RDriver::FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator
 		}
 	}
 	if (ftdi_set_bitmode(&ftdic_, translate_pins_[nMCLR | PGC | PGD], BITMODE_SYNCBB) < 0) {
-		FATAL("Couldn't set bitbang mode: %s\n", ftdi_get_error_string(&ftdic_));
+		AutoClosureRunner deinit([this] {ftdi_deinit(&ftdic_);});
+		return Status(INIT_FAILED, strings::Cat("Couldn't set bitbang mode: ", ftdi_get_error_string(&ftdic_)));
 	}
+	open_ = true;
+	return Status::OK;
 }
 
-FT232RDriver::~FT232RDriver() {
+void FT232RDriver::Close() {
+	if (!open_) return;
 	SetPins(0).IgnoreResult();
 	Sleep(MilliSeconds(100));
+	// Turn all pins into inputs
 	ftdi_set_bitmode(&ftdic_, 0, BITMODE_SYNCBB);
+	ftdi_deinit(&ftdic_);
+	open_ = false;
 }
 
 Status FT232RDriver::SetPins(uint8_t pins) {
@@ -207,10 +226,7 @@ Status FT232RDriver::DrainInput(int expected_size) {
 		total_bytes_read += bytes_read;
 	}
 	if (total_bytes_read < expected_size) {
-		//FIXME: use strings::Cat to complete to this error message
-		return Status(Code::SYNC_LOST, "Did not receive the expected number of bytes");
-/*		FATAL("Did not receive the expected number of bytes: %s (last count: %d, expected: %d, read: %d, received_data size: %zd)\n",
-				ftdi_get_error_string(&ftdic_), bytes_read, expected_size, total_bytes_read, received_data_.size());*/
+		return Status(Code::SYNC_LOST, strings::Cat("Did not receive the expected number of bytes (", total_bytes_read, " instead of ", expected_size, ")"));
 	}
 	return Status::OK;
 }

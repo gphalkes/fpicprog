@@ -2,6 +2,11 @@
 
 #include "util.h"
 
+Status Controller::Open() {
+	RETURN_IF_ERROR(driver_->Open());
+	return driver_->WriteTimedSequence(SequenceGenerator::INIT_SEQUENCE);
+}
+
 Status Controller::ReadDeviceId(uint16_t *device_id) {
     RETURN_IF_ERROR(LoadAddress(0x3ffffe));
     datastring bytes;

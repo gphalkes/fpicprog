@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
 //		sequence_generator.reset(new PgmSequenceGenerator);
 	}
 	std::unique_ptr<Driver> driver = Driver::CreateFromFlags(std::move(sequence_generator));
-	CHECK_OK(driver->WriteTimedSequence(SequenceGenerator::INIT_SEQUENCE));
 	Controller controller(std::move(driver));
+	CHECK_OK(controller.Open());
 
 	uint16_t device_id;
 	CHECK_OK(controller.ReadDeviceId(&device_id));
@@ -39,8 +39,8 @@ int main(int argc, char **argv) {
 	controller.RowErase(0);
 	controller.RowErase(64);
 #else
-//	datastring program = controller.ReadFlashMemory(0, 256);
 	datastring program;
+//	CHECK_OK(controller.ReadFlashMemory(0, 256, &program));
 	CHECK_OK(controller.ReadFlashMemory(0, 0x8100, &program));
 	FILE *out = fopen("dump.bin", "w+");
 	if (!out) {

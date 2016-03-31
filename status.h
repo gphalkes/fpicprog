@@ -13,6 +13,7 @@ enum Code {
 
 class __attribute__((warn_unused_result)) Status {
 public:
+	Status() : Status(OK) {}
 	Status(Code code, std::string message) : code_(code), message_(message) {}
 
 	bool ok() const { return code_ == Code::OK; }

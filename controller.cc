@@ -110,3 +110,76 @@ Status Controller::LoadAddress(uint32_t address) {
 	return driver_->WriteCommand(CORE_INST, 0x6EF6);
 }
 
+Status HighLevelController::ReadProgram(Program *program) {
+	Status status;
+	DeviceCloser closer(this);
+	for (int attempts = 0; attempts < 100; ++attempts) {
+		if (!status.ok()) {
+			Sleep(MilliSeconds(500));
+//			fprintf(stderr, "Error from previous attempt: %s\n", status.message().c_str());
+		}
+		if (!(status = InitDevice()).ok()) {
+			continue;
+		}
+		printf("(Re)initialized device [%s]\n", device_info_.name.c_str());
+		if (!(status = ReadData(&(*program)[0], 0, device_info_.program_memory_size)).ok()) {
+			CloseDevice();
+			continue;
+		}
+		if (!(status = ReadData(&(*program)[device_info_.user_id_offset], device_info_.user_id_offset, device_info_.user_id_size)).ok()) {
+			CloseDevice();
+			continue;
+		}
+		if (!(status = ReadData(&(*program)[device_info_.config_offset], device_info_.config_offset, device_info_.config_size)).ok()) {
+			CloseDevice();
+			continue;
+		}
+	}
+	return status;
+}
+
+Status HighLevelController::InitDevice() {
+	if (device_open_) {
+		return Status::OK;
+	}
+	Status status;
+	uint16_t device_id;
+	for (int attempts = 0; attempts < 10; ++attempts) {
+		status = controller_->Open();
+		if (!status.ok()) {
+			controller_->Close();
+			continue;
+		}
+		status = controller_->ReadDeviceId(&device_id);
+		if (!status.ok() || device_id == 0) {
+			controller_->Close();
+			continue;
+		}
+		status = device_db_->GetDeviceInfo(device_id, &device_info_);
+		if (status.ok()) {
+			device_open_ = true;
+		}
+		return status;
+	}
+	return status;
+}
+
+void HighLevelController::CloseDevice() {
+	if (!device_open_) {
+		return;
+	}
+	device_open_ = false;
+	controller_->Close();
+}
+
+Status HighLevelController::ReadData(datastring *data, uint32_t base_address, uint32_t target_size) {
+	data->reserve(target_size);
+	printf("Starting read at address %06lx\n", base_address + data->size());
+	while (data->size() < target_size) {
+		datastring buffer;
+		uint32_t start_address = base_address + data->size();
+		RETURN_IF_ERROR(controller_->ReadFlashMemory(start_address, start_address + std::min<uint32_t>(1024, target_size - data->size()), &buffer));
+		data->append(buffer);
+	}
+	return Status::OK;
+}

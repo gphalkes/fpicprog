@@ -8,6 +8,8 @@
 class DeviceDb {
 public:
 	struct DeviceInfo {
+		std::string name;
+		uint16_t device_id;
 		uint32_t program_memory_size;
 		uint32_t user_id_size;
 		uint32_t user_id_offset;

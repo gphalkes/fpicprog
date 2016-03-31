@@ -37,8 +37,19 @@ public:
 	Status ReadProgram(Program *program);
 
 private:
+	class DeviceCloser {
+	public:
+		DeviceCloser(HighLevelController *controller) : controller_(controller) {}
+		~DeviceCloser() { controller_->CloseDevice(); }
+	private:
+		HighLevelController *controller_;
+	};
+	Status InitDevice();
+	void CloseDevice();
+	Status ReadData(datastring *data, uint32_t base_address, uint32_t target_size);
+
 	bool device_open_ = false;
-	uint16_t device_id_ = 0;
+	DeviceDb::DeviceInfo device_info_;
 	std::unique_ptr<Controller> controller_;
 	std::unique_ptr<DeviceDb> device_db_;
 };

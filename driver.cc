@@ -135,6 +135,7 @@ Status FT232RDriver::SetPins(uint8_t pins) {
 }
 
 Status FT232RDriver::FlushOutput() {
+	Status status;
 	while (!output_buffer_.empty()) {
 		// In theory we should be able to push this up to 128. However, reading becomes unreliable when
 		// we write more than 64 bytes at a time.
@@ -148,9 +149,9 @@ Status FT232RDriver::FlushOutput() {
 			//FATAL("Wrote fewer bytes than requested: %s\n", ftdi_get_error_string(&ftdic_));
 		}
 		output_buffer_.erase(0, size);
-		RETURN_IF_ERROR(DrainInput(size));
+		status.Update(DrainInput(size));
 	}
-	return Status::OK;
+	return status;
 }
 
 uint8_t ReverseBits(uint8_t data) {
@@ -225,8 +226,12 @@ Status FT232RDriver::DrainInput(int expected_size) {
 		}
 		total_bytes_read += bytes_read;
 	}
-	if (total_bytes_read < expected_size) {
-		return Status(Code::SYNC_LOST, strings::Cat("Did not receive the expected number of bytes (", total_bytes_read, " instead of ", expected_size, ")"));
+	// In read mode it is vital we receive all the bytes. In write mode, we don't really care.
+	// It appears to be a problem with read bytes not being reported to the USB host, rather
+	// than a complete loss of data.
+	if (total_bytes_read < expected_size && !write_mode_) {
+		return Status(Code::SYNC_LOST, strings::Cat("Did not receive the expected number of bytes (",
+				total_bytes_read, " instead of ", expected_size, ")"));
 	}
 	return Status::OK;
 }

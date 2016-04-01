@@ -15,6 +15,8 @@ public:
 		uint32_t user_id_offset;
 		uint32_t config_size;
 		uint32_t config_offset;
+		uint16_t write_block_size;
+		uint16_t erase_block_size;
 	};
 
 	Status Load();

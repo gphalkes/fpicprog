@@ -16,8 +16,15 @@ public:
 	Status() : Status(OK) {}
 	Status(Code code, std::string message) : code_(code), message_(message) {}
 
+	void Update(const Status &other) {
+		if (code_ == Code::OK) {
+			*this = other;
+		}
+	}
+
 	bool ok() const { return code_ == Code::OK; }
 	void IgnoreResult() {}
+	Code code() const { return code_; }
 	std::string message() const { return message_; }
 
 	static const Status OK;

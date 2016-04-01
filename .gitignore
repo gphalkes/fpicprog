@@ -1,4 +1,2 @@
-.deps
-.objects
+.*
 programmer
-new_programmer

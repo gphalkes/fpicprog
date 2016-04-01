@@ -111,31 +111,14 @@ Status Controller::LoadAddress(uint32_t address) {
 }
 
 Status HighLevelController::ReadProgram(Program *program) {
-	Status status;
 	DeviceCloser closer(this);
-	for (int attempts = 0; attempts < 100; ++attempts) {
-		if (!status.ok()) {
-			Sleep(MilliSeconds(500));
-//			fprintf(stderr, "Error from previous attempt: %s\n", status.message().c_str());
-		}
-		if (!(status = InitDevice()).ok()) {
-			continue;
-		}
-		printf("(Re)initialized device [%s]\n", device_info_.name.c_str());
-		if (!(status = ReadData(&(*program)[0], 0, device_info_.program_memory_size)).ok()) {
-			CloseDevice();
-			continue;
-		}
-		if (!(status = ReadData(&(*program)[device_info_.user_id_offset], device_info_.user_id_offset, device_info_.user_id_size)).ok()) {
-			CloseDevice();
-			continue;
-		}
-		if (!(status = ReadData(&(*program)[device_info_.config_offset], device_info_.config_offset, device_info_.config_size)).ok()) {
-			CloseDevice();
-			continue;
-		}
-	}
-	return status;
+	RETURN_IF_ERROR(InitDevice());
+	printf("Initialized device [%s]\n", device_info_.name.c_str());
+
+	RETURN_IF_ERROR(ReadData(&(*program)[0], 0, device_info_.program_memory_size));
+	RETURN_IF_ERROR(ReadData(&(*program)[device_info_.user_id_offset], device_info_.user_id_offset, device_info_.user_id_size));
+	RETURN_IF_ERROR(ReadData(&(*program)[device_info_.config_offset], device_info_.config_offset, device_info_.config_size));
+	return Status::OK;
 }
 
 Status HighLevelController::InitDevice() {
@@ -161,7 +144,7 @@ Status HighLevelController::InitDevice() {
 		}
 		return status;
 	}
-	return status;
+	return Status(Code::DEVICE_NOT_FOUND, "No device detected");
 }
 
 void HighLevelController::CloseDevice() {
@@ -174,12 +157,16 @@ void HighLevelController::CloseDevice() {
 
 Status HighLevelController::ReadData(datastring *data, uint32_t base_address, uint32_t target_size) {
 	data->reserve(target_size);
-	printf("Starting read at address %06lx\n", base_address + data->size());
+	printf("Starting read at address %06lX to read %06X bytes\n", base_address + data->size(), target_size);
 	while (data->size() < target_size) {
 		datastring buffer;
 		uint32_t start_address = base_address + data->size();
-		RETURN_IF_ERROR(controller_->ReadFlashMemory(start_address, start_address + std::min<uint32_t>(1024, target_size - data->size()), &buffer));
-		data->append(buffer);
+		Status status = controller_->ReadFlashMemory(start_address, start_address + std::min<uint32_t>(128, target_size - data->size()), &buffer);
+		if (status.ok()) {
+			data->append(buffer);
+		} else if (status.code() != Code::SYNC_LOST) {
+			return status;
+		}
 	}
 	return Status::OK;
 }

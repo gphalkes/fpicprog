@@ -27,14 +27,14 @@ int main(int argc, char **argv) {
 	google::ParseCommandLineFlags(&argc, &argv, true);
 
 	// FIXME: set this based on the chip type.
-	std::unique_ptr<SequenceGenerator> sequence_generator;
+	std::unique_ptr<Pic18SequenceGenerator> sequence_generator;
 	if (FLAGS_two_pin_programming) {
 		sequence_generator.reset(new KeySequenceGenerator);
 	} else {
-//		sequence_generator.reset(new PgmSequenceGenerator);
+		sequence_generator.reset(new PgmSequenceGenerator);
 	}
-	std::unique_ptr<Driver> driver = Driver::CreateFromFlags(std::move(sequence_generator));
-	std::unique_ptr<Controller> controller(new Controller(std::move(driver)));
+	std::unique_ptr<Driver> driver = Driver::CreateFromFlags();
+	std::unique_ptr<Controller> controller(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
 	auto device_db = std::make_unique<DeviceDb>();
 	CHECK_OK(device_db->Load());
 	HighLevelController high_level_controller(std::move(controller), std::move(device_db));

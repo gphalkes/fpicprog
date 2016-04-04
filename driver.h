@@ -13,24 +13,19 @@ class Driver {
 public:
 	virtual ~Driver() = default;
 
-	static std::unique_ptr<Driver> CreateFromFlags(std::unique_ptr<SequenceGenerator> sequence_generator);
+	static std::unique_ptr<Driver> CreateFromFlags();
 
 	virtual Status Open() = 0;
 	virtual void Close() = 0;
 
-	Status WriteTimedSequence(SequenceGenerator::TimedSequenceType type);
-	Status WriteCommand(Command command, uint16_t payload);
-	virtual Status ReadWithCommand(Command command, uint32_t count, datastring *result) = 0;
+	Status WriteTimedSequence(const TimedSequence &sequence);
+	Status WriteDatastring(const datastring &data);
+	virtual Status ReadWithSequence(const datastring &sequence, int bit_offset, int bit_count, uint32_t count, datastring *result) = 0;
 
 protected:
-	Driver(std::unique_ptr<SequenceGenerator> sequence_generator) : sequence_generator_(std::move(sequence_generator)) {}
-
-	Status WriteDatastring(const datastring &data);
-
+	Driver() = default;
 	virtual Status SetPins(uint8_t pins) = 0;
 	virtual Status FlushOutput() = 0;
-
-	std::unique_ptr<SequenceGenerator> sequence_generator_;
 
 private:
 	Driver(const Driver &) = delete;

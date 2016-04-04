@@ -21,7 +21,6 @@ Status DeviceDb::Load() {
 }
 
 Status DeviceDb::GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info) {
-	device_id &= 0xffe0;
 	if (device_db_.find(device_id) == device_db_.end()) {
 		// FIXME: Print hex device ID
 		return Status(Code::DEVICE_NOT_FOUND, strings::Cat("Device with id ", device_id, " not found"));

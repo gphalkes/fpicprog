@@ -12,18 +12,13 @@ DEFINE_string(PGC, "DTR", "Pin to use for PGC");
 DEFINE_string(PGD, "RxD", "Pin to use for PGD");
 DEFINE_string(PGM, "CTS", "Pin to use for PGM");
 
-Status Driver::WriteTimedSequence(SequenceGenerator::TimedSequenceType type) {
-	std::vector<SequenceGenerator::TimedStep> steps = sequence_generator_->GetTimedSequence(type);
-	for (const auto &step : steps) {
+Status Driver::WriteTimedSequence(const TimedSequence &sequence) {
+	for (const auto &step : sequence) {
 		RETURN_IF_ERROR(WriteDatastring(step.data));
 		RETURN_IF_ERROR(FlushOutput());
 		Sleep(step.sleep);
 	}
 	return Status::OK;
-}
-
-Status Driver::WriteCommand(Command command, uint16_t payload) {
-	return WriteDatastring(sequence_generator_->GenerateCommand(command, payload));
 }
 
 Status Driver::WriteDatastring(const datastring &data) {
@@ -36,14 +31,13 @@ Status Driver::WriteDatastring(const datastring &data) {
 // ======================= FT232RDriver ===========================
 class FT232RDriver : public Driver {
 public:
-	FT232RDriver(std::unique_ptr<SequenceGenerator> sequence_generator) : Driver(std::move(sequence_generator)) {}
 	~FT232RDriver() override {
 		Close();
 	}
 
 	Status Open() override;
 	void Close() override;
-	Status ReadWithCommand(Command command, uint32_t count, datastring *result) override;
+	Status ReadWithSequence(const datastring &sequence, int bit_offset, int bit_count, uint32_t count, datastring *result) override;
 
 protected:
 	Status SetPins(uint8_t pins) override;
@@ -103,7 +97,7 @@ Status FT232RDriver::Open() {
 	translate_pins_[nMCLR] = PinNameToValue(FLAGS_nMCLR);
 	translate_pins_[PGC] = PinNameToValue(FLAGS_PGC);
 	translate_pins_[PGD] = PinNameToValue(FLAGS_PGD);
-	translate_pins_[PGM] = PinNameToValue(FLAGS_PGM);
+	translate_pins_[PGM] = FLAGS_PGM == "NC" ? 0 : PinNameToValue(FLAGS_PGM);
 	for (int i = 0; i < 16; ++i) {
 		for (int j : {nMCLR, PGC, PGD, PGM}) {
 			if (i & j) {
@@ -164,7 +158,8 @@ uint8_t ReverseBits(uint8_t data) {
 	return result;
 }
 
-Status FT232RDriver::ReadWithCommand(Command command, uint32_t count, datastring *result) {
+Status FT232RDriver::ReadWithSequence(const datastring &sequence, int bit_offset, int bit_count, uint32_t count, datastring *result) {
+	//FIXME: start using bit_offset and bit_count!
 	result->clear();
 	RETURN_IF_ERROR(FlushOutput());
 	received_data_.clear();
@@ -172,7 +167,7 @@ Status FT232RDriver::ReadWithCommand(Command command, uint32_t count, datastring
 	received_data_bit_offset_ = 0;
 	write_mode_ = false;
 	for (uint32_t i = 0; i < count; ++i) {
-		RETURN_IF_ERROR(WriteCommand(command, 0));
+		RETURN_IF_ERROR(WriteDatastring(sequence));
 	}
 	RETURN_IF_ERROR(FlushOutput());
 	write_mode_ = true;
@@ -236,9 +231,9 @@ Status FT232RDriver::DrainInput(int expected_size) {
 	return Status::OK;
 }
 
-std::unique_ptr<Driver> Driver::CreateFromFlags(std::unique_ptr<SequenceGenerator> sequence_generator) {
+std::unique_ptr<Driver> Driver::CreateFromFlags() {
 	if (FLAGS_driver == "FT232R") {
-		return std::make_unique<FT232RDriver>(std::move(sequence_generator));
+		return std::make_unique<FT232RDriver>();
 	}
 	FATAL("Unknown driver: %s\n", FLAGS_driver.c_str());
 }

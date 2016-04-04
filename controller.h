@@ -9,7 +9,7 @@
 #include "driver.h"
 
 // FIXME: put this into its own header with utils for reading and writing
-typedef std::map<uint32_t, datastring> Program;
+typedef std::map<uint32_t, Datastring> Program;
 
 class Controller {
 public:
@@ -18,9 +18,9 @@ public:
 	virtual Status Open() = 0;
 	virtual void Close() = 0;
 	virtual Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) = 0;
-	virtual Status ReadFlashMemory(uint32_t start_address, uint32_t end_address, datastring *result) = 0;
+	virtual Status ReadFlashMemory(uint32_t start_address, uint32_t end_address, Datastring *result) = 0;
 	virtual Status ChipErase() = 0;
-	virtual Status WriteFlash(uint32_t address, const datastring &data) = 0;
+	virtual Status WriteFlash(uint32_t address, const Datastring &data) = 0;
 	virtual Status RowErase(uint32_t address) = 0;
 };
 
@@ -32,14 +32,14 @@ public:
 	Status Open() override;
 	void Close() override;
 	Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) override;
-	Status ReadFlashMemory(uint32_t start_address, uint32_t end_address, datastring *result) override;
+	Status ReadFlashMemory(uint32_t start_address, uint32_t end_address, Datastring *result) override;
 	Status ChipErase() override;
-	Status WriteFlash(uint32_t address, const datastring &data) override;
+	Status WriteFlash(uint32_t address, const Datastring &data) override;
 	Status RowErase(uint32_t address) override;
 
 private:
 	Status WriteCommand(Command command, uint16_t payload);
-	Status ReadWithCommand(Command command, uint32_t count, datastring *result);
+	Status ReadWithCommand(Command command, uint32_t count, Datastring *result);
 	Status WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type);
 	Status LoadAddress(uint32_t address);
 
@@ -64,7 +64,7 @@ private:
 	};
 	Status InitDevice();
 	void CloseDevice();
-	Status ReadData(datastring *data, uint32_t base_address, uint32_t target_size);
+	Status ReadData(Datastring *data, uint32_t base_address, uint32_t target_size);
 
 	bool device_open_ = false;
 	DeviceDb::DeviceInfo device_info_;

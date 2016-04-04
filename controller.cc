@@ -14,7 +14,7 @@ void Pic18Controller::Close() {
 
 Status Pic18Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
     RETURN_IF_ERROR(LoadAddress(0x3ffffe));
-    datastring bytes;
+    Datastring bytes;
 	RETURN_IF_ERROR(ReadWithCommand(TABLE_READ_post_inc, 2, &bytes));
     *device_id = bytes[0] | static_cast<uint16_t>(bytes[1]) << 8;
     *revision = *device_id & 0x1f;
@@ -22,7 +22,7 @@ Status Pic18Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
     return Status::OK;
 }
 
-Status Pic18Controller::ReadFlashMemory(uint32_t start_address, uint32_t end_address, datastring *result) {
+Status Pic18Controller::ReadFlashMemory(uint32_t start_address, uint32_t end_address, Datastring *result) {
 	RETURN_IF_ERROR(LoadAddress(start_address));
 	return ReadWithCommand(TABLE_READ_post_inc, end_address - start_address, result);
 }
@@ -32,7 +32,7 @@ Status Pic18Controller::ChipErase() {
 	// 1100 0F 0F Write 0Fh to 3C0005h
 	RETURN_IF_ERROR(WriteCommand(TABLE_WRITE, 0x0F0F));
 	RETURN_IF_ERROR(LoadAddress(0x3C0004));
-	datastring sequence;
+	Datastring sequence;
 	// 1100 8F 8F Write 8F8Fh TO 3C0004h to erase entire device.
 	RETURN_IF_ERROR(WriteCommand(TABLE_WRITE, 0x8F8F));
 	// 0000 00 00 NOP
@@ -41,7 +41,7 @@ Status Pic18Controller::ChipErase() {
 	return WriteTimedSequence(Pic18SequenceGenerator::CHIP_ERASE_SEQUENCE);
 }
 
-Status Pic18Controller::WriteFlash(uint32_t address, const datastring &data) {
+Status Pic18Controller::WriteFlash(uint32_t address, const Datastring &data) {
 	if (address & 63) {
 		FATAL("Attempting to write at a non-aligned address\n%s", "");
 	}
@@ -86,7 +86,7 @@ Status Pic18Controller::RowErase(uint32_t address) {
 	RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
 
 	// Loop until the WR bit in EECON1 is clear.
-	datastring value;
+	Datastring value;
 	do {
 		// MOVF EECON1, W, 0
 		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x50A6));
@@ -106,8 +106,14 @@ Status Pic18Controller::WriteCommand(Command command, uint16_t payload) {
 	return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command, payload));
 }
 
-Status Pic18Controller::ReadWithCommand(Command command, uint32_t count, datastring *result) {
-	return driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 12, 8, count, result);
+Status Pic18Controller::ReadWithCommand(Command command, uint32_t count, Datastring *result) {
+	Datastring16 data;
+	RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 12, 8, count, &data));
+	result->clear();
+	for (const uint16_t c : data) {
+		result->push_back(c);
+	}
+	return Status::OK;
 }
 
 Status Pic18Controller::WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type) {
@@ -174,11 +180,11 @@ void HighLevelController::CloseDevice() {
 	controller_->Close();
 }
 
-Status HighLevelController::ReadData(datastring *data, uint32_t base_address, uint32_t target_size) {
+Status HighLevelController::ReadData(Datastring *data, uint32_t base_address, uint32_t target_size) {
 	data->reserve(target_size);
 	printf("Starting read at address %06lX to read %06X bytes\n", base_address + data->size(), target_size);
 	while (data->size() < target_size) {
-		datastring buffer;
+		Datastring buffer;
 		uint32_t start_address = base_address + data->size();
 		Status status = controller_->ReadFlashMemory(start_address, start_address + std::min<uint32_t>(128, target_size - data->size()), &buffer);
 		if (status.ok()) {

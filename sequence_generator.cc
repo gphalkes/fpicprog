@@ -1,7 +1,7 @@
 #include "sequence_generator.h"
 
-datastring Pic18SequenceGenerator::GetCommandSequence(Command command, uint16_t payload) const {
-	datastring result;
+Datastring Pic18SequenceGenerator::GetCommandSequence(Command command, uint16_t payload) const {
+	Datastring result;
 	result += GenerateBitSequence(command, 4);
 	result += GenerateBitSequence(payload, 16);
 	return result;
@@ -32,8 +32,8 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(TimedSequenceTyp
 	return result;
 }
 
-datastring Pic18SequenceGenerator::GenerateBitSequence(uint32_t data, int bits) const {
-	datastring result;
+Datastring Pic18SequenceGenerator::GenerateBitSequence(uint32_t data, int bits) const {
+	Datastring result;
 	for (int i = 0; i < bits; ++i) {
 		bool bit_set = (data >> i) & 1;
 		uint8_t base = nMCLR | PGM;
@@ -59,7 +59,7 @@ std::vector<TimedStep> KeySequenceGenerator::GetTimedSequence(TimedSequenceType 
 		std::vector<TimedStep> result;
 		result.push_back(TimedStep{{0, nMCLR, 0}, MilliSeconds(1)});
 		{
-			datastring magic;
+			Datastring magic;
 			uint32_t key = 0x4D434850; // MCHP
 			for (int i = 31; i >= 0; --i) {
 				bool bit_set = (key >> i) & 1;

@@ -19,8 +19,8 @@ public:
 	virtual void Close() = 0;
 
 	Status WriteTimedSequence(const TimedSequence &sequence);
-	Status WriteDatastring(const datastring &data);
-	virtual Status ReadWithSequence(const datastring &sequence, int bit_offset, int bit_count, uint32_t count, datastring *result) = 0;
+	Status WriteDatastring(const Datastring &data);
+	virtual Status ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count, uint32_t count, Datastring16 *result) = 0;
 
 protected:
 	Driver() = default;

@@ -6,10 +6,11 @@
 
 #include "util.h"
 
-typedef std::basic_string<uint8_t> datastring;
+typedef std::basic_string<uint8_t> Datastring;
+typedef std::basic_string<uint16_t> Datastring16;
 
 struct TimedStep {
-	datastring data;
+	Datastring data;
 	Duration sleep;
 };
 
@@ -24,12 +25,12 @@ public:
 		WRITE_CONFIG_SEQUENCE,
 	};
 
-	datastring GetCommandSequence(Command command, uint16_t payload) const;
+	Datastring GetCommandSequence(Command command, uint16_t payload) const;
 	virtual std::vector<TimedStep> GetTimedSequence(TimedSequenceType type) const;
 	virtual ~Pic18SequenceGenerator() = default;
 
 private:
-	datastring GenerateBitSequence(uint32_t data, int bits) const;
+	Datastring GenerateBitSequence(uint32_t data, int bits) const;
 };
 
 class PgmSequenceGenerator : public Pic18SequenceGenerator {

@@ -21,7 +21,7 @@ Status Driver::WriteTimedSequence(const TimedSequence &sequence) {
 	return Status::OK;
 }
 
-Status Driver::WriteDatastring(const datastring &data) {
+Status Driver::WriteDatastring(const Datastring &data) {
 	for (const uint8_t pins : data) {
 		RETURN_IF_ERROR(SetPins(pins));
 	}
@@ -37,7 +37,7 @@ public:
 
 	Status Open() override;
 	void Close() override;
-	Status ReadWithSequence(const datastring &sequence, int bit_offset, int bit_count, uint32_t count, datastring *result) override;
+	Status ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count, uint32_t count, Datastring16 *result) override;
 
 protected:
 	Status SetPins(uint8_t pins) override;
@@ -59,8 +59,8 @@ private:
 	ftdi_context ftdic_;
 	bool write_mode_ = true;
 	bool open_ = false;
-	datastring output_buffer_;
-	datastring received_data_;
+	Datastring output_buffer_;
+	Datastring received_data_;
 	int received_data_bit_offset_ = 0;
 };
 
@@ -115,7 +115,9 @@ Status FT232RDriver::Open() {
 
 void FT232RDriver::Close() {
 	if (!open_) return;
+	FlushOutput().IgnoreResult();
 	SetPins(0).IgnoreResult();
+	FlushOutput().IgnoreResult();
 	Sleep(MilliSeconds(100));
 	// Turn all pins into inputs
 	ftdi_set_bitmode(&ftdic_, 0, BITMODE_SYNCBB);
@@ -158,7 +160,7 @@ uint8_t ReverseBits(uint8_t data) {
 	return result;
 }
 
-Status FT232RDriver::ReadWithSequence(const datastring &sequence, int bit_offset, int bit_count, uint32_t count, datastring *result) {
+Status FT232RDriver::ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count, uint32_t count, Datastring16 *result) {
 	//FIXME: start using bit_offset and bit_count!
 	result->clear();
 	RETURN_IF_ERROR(FlushOutput());

@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <functional>
 
+typedef std::basic_string<uint8_t> Datastring;
+typedef std::basic_string<uint16_t> Datastring16;
+
 enum Command {
 	CORE_INST = 0,
 	SHIFT_OUT_TABLAT = 2,

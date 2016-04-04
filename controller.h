@@ -7,9 +7,9 @@
 
 #include "device_db.h"
 #include "driver.h"
+#include "program.h"
 
 // FIXME: put this into its own header with utils for reading and writing
-typedef std::map<uint32_t, Datastring> Program;
 
 class Controller {
 public:

@@ -5,18 +5,19 @@
 Status DeviceDb::Load() {
 	// FIXME: this should be loaded from a CSV file for ease of use.
 	// Device IDs have revision numbers in the low 5 bits. These are assumed to be 0.
-	device_db_[0x5c60] = DeviceInfo{"18F24K50", 0x5c60, 0x4000, 8, 0x200000, 14, 0x300000, 64, 64};
-	device_db_[0x5ce0] = DeviceInfo{"18LF24K50", 0x5ce0, 0x4000, 8, 0x200000, 14, 0x300000, 64, 64};
+/*	device_db_[0x5c60] = DeviceInfo{"18F24K50", 0x5c60, 0x4000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};
+	device_db_[0x5ce0] = DeviceInfo{"18LF24K50", 0x5ce0, 0x4000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};
 
-	device_db_[0x5c20] = DeviceInfo{"18F25K50", 0x5c20, 0x8000, 8, 0x200000, 14, 0x300000, 64, 64};
-	device_db_[0x5ca0] = DeviceInfo{"18LF25K50", 0x5ca0, 0x8000, 8, 0x200000, 14, 0x300000, 64, 64};
-	device_db_[0x5c00] = DeviceInfo{"18F45K50", 0x5c00, 0x8000, 8, 0x200000, 14, 0x300000, 64, 64};
-	device_db_[0x5c80] = DeviceInfo{"18LF45K50", 0x5c80, 0x8000, 8, 0x200000, 14, 0x300000, 64, 64};
+	device_db_[0x5c20] = DeviceInfo{"18F25K50", 0x5c20, 0x8000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};
+	device_db_[0x5ca0] = DeviceInfo{"18LF25K50", 0x5ca0, 0x8000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};*/
+	device_db_[0x5c00] = DeviceInfo{"18F45K50", 0x5c00, 0x8000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64,
+		{0x0f8f}, {0x0088}, {0x0084}, {0x0082}, {0x0084, 0x0180, 0x0280, 0x0480, 0x0880}, MilliSeconds(15) + MicroSeconds(200)};
+/*	device_db_[0x5c80] = DeviceInfo{"18LF45K50", 0x5c80, 0x8000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};
 
-	device_db_[0x5d20] = DeviceInfo{"18F26K50", 0x5d20, 0x8000, 8, 0x200000, 14, 0x300000, 64, 64};
-	device_db_[0x5d60] = DeviceInfo{"18LF26K50", 0x5d60, 0x8000, 8, 0x200000, 14, 0x300000, 64, 64};
-	device_db_[0x5d00] = DeviceInfo{"18F46K50", 0x5d00, 0x8000, 8, 0x200000, 14, 0x300000, 64, 64};
-	device_db_[0x5d40] = DeviceInfo{"18LF46K50", 0x5d40, 0x8000, 8, 0x200000, 14, 0x300000, 64, 64};
+	device_db_[0x5d20] = DeviceInfo{"18F26K50", 0x5d20, 0x8000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};
+	device_db_[0x5d60] = DeviceInfo{"18LF26K50", 0x5d60, 0x8000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};
+	device_db_[0x5d00] = DeviceInfo{"18F46K50", 0x5d00, 0x8000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};
+	device_db_[0x5d40] = DeviceInfo{"18LF46K50", 0x5d40, 0x8000, 8, 0x200000, 14, 0x300000, 256, 0xf00000, 64, 64};*/
 	return Status::OK;
 }
 

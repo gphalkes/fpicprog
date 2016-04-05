@@ -17,7 +17,7 @@ class Pic18SequenceGenerator {
 public:
 	enum TimedSequenceType {
 		INIT_SEQUENCE,
-		CHIP_ERASE_SEQUENCE,
+		BULK_ERASE_SEQUENCE,
 		WRITE_SEQUENCE,
 		WRITE_CONFIG_SEQUENCE,
 	};

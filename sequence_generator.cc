@@ -12,7 +12,7 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(TimedSequenceTyp
 	constexpr int base = nMCLR | PGM;
 
 	switch (type) {
-		case CHIP_ERASE_SEQUENCE:
+		case BULK_ERASE_SEQUENCE:
 			result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC, base}, MilliSeconds(16)}); // FIXME: this is device dependent. 15ms is for 18f45k50
 			result.push_back(TimedStep{GenerateBitSequence(0, 16), base});
 			break;

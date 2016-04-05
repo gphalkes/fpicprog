@@ -41,3 +41,24 @@ void WriteIhex(const Program &program, FILE *out) {
 		}
 	}
 }
+
+Status MergeProgramBlocks(Program *program, const DeviceDb::DeviceInfo &device_info) {
+	//FIXME use device info to validate input and prevent merge of unrelated sections
+	auto last_section = program->begin();
+	auto iter = last_section;
+	for (++iter; iter != program->end();) {
+		uint32_t last_section_end = last_section->first + last_section->second.size();
+
+		if (last_section_end < iter->first) {
+			last_section = iter;
+			++iter;
+			continue;
+		} else if (last_section_end == iter->first) {
+			last_section->second.append(iter->second);
+			iter = program->erase(iter);
+		} else if (last_section_end > iter->first) {
+			return Status(Code::INVALID_PROGRAM, "Overlapping sections in program");
+		}
+	}
+	return Status::OK;
+}

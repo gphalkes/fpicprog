@@ -13,14 +13,22 @@
 
 class Controller {
 public:
+	enum Section {
+		FLASH,
+		USER_ID,
+		CONFIGURATION,
+		EEPROM,
+	};
+
 	virtual ~Controller() = default;
 
 	virtual Status Open() = 0;
 	virtual void Close() = 0;
 	virtual Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) = 0;
-	virtual Status ReadFlashMemory(uint32_t start_address, uint32_t end_address, Datastring *result) = 0;
-	virtual Status ChipErase() = 0;
-	virtual Status WriteFlash(uint32_t address, const Datastring &data, uint32_t block_size) = 0;
+	virtual Status Read(Section section, uint32_t start_address, uint32_t end_address, Datastring *result) = 0;
+	virtual Status Write(Section section, uint32_t address, const Datastring &data, uint32_t block_size) = 0;
+	virtual Status ChipErase(const DeviceDb::DeviceInfo &device_info) = 0;
+	virtual Status SectionErase(Section section, const DeviceDb::DeviceInfo &device_info) = 0;
 	virtual Status RowErase(uint32_t address) = 0;
 };
 
@@ -32,9 +40,10 @@ public:
 	Status Open() override;
 	void Close() override;
 	Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) override;
-	Status ReadFlashMemory(uint32_t start_address, uint32_t end_address, Datastring *result) override;
-	Status ChipErase() override;
-	Status WriteFlash(uint32_t address, const Datastring &data, uint32_t block_size) override;
+	Status Read(Section section, uint32_t start_address, uint32_t end_address, Datastring *result) override;
+	Status Write(Section section, uint32_t address, const Datastring &data, uint32_t block_size) override;
+	Status ChipErase(const DeviceDb::DeviceInfo &device_info) override;
+	Status SectionErase(Section section, const DeviceDb::DeviceInfo &device_info) override;
 	Status RowErase(uint32_t address) override;
 
 private:
@@ -42,6 +51,8 @@ private:
 	Status ReadWithCommand(Command command, uint32_t count, Datastring *result);
 	Status WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type);
 	Status LoadAddress(uint32_t address);
+	Status LoadEepromAddress(uint32_t address);
+	Status ExecuteBulkErase(const Datastring16 &sequence, Duration bulk_erase_timing);
 
 	std::unique_ptr<Driver> driver_;
 	std::unique_ptr<Pic18SequenceGenerator> sequence_generator_;
@@ -51,6 +62,7 @@ class HighLevelController {
 public:
 	enum EraseMode {
 		CHIP_ERASE,
+		SECTION_ERASE,
 		ROW_ERASE,
 	};
 
@@ -70,7 +82,7 @@ private:
 	};
 	Status InitDevice();
 	void CloseDevice();
-	Status ReadData(Datastring *data, uint32_t base_address, uint32_t target_size);
+	Status ReadData(Controller::Section section, Datastring *data, uint32_t base_address, uint32_t target_size);
 
 	bool device_open_ = false;
 	DeviceDb::DeviceInfo device_info_;

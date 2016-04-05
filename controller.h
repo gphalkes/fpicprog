@@ -20,7 +20,7 @@ public:
 	virtual Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) = 0;
 	virtual Status ReadFlashMemory(uint32_t start_address, uint32_t end_address, Datastring *result) = 0;
 	virtual Status ChipErase() = 0;
-	virtual Status WriteFlash(uint32_t address, const Datastring &data) = 0;
+	virtual Status WriteFlash(uint32_t address, const Datastring &data, uint32_t block_size) = 0;
 	virtual Status RowErase(uint32_t address) = 0;
 };
 
@@ -34,7 +34,7 @@ public:
 	Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) override;
 	Status ReadFlashMemory(uint32_t start_address, uint32_t end_address, Datastring *result) override;
 	Status ChipErase() override;
-	Status WriteFlash(uint32_t address, const Datastring &data) override;
+	Status WriteFlash(uint32_t address, const Datastring &data, uint32_t block_size) override;
 	Status RowErase(uint32_t address) override;
 
 private:
@@ -49,10 +49,16 @@ private:
 
 class HighLevelController {
 public:
+	enum EraseMode {
+		CHIP_ERASE,
+		ROW_ERASE,
+	};
+
 	HighLevelController(std::unique_ptr<Controller> controller, std::unique_ptr<DeviceDb> device_db)
 		: controller_(std::move(controller)), device_db_(std::move(device_db)) {}
 
 	Status ReadProgram(Program *program);
+	Status WriteProgram(const Program &program, EraseMode erase_mode);
 
 private:
 	class DeviceCloser {

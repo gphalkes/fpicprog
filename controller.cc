@@ -2,6 +2,26 @@
 
 #include "util.h"
 
+//FIXME: put the following in program.{h,cc}
+Status MergeProgramBlocks(Program *program) {
+	auto last_section = program->begin();
+	for (auto iter = last_section + 1; iter != program->end();) {
+		uint32_t last_section_end = last_section->first + last_section->second.size();
+
+		if (last_section_end < iter->first) {
+			last_section = iter;
+			++iter;
+			continue;
+		} else if (last_section_end == iter->first) {
+			last_section->second.append(iter->second);
+			iter = program->erase(iter);
+		} else if (last_section_end > iter->first) {
+			return Status(Code::INVALID_PROGRAM, "Overlapping sections in program");
+		}
+	}
+	return Status::OK;
+}
+
 Status Pic18Controller::Open() {
 	RETURN_IF_ERROR(driver_->Open());
 	return WriteTimedSequence(Pic18SequenceGenerator::INIT_SEQUENCE);
@@ -41,12 +61,12 @@ Status Pic18Controller::ChipErase() {
 	return WriteTimedSequence(Pic18SequenceGenerator::CHIP_ERASE_SEQUENCE);
 }
 
-Status Pic18Controller::WriteFlash(uint32_t address, const Datastring &data) {
-	if (address & 63) {
+Status Pic18Controller::WriteFlash(uint32_t address, const Datastring &data, uint32_t block_size) {
+	if (address % block_size) {
 		FATAL("Attempting to write at a non-aligned address\n%s", "");
 	}
-	if (data.size() & 63)  {
-		FATAL("Attempting to write less than one block of data\n%s", "");
+	if (data.size() % block_size)  {
+		FATAL("Attempting to write incomplete block\n%s", "");
 	}
 	// BSF EECON1, EEPGD
 	RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
@@ -141,8 +161,42 @@ Status HighLevelController::ReadProgram(Program *program) {
 	printf("Initialized device [%s]\n", device_info_.name.c_str());
 
 	RETURN_IF_ERROR(ReadData(&(*program)[0], 0, device_info_.program_memory_size));
-	RETURN_IF_ERROR(ReadData(&(*program)[device_info_.user_id_offset], device_info_.user_id_offset, device_info_.user_id_size));
-	RETURN_IF_ERROR(ReadData(&(*program)[device_info_.config_offset], device_info_.config_offset, device_info_.config_size));
+	if (device_info_.user_id_size > 0) {
+		RETURN_IF_ERROR(ReadData(&(*program)[device_info_.user_id_offset], device_info_.user_id_offset, device_info_.user_id_size));
+	}
+	if (device_info_.config_size > 0) {
+		RETURN_IF_ERROR(ReadData(&(*program)[device_info_.config_offset], device_info_.config_offset, device_info_.config_size));
+	}
+	return Status::OK;
+}
+
+Status HighLevelController::WriteProgram(const Program &program, EraseMode erase_mode) {
+	Program block_aligned_program;
+	if (erase_mode == CHIP_ERASE) {
+		printf("Starting chip erase\n");
+		controller_->ChipErase();
+		for (const auto &section : program) {
+			if (section.first % device_info_.write_block_size == 0 && section.second.size() % device_info_.write_block_size == 0) {
+				block_aligned_program[section.first] = section.second;
+				continue;
+			}
+			// Calculate new aligned offset.
+			uint32_t new_offset = (section.first / device_info_.write_block_size) * device_info_.write_block_size;
+			Datastring new_data = section.second;
+			new_data.insert(0, section.first - new_offset, 0xff);
+			new_data.append((device_info_.write_block_size - (new_data.size() % device_info_.write_block_size)) % device_info_.write_block_size, 0xff);
+			block_aligned_program[new_offset] = std::move(new_data);
+		}
+		MergeProgramBlocks(&block_aligned_program);
+	}
+	//FIXME: for row erase mode, read the incomplete blocks from flash and merge with incomplete blocks. Then erase the relevant rows
+
+	for (const auto &section : program) {
+		if (section.first < device_info_.program_memory_size) {
+			controller_->WriteFlash(section.first, section.second, device_info_.write_block_size);
+		}
+	}
+
 	return Status::OK;
 }
 

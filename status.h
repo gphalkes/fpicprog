@@ -9,6 +9,7 @@ enum Code {
 	SYNC_LOST,
 	DEVICE_NOT_FOUND,
 	USB_WRITE_ERROR,
+	INVALID_PROGRAM,
 };
 
 class __attribute__((warn_unused_result)) Status {

@@ -2,18 +2,156 @@
 
 #include <limits>
 
+#include "strings.h"
+
 class IHexChecksum {
 public:
 	IHexChecksum &operator<<(int data) {
 		checksum_ += data & 0xff;
 		return *this;
 	}
+
 	int Get() {
 		return (-checksum_) & 0xff;
 	}
+
 private:
-	int16_t checksum_ = 0;
+	int32_t checksum_ = 0;
 };
+
+static int AscciToInt(int c) {
+	if (c >= '0' && c <= '9') {
+		return c - '0';
+	} else if (c >= 'a' && c <= 'f') {
+		return c - 'a' + 10;
+	} else if (c >= 'A' && c <= 'F') {
+		return c - 'A' + 10;
+	}
+	return -1;
+}
+
+static Status ReadAsciiByte(int line_number, FILE *in, uint8_t *byte) {
+	int c = fgetc(in);
+	if (c == EOF) {
+		if (ferror(in)) {
+			return Status(Code::PARSE_ERROR, strings::Cat("Error reading file at line ", line_number, ": ", strerror(errno)));
+		}
+		return Status(Code::PARSE_ERROR, strings::Cat("Unexpected end-of-file at line ", line_number));
+	}
+	int nibble = AscciToInt(c);
+	if (nibble < 0) {
+		return Status(Code::PARSE_ERROR, strings::Cat("Unexpected character ", std::string(1, c), " at line ", line_number));
+	}
+	*byte = nibble << 4;
+
+	c = fgetc(in);
+	if (c == EOF) {
+		if (ferror(in)) {
+			return Status(Code::PARSE_ERROR, strings::Cat("Error reading file at line ", line_number, ": ", strerror(errno)));
+		}
+		return Status(Code::PARSE_ERROR, strings::Cat("Unexpected end-of-file at line ", line_number));
+	}
+	nibble = AscciToInt(c);
+	if (nibble < 0) {
+		return Status(Code::PARSE_ERROR, strings::Cat("Unexpected character ", strings::CEscape(std::string(1, c)), " at line ", line_number));
+	}
+	*byte |= nibble;
+	return Status::OK;
+}
+
+static std::string HexByte(uint8_t byte) {
+	static char convert[] = "0123456789ABCDEF";
+	return std::string(1, convert[byte >> 4]) + convert[byte & 0xf];
+}
+
+static std::string HexAddress(uint32_t address) {
+	return HexByte(address >> 24) + HexByte((address >> 16) & 0xff) + HexByte((address >> 8) & 0xff) + HexByte(address & 0xff);
+}
+
+Status ReadIhex(Program *program, FILE *in) {
+	uint32_t high_address = 0;
+	for (int line_number = 1;; ++line_number) {
+		int c;
+		c = fgetc(in);
+		if (c == EOF) {
+			if (ferror(in)) {
+				return Status(Code::PARSE_ERROR, strings::Cat("Error reading file at line ", line_number, ": ", strerror(errno)));
+			}
+			return Status(Code::PARSE_ERROR, strings::Cat("Unexpected end-of-file at line ", line_number));
+		} else if (c != ':') {
+			return Status(Code::PARSE_ERROR, strings::Cat("Did not find : at start of line ", line_number));
+		}
+
+		IHexChecksum running_checksum;
+		uint8_t byte_count;
+		RETURN_IF_ERROR(ReadAsciiByte(line_number, in, &byte_count));
+		running_checksum << byte_count;
+		uint8_t data;
+		RETURN_IF_ERROR(ReadAsciiByte(line_number, in, &data));
+		running_checksum << data;
+		uint16_t offset = data;
+		offset <<= 8;
+		RETURN_IF_ERROR(ReadAsciiByte(line_number, in, &data));
+		running_checksum << data;
+		offset |= data;
+		uint8_t record_type;
+		RETURN_IF_ERROR(ReadAsciiByte(line_number, in, &record_type));
+		running_checksum << record_type;
+		Datastring bytes;
+		bytes.reserve(byte_count);
+		for (uint8_t i = 0; i < byte_count; ++i) {
+			RETURN_IF_ERROR(ReadAsciiByte(line_number, in, &data));
+			bytes.push_back(data);
+			running_checksum << data;
+		}
+		uint8_t checksum;
+		RETURN_IF_ERROR(ReadAsciiByte(line_number, in , &checksum));
+		if (running_checksum.Get() != checksum) {
+			return Status(Code::PARSE_ERROR, strings::Cat(
+					"Checksum incorrect at line ", line_number, " (Found ", HexByte(checksum),
+					", calculated ", HexByte(running_checksum.Get()), ")"));
+		}
+		switch (record_type) {
+			case 0x00:
+				(*program)[high_address + offset] = bytes;
+				break;
+			case 0x01: {
+				//FIXME: Handle EOF properly
+				uint32_t last_start = 0;
+				uint32_t last_end = 0;
+				for (const auto &section : *program) {
+					if (last_end > section.first) {
+						return Status(Code::PARSE_ERROR, strings::Cat("Overlapping program parts in IHEX file (",
+								HexAddress(last_start), "-", HexAddress(last_end), " and ",
+								HexAddress(section.first), "-", HexAddress(section.first + section.second.size()), ")"));
+					}
+					last_start = section.first;
+					last_end = section.first + section.second.size();
+				}
+				return Status::OK;
+			}
+			case 0x04:
+				if (bytes.size() != 2) {
+					return Status(Code::PARSE_ERROR,
+							strings::Cat("Invalid size for type 04 (extended linear address) at line ",
+									line_number, " (", bytes.size(), " instead of 2)"));
+				}
+				high_address = bytes[0];
+				high_address <<= 8;
+				high_address |= bytes[1];
+				high_address <<= 16;
+				break;
+			default:
+				return Status(Code::PARSE_ERROR, strings::Cat("Unsupported record type ", HexByte(record_type), " at line ", line_number));
+		}
+		c = fgetc(in);
+		if (c == EOF) {
+			return Status(Code::PARSE_ERROR, strings::Cat("Unexpected end-of-file at line ", line_number));
+		} else  if (c != '\n') {
+			return Status(Code::PARSE_ERROR, strings::Cat("Unexpected character ", strings::CEscape(std::string(1, c)), " at line ", line_number));
+		}
+	}
+}
 
 void WriteIhex(const Program &program, FILE *out) {
 	for (const auto &section : program) {
@@ -23,7 +161,7 @@ void WriteIhex(const Program &program, FILE *out) {
 		for (size_t idx = 0; idx < section_size;) {
 			uint32_t next_offset = section_offset + idx;
 			if ((next_offset >> 16) != (last_address >> 16)) {
-				fprintf(out, ":0200004%04X%02X\n", next_offset >> 16, (IHexChecksum() << 2 << 4 << (next_offset >> 24) << (next_offset >> 16)).Get());
+				fprintf(out, ":02000004%04X%02X\n", next_offset >> 16, (IHexChecksum() << 2 << 4 << (next_offset >> 24) << (next_offset >> 16)).Get());
 			}
 			uint32_t line_length = std::min<uint32_t>(32, ((next_offset + 0x10000) & 0xffff0000) - next_offset);
 			if (line_length + idx > section_size) {
@@ -40,6 +178,7 @@ void WriteIhex(const Program &program, FILE *out) {
 			last_address = next_offset;
 		}
 	}
+	fprintf(out, ":00000001FF\n");
 }
 
 Status MergeProgramBlocks(Program *program, const DeviceDb::DeviceInfo &device_info) {

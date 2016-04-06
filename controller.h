@@ -10,15 +10,15 @@
 #include "program.h"
 
 // FIXME: put this into its own header with utils for reading and writing
+enum Section {
+	FLASH,
+	USER_ID,
+	CONFIGURATION,
+	EEPROM,
+};
 
 class Controller {
 public:
-	enum Section {
-		FLASH,
-		USER_ID,
-		CONFIGURATION,
-		EEPROM,
-	};
 
 	virtual ~Controller() = default;
 
@@ -64,13 +64,17 @@ public:
 		CHIP_ERASE,
 		SECTION_ERASE,
 		ROW_ERASE,
+		NONE,
 	};
 
 	HighLevelController(std::unique_ptr<Controller> controller, std::unique_ptr<DeviceDb> device_db)
 		: controller_(std::move(controller)), device_db_(std::move(device_db)) {}
 
-	Status ReadProgram(Program *program);
-	Status WriteProgram(const Program &program, EraseMode erase_mode);
+	Status ReadProgram(const std::vector<Section> &sections, Program *program);
+	Status WriteProgram(const std::vector<Section> &sections, const Program &program, EraseMode erase_mode);
+	Status ChipErase();
+	Status SectionErase(const std::vector<Section> &sections);
+	Status Identify();
 
 private:
 	class DeviceCloser {
@@ -82,7 +86,7 @@ private:
 	};
 	Status InitDevice();
 	void CloseDevice();
-	Status ReadData(Controller::Section section, Datastring *data, uint32_t base_address, uint32_t target_size);
+	Status ReadData(Section section, Datastring *data, uint32_t base_address, uint32_t target_size);
 
 	bool device_open_ = false;
 	DeviceDb::DeviceInfo device_info_;

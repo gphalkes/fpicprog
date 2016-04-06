@@ -5,8 +5,28 @@
 #include <cstring>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 namespace strings {
+
+template <class T>
+std::vector<T> Split(const std::string &str, char sep, bool keep_empty) {
+	std::vector<T> result;
+
+	size_t last_start = 0;
+	size_t last_found = str.find(sep, last_start);
+	while (last_found != std::string::npos) {
+		if (keep_empty || last_found - last_start > 0) {
+			result.emplace_back(str.substr(last_start, last_found - last_start));
+		}
+		last_start = last_found + 1;
+		last_found = str.find(sep, last_start);
+	}
+	if (keep_empty || str.size() - last_start > 0) {
+		result.emplace_back(str.substr(last_start, str.size() - last_start));
+	}
+	return result;
+}
 
 namespace internal {
 inline void AppendOne(std::string *base, const std::string &str) {

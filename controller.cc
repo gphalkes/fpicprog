@@ -1,5 +1,7 @@
 #include "controller.h"
 
+#include <set>
+
 #include "strings.h"
 #include "util.h"
 
@@ -195,25 +197,34 @@ Status Pic18Controller::ExecuteBulkErase(const Datastring16 &sequence, Duration 
 	return Status::OK;
 }
 
-Status HighLevelController::ReadProgram(Program *program) {
+Status HighLevelController::ReadProgram(const std::vector<Section> &sections, Program *program) {
 	DeviceCloser closer(this);
 	RETURN_IF_ERROR(InitDevice());
 	printf("Initialized device [%s]\n", device_info_.name.c_str());
 
-	RETURN_IF_ERROR(ReadData(Controller::FLASH, &(*program)[0], 0, device_info_.program_memory_size));
-	if (device_info_.user_id_size > 0) {
-		RETURN_IF_ERROR(ReadData(Controller::USER_ID, &(*program)[device_info_.user_id_offset], device_info_.user_id_offset, device_info_.user_id_size));
+	std::set<Section> sections_set(sections.begin(), sections.end());
+	if (ContainsKey(sections_set, FLASH)) {
+		RETURN_IF_ERROR(ReadData(FLASH, &(*program)[0], 0, device_info_.program_memory_size));
 	}
-	if (device_info_.config_size > 0) {
-		RETURN_IF_ERROR(ReadData(Controller::CONFIGURATION, &(*program)[device_info_.config_offset], device_info_.config_offset, device_info_.config_size));
+	if (ContainsKey(sections_set, USER_ID) && device_info_.user_id_size > 0) {
+		RETURN_IF_ERROR(ReadData(USER_ID, &(*program)[device_info_.user_id_offset],
+				device_info_.user_id_offset, device_info_.user_id_size));
 	}
-	if (device_info_.eeprom_size > 0) {
-		RETURN_IF_ERROR(ReadData(Controller::EEPROM, &(*program)[device_info_.config_offset], device_info_.config_offset, device_info_.config_size));
+	if (ContainsKey(sections_set, CONFIGURATION) && device_info_.config_size > 0) {
+		RETURN_IF_ERROR(ReadData(CONFIGURATION, &(*program)[device_info_.config_offset],
+				device_info_.config_offset, device_info_.config_size));
+	}
+	if (ContainsKey(sections_set, EEPROM) && device_info_.eeprom_size > 0) {
+		RETURN_IF_ERROR(ReadData(EEPROM, &(*program)[device_info_.eeprom_offset],
+				device_info_.eeprom_offset, device_info_.eeprom_size));
 	}
 	return Status::OK;
 }
 
-Status HighLevelController::WriteProgram(const Program &program, EraseMode erase_mode) {
+Status HighLevelController::WriteProgram(const std::vector<Section> &sections, const Program &program, EraseMode erase_mode) {
+	DeviceCloser closer(this);
+	RETURN_IF_ERROR(InitDevice());
+
 	Program block_aligned_program;
 
 	std::vector<std::pair<uint32_t, uint32_t>> missing_ranges;
@@ -242,11 +253,11 @@ Status HighLevelController::WriteProgram(const Program &program, EraseMode erase
 			if (erase_mode == ROW_ERASE) {
 				Datastring data;
 				if (range.first != lower) {
-					RETURN_IF_ERROR(ReadData(Controller::FLASH, &data, range.first, lower - range.first));
+					RETURN_IF_ERROR(ReadData(FLASH, &data, range.first, lower - range.first));
 					block_aligned_program[range.first] = data;
 				}
 				if (range.second != higher) {
-					RETURN_IF_ERROR(ReadData(Controller::FLASH, &data, higher, range.second - higher));
+					RETURN_IF_ERROR(ReadData(FLASH, &data, higher, range.second - higher));
 					block_aligned_program[higher] = data;
 				}
 			} else {
@@ -260,7 +271,7 @@ Status HighLevelController::WriteProgram(const Program &program, EraseMode erase
 		} else {
 			if (erase_mode == ROW_ERASE) {
 				Datastring data;
-				RETURN_IF_ERROR(ReadData(Controller::FLASH, &data, range.first, range.second - range.first));
+				RETURN_IF_ERROR(ReadData(FLASH, &data, range.first, range.second - range.first));
 				block_aligned_program[range.first] = data;
 			} else {
 				block_aligned_program[range.first].assign(range.second - range.first, 0xff);
@@ -310,20 +321,22 @@ Status HighLevelController::WriteProgram(const Program &program, EraseMode erase
 		case SECTION_ERASE:
 			if (flash_erase) {
 				printf("Starting flash erase\n");
-				RETURN_IF_ERROR(controller_->SectionErase(Controller::FLASH, device_info_));
+				RETURN_IF_ERROR(controller_->SectionErase(FLASH, device_info_));
 			}
 			if (user_id_erase) {
 				printf("Starting user ID erase\n");
-				RETURN_IF_ERROR(controller_->SectionErase(Controller::USER_ID, device_info_));
+				RETURN_IF_ERROR(controller_->SectionErase(USER_ID, device_info_));
 			}
 			if (config_erase) {
 				printf("Starting configuration bits erase\n");
-				RETURN_IF_ERROR(controller_->SectionErase(Controller::CONFIGURATION, device_info_));
+				RETURN_IF_ERROR(controller_->SectionErase(CONFIGURATION, device_info_));
 			}
 			if (eeprom_erase) {
 				printf("Starting EEPROM erase\n");
-				RETURN_IF_ERROR(controller_->SectionErase(Controller::EEPROM, device_info_));
+				RETURN_IF_ERROR(controller_->SectionErase(EEPROM, device_info_));
 			}
+			break;
+		case NONE:
 			break;
 		default:
 			fatal("Unsupported erase mode\n");
@@ -339,17 +352,43 @@ Status HighLevelController::WriteProgram(const Program &program, EraseMode erase
 					RETURN_IF_ERROR(controller_->RowErase(address));
 				}
 			}
-			RETURN_IF_ERROR(controller_->Write(Controller::FLASH, section.first, section.second, device_info_.write_block_size));
+			RETURN_IF_ERROR(controller_->Write(FLASH, section.first, section.second, device_info_.write_block_size));
 		} else if (section.first >= device_info_.user_id_offset &&
 				section.first < device_info_.user_id_offset + device_info_.user_id_size) {
-			RETURN_IF_ERROR(controller_->Write(Controller::USER_ID, section.first, section.second, device_info_.user_id_size));
-		} else if (section.first >= device_info_.config_offset && section.first < device_info_.config_offset + device_info_.config_size) {
-			RETURN_IF_ERROR(controller_->Write(Controller::CONFIGURATION, section.first, section.second, 1));
-		} else if (section.first >= device_info_.eeprom_offset && section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
-			RETURN_IF_ERROR(controller_->Write(Controller::EEPROM, section.first, section.second, 1));
+			RETURN_IF_ERROR(controller_->Write(USER_ID, section.first, section.second, device_info_.user_id_size));
+		} else if (section.first >= device_info_.config_offset &&
+				section.first < device_info_.config_offset + device_info_.config_size) {
+			RETURN_IF_ERROR(controller_->Write(CONFIGURATION, section.first, section.second, 1));
+		} else if (section.first >= device_info_.eeprom_offset &&
+				section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
+			RETURN_IF_ERROR(controller_->Write(EEPROM, section.first, section.second, 1));
 		}
 	}
 
+	return Status::OK;
+}
+
+Status HighLevelController::ChipErase() {
+	DeviceCloser closer(this);
+	RETURN_IF_ERROR(InitDevice());
+
+	return controller_->ChipErase(device_info_);
+}
+
+Status HighLevelController::SectionErase(const std::vector<Section> &sections) {
+	DeviceCloser closer(this);
+	RETURN_IF_ERROR(InitDevice());
+
+	for (auto section : sections) {
+		RETURN_IF_ERROR(controller_->SectionErase(section, device_info_));
+	}
+	return Status::OK;
+}
+
+Status HighLevelController::Identify() {
+	DeviceCloser closer(this);
+	RETURN_IF_ERROR(InitDevice());
+	printf("Initialized device [%s]\n", device_info_.name.c_str());
 	return Status::OK;
 }
 
@@ -387,13 +426,14 @@ void HighLevelController::CloseDevice() {
 	controller_->Close();
 }
 
-Status HighLevelController::ReadData(Controller::Section section, Datastring *data, uint32_t base_address, uint32_t target_size) {
+Status HighLevelController::ReadData(Section section, Datastring *data, uint32_t base_address, uint32_t target_size) {
 	data->reserve(target_size);
 	printf("Starting read at address %06lX to read %06X bytes\n", base_address + data->size(), target_size);
 	while (data->size() < target_size) {
 		Datastring buffer;
 		uint32_t start_address = base_address + data->size();
-		Status status = controller_->Read(section, start_address, start_address + std::min<uint32_t>(128, target_size - data->size()), &buffer);
+		Status status = controller_->Read(
+				section, start_address, start_address + std::min<uint32_t>(128, target_size - data->size()), &buffer);
 		if (status.ok()) {
 			data->append(buffer);
 		} else if (status.code() == Code::SYNC_LOST) {

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <type_traits>
 
 typedef std::basic_string<uint8_t> Datastring;
 typedef std::basic_string<uint16_t> Datastring16;
@@ -48,5 +49,14 @@ public:
 private:
 	std::function<void()> func_;
 };
+
+template <class C, class T>
+typename std::enable_if<!std::is_pod<T>::value,bool>::type ContainsKey(const C &c, const T &t) {
+	return c.find(t) != c.end();
+}
+template <class C, class T>
+typename std::enable_if<std::is_pod<T>::value,bool>::type ContainsKey(const C &c, T t) {
+	return c.find(t) != c.end();
+}
 
 #endif

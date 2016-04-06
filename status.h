@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "util.h"
+
 enum Code {
 	OK,
 	INIT_FAILED,
@@ -12,6 +14,7 @@ enum Code {
 	INVALID_PROGRAM,
 	UNIMPLEMENTED,
 	INVALID_ARGUMENT,
+	PARSE_ERROR,
 };
 
 class __attribute__((warn_unused_result)) Status {
@@ -38,5 +41,5 @@ private:
 
 #define RETURN_IF_ERROR(x) do { Status _x = (x); if (!_x.ok()) return _x; } while (0)
 // FIXME: print the error code as well.
-#define CHECK_OK(x) do { Status _x = (x); if (!_x.ok()) { fprintf(stderr, "Check failed: " #x ": %s\n", _x.message().c_str()); abort(); } } while(0)
+#define CHECK_OK(x) do { Status _x = (x); if (!_x.ok()) { fatal("Check failed: " #x ": %s\n", _x.message().c_str()); } } while(0)
 #endif

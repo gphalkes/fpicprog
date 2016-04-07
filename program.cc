@@ -182,7 +182,11 @@ void WriteIhex(const Program &program, FILE *out) {
 }
 
 Status MergeProgramBlocks(Program *program, const DeviceDb::DeviceInfo &device_info) {
-	//FIXME use device info to validate input and prevent merge of unrelated sections
+	std::set<uint32_t> section_boundaries;
+	section_boundaries.insert(device_info.user_id_offset);
+	section_boundaries.insert(device_info.config_offset);
+	section_boundaries.insert(device_info.eeprom_offset);
+
 	auto last_section = program->begin();
 	auto iter = last_section;
 	for (++iter; iter != program->end();) {
@@ -192,12 +196,13 @@ Status MergeProgramBlocks(Program *program, const DeviceDb::DeviceInfo &device_i
 			last_section = iter;
 			++iter;
 			continue;
-		} else if (last_section_end == iter->first) {
+		} else if (last_section_end == iter->first && !ContainsKey(section_boundaries, last_section_end)) {
 			last_section->second.append(iter->second);
 			iter = program->erase(iter);
 		} else if (last_section_end > iter->first) {
 			return Status(Code::INVALID_PROGRAM, "Overlapping sections in program");
 		}
 	}
+	//FIXME use device info to check that sections don't cross boundaries
 	return Status::OK;
 }

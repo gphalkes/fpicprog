@@ -3,12 +3,13 @@
 
 #include <cstdint>
 #include <functional>
+#include <set>
 #include <type_traits>
 
 typedef std::basic_string<uint8_t> Datastring;
 typedef std::basic_string<uint16_t> Datastring16;
 
-enum Command {
+enum Pic18Command {
 	CORE_INST = 0,
 	SHIFT_OUT_TABLAT = 2,
 	TABLE_READ = 8,
@@ -57,6 +58,13 @@ typename std::enable_if<!std::is_pod<T>::value,bool>::type ContainsKey(const C &
 template <class C, class T>
 typename std::enable_if<std::is_pod<T>::value,bool>::type ContainsKey(const C &c, T t) {
 	return c.find(t) != c.end();
+}
+
+template <class T>
+void set_subtract(std::set<T> *a, const std::set<T> &b) {
+	for (const T &item : b) {
+		a->erase(item);
+	}
 }
 
 #endif

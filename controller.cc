@@ -69,13 +69,60 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
 			for (size_t j = 0; j < block_size - 2; j += 2) {
 				RETURN_IF_ERROR(WriteCommand(TABLE_WRITE_post_inc2, (static_cast<uint16_t>(data[i + j + 1]) << 8) | data[i + j]));
 			}
-			RETURN_IF_ERROR(WriteCommand(TABLE_WRITE_post_inc2_start_pgm, (static_cast<uint16_t>(data[i + 63]) << 8) | data[i + 62]));
+			RETURN_IF_ERROR(WriteCommand(TABLE_WRITE_post_inc2_start_pgm, (static_cast<uint16_t>(data[i + block_size - 1]) << 8) | data[i + block_size - 2]));
 			RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE));
 		}
-		return Status::OK;
-	} else {
-		return Status(Code::UNIMPLEMENTED, strings::Cat("Writing of section ", section, " not implemented"));
+	} else if (section == CONFIGURATION) {
+		// BSF EECON1, EEPGD
+		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
+		// BSF EECON1, CFGS
+		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8CA6));
+		// BSF EECON1, WREN
+		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
+		for (const uint8_t byte : data) {
+			RETURN_IF_ERROR(LoadAddress(address));
+			// Only one of the two copies of byte is actually used. Which one depends on whether address
+			// is odd or even. The other byte is ignored.
+			RETURN_IF_ERROR(WriteCommand(TABLE_WRITE_post_inc2_start_pgm, (static_cast<uint16_t>(byte) << 8) | byte));
+			RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE));
+			++address;
+		}
+	} else if (section == EEPROM){
+		// BCF EECON1, EEPGD
+		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9EA6));
+		// BCF EECON1, CFGS
+		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
+		for (const uint8_t byte : data) {
+			RETURN_IF_ERROR(LoadEepromAddress(address));
+			// MOVLW <data>
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0E00 | byte));
+			// BSF EECON1, WREN
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
+			// BSF EECON1, WREN
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x82A6));
+			// NOP
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
+			// NOP
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
+
+			Datastring value;
+			do {
+				// MOVF EEDATA, W, 0
+				RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x50A8));
+				// MOVWF TABLAT
+				RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x6EF5));
+				// NOP
+				RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
+				RETURN_IF_ERROR(ReadWithCommand(SHIFT_OUT_TABLAT, 1, &value));
+			} while (value[0] & 2);
+			// FIXME: this is likely to be device specific!
+			Sleep(MicroSeconds(200));
+			++address;
+		}
+		// BSF EECON1, WREN
+		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x94A6));
 	}
+	return Status::OK;
 }
 
 Status Pic18Controller::ChipErase(const DeviceDb::DeviceInfo &device_info) {
@@ -131,11 +178,11 @@ Status Pic18Controller::RowErase(uint32_t address) {
 	return WriteCommand(CORE_INST, 0x9AA6);
 }
 
-Status Pic18Controller::WriteCommand(Command command, uint16_t payload) {
+Status Pic18Controller::WriteCommand(Pic18Command command, uint16_t payload) {
 	return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command, payload));
 }
 
-Status Pic18Controller::ReadWithCommand(Command command, uint32_t count, Datastring *result) {
+Status Pic18Controller::ReadWithCommand(Pic18Command command, uint32_t count, Datastring *result) {
 	Datastring16 data;
 	RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 12, 8, count, &data));
 	result->clear();
@@ -222,6 +269,7 @@ Status HighLevelController::ReadProgram(const std::vector<Section> &sections, Pr
 }
 
 Status HighLevelController::WriteProgram(const std::vector<Section> &sections, const Program &program, EraseMode erase_mode) {
+	std::set<Section> write_sections(sections.begin(), sections.end());
 	DeviceCloser closer(this);
 	RETURN_IF_ERROR(InitDevice());
 
@@ -278,27 +326,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections, c
 			}
 		}
 	}
-	// FIXME: pad user ID
-
-	bool flash_erase = false;
-	bool user_id_erase = false;
-	bool config_erase = false;
-	bool eeprom_erase = false;
-	for (const auto &section : program) {
-		block_aligned_program[section.first] = section.second;
-		if (section.first < device_info_.program_memory_size) {
-			flash_erase = true;
-		} else if (section.first >= device_info_.user_id_offset &&
-				section.first < device_info_.user_id_offset + device_info_.user_id_size) {
-			user_id_erase = true;
-		} else if (section.first >= device_info_.config_offset &&
-				section.first < device_info_.config_offset + device_info_.config_size) {
-			config_erase = true;
-		} else if (section.first >= device_info_.eeprom_offset &&
-				section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
-			eeprom_erase = true;
-		}
-	}
+	// FIXME: pad user ID?
 	RETURN_IF_ERROR(MergeProgramBlocks(&block_aligned_program, device_info_));
 
 	printf("Program section addresses + sizes dump\n");
@@ -309,29 +337,47 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections, c
 	printf("Not actually writing :-)\n");
 	return Status::OK;
 
+	std::set<Section> erase_sections;
+	for (const auto &section : program) {
+		block_aligned_program[section.first] = section.second;
+		if (section.first < device_info_.program_memory_size) {
+			erase_sections.insert(FLASH);
+		} else if (section.first >= device_info_.user_id_offset &&
+				section.first < device_info_.user_id_offset + device_info_.user_id_size) {
+			erase_sections.insert(USER_ID);
+		} else if (section.first >= device_info_.config_offset &&
+				section.first < device_info_.config_offset + device_info_.config_size) {
+			erase_sections.insert(CONFIGURATION);
+		} else if (section.first >= device_info_.eeprom_offset &&
+				section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
+			erase_sections.insert(EEPROM);
+		}
+	}
+	set_subtract(&erase_sections, write_sections);
+
 	switch (erase_mode) {
 		case CHIP_ERASE:
 			printf("Starting chip erase\n");
 			RETURN_IF_ERROR(controller_->ChipErase(device_info_));
 			break;
 		case ROW_ERASE:
-			flash_erase = false;
-			eeprom_erase = false;
+			erase_sections.erase(FLASH);
+			erase_sections.erase(EEPROM);
 			// FALLTHROUGH
 		case SECTION_ERASE:
-			if (flash_erase) {
+			if (ContainsKey(erase_sections, FLASH)) {
 				printf("Starting flash erase\n");
 				RETURN_IF_ERROR(controller_->SectionErase(FLASH, device_info_));
 			}
-			if (user_id_erase) {
+			if (ContainsKey(erase_sections, USER_ID)) {
 				printf("Starting user ID erase\n");
 				RETURN_IF_ERROR(controller_->SectionErase(USER_ID, device_info_));
 			}
-			if (config_erase) {
+			if (ContainsKey(erase_sections, CONFIGURATION)) {
 				printf("Starting configuration bits erase\n");
 				RETURN_IF_ERROR(controller_->SectionErase(CONFIGURATION, device_info_));
 			}
-			if (eeprom_erase) {
+			if (ContainsKey(erase_sections, EEPROM)) {
 				printf("Starting EEPROM erase\n");
 				RETURN_IF_ERROR(controller_->SectionErase(EEPROM, device_info_));
 			}
@@ -343,7 +389,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections, c
 	}
 
 	for (const auto &section : program) {
-		if (section.first < device_info_.program_memory_size) {
+		if (ContainsKey(write_sections, FLASH) && section.first < device_info_.program_memory_size) {
 			if (erase_mode == ROW_ERASE) {
 				// Erase the relevant blocks. The program sections have been aligned and sized to be
 				// a multiple of the erase block size.
@@ -353,13 +399,13 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections, c
 				}
 			}
 			RETURN_IF_ERROR(controller_->Write(FLASH, section.first, section.second, device_info_.write_block_size));
-		} else if (section.first >= device_info_.user_id_offset &&
+		} else if (ContainsKey(write_sections, USER_ID) && section.first >= device_info_.user_id_offset &&
 				section.first < device_info_.user_id_offset + device_info_.user_id_size) {
 			RETURN_IF_ERROR(controller_->Write(USER_ID, section.first, section.second, device_info_.user_id_size));
-		} else if (section.first >= device_info_.config_offset &&
+		} else if (ContainsKey(write_sections, CONFIGURATION) && section.first >= device_info_.config_offset &&
 				section.first < device_info_.config_offset + device_info_.config_size) {
 			RETURN_IF_ERROR(controller_->Write(CONFIGURATION, section.first, section.second, 1));
-		} else if (section.first >= device_info_.eeprom_offset &&
+		} else if (ContainsKey(write_sections, EEPROM) && section.first >= device_info_.eeprom_offset &&
 				section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
 			RETURN_IF_ERROR(controller_->Write(EEPROM, section.first, section.second, 1));
 		}

@@ -1,6 +1,6 @@
 #include "sequence_generator.h"
 
-Datastring Pic18SequenceGenerator::GetCommandSequence(Command command, uint16_t payload) const {
+Datastring Pic18SequenceGenerator::GetCommandSequence(Pic18Command command, uint16_t payload) const {
 	Datastring result;
 	result += GenerateBitSequence(command, 4);
 	result += GenerateBitSequence(payload, 16);

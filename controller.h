@@ -47,8 +47,8 @@ public:
 	Status RowErase(uint32_t address) override;
 
 private:
-	Status WriteCommand(Command command, uint16_t payload);
-	Status ReadWithCommand(Command command, uint32_t count, Datastring *result);
+	Status WriteCommand(Pic18Command command, uint16_t payload);
+	Status ReadWithCommand(Pic18Command command, uint32_t count, Datastring *result);
 	Status WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type);
 	Status LoadAddress(uint32_t address);
 	Status LoadEepromAddress(uint32_t address);

@@ -2,6 +2,7 @@
 
 #include <limits>
 
+#include "interval_set.h"
 #include "strings.h"
 
 class IHexChecksum {
@@ -154,6 +155,7 @@ Status ReadIhex(Program *program, FILE *in) {
 }
 
 void WriteIhex(const Program &program, FILE *out) {
+#define BYTES_PER_LINE 16
 	for (const auto &section : program) {
 		size_t section_size = section.second.size();
 		uint32_t section_offset = section.first;
@@ -163,7 +165,7 @@ void WriteIhex(const Program &program, FILE *out) {
 			if ((next_offset >> 16) != (last_address >> 16)) {
 				fprintf(out, ":02000004%04X%02X\n", next_offset >> 16, (IHexChecksum() << 2 << 4 << (next_offset >> 24) << (next_offset >> 16)).Get());
 			}
-			uint32_t line_length = std::min<uint32_t>(32, ((next_offset + 0x10000) & 0xffff0000) - next_offset);
+			uint32_t line_length = std::min<uint32_t>(BYTES_PER_LINE, ((next_offset + 0x10000) & 0xffff0000) - next_offset);
 			if (line_length + idx > section_size) {
 				line_length = section_size - idx;
 			}
@@ -203,6 +205,25 @@ Status MergeProgramBlocks(Program *program, const DeviceDb::DeviceInfo &device_i
 			return Status(Code::INVALID_PROGRAM, "Overlapping sections in program");
 		}
 	}
-	//FIXME use device info to check that sections don't cross boundaries
+
+	std::vector<Interval<uint32_t>> device_sections;
+	device_sections.emplace_back(0, device_info.program_memory_size);
+	device_sections.emplace_back(device_info.user_id_offset, device_info.user_id_offset + device_info.user_id_size);
+	device_sections.emplace_back(device_info.config_offset, device_info.config_offset + device_info.config_size);
+	device_sections.emplace_back(device_info.eeprom_offset, device_info.eeprom_offset + device_info.eeprom_size);
+
+	for (const auto &section : *program) {
+		bool contained = false;
+		for (const auto &interval : device_sections) {
+			if (interval.Contains(Interval<uint32_t>(section.first, section.first + section.second.size()))) {
+				contained = true;
+				break;
+			}
+		}
+		if (!contained) {
+			return Status(Code::INVALID_PROGRAM, strings::Cat("Data outside device memory or crossing section boundaries: ",
+					HexAddress(section.first), "-", HexAddress(section.first + section.second.size())));
+		}
+	}
 	return Status::OK;
 }

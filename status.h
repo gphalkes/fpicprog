@@ -15,6 +15,7 @@ enum Code {
 	UNIMPLEMENTED,
 	INVALID_ARGUMENT,
 	PARSE_ERROR,
+	VERIFICATION_ERROR,
 };
 
 class __attribute__((warn_unused_result)) Status {

@@ -64,7 +64,7 @@ public:
 		CHIP_ERASE,
 		SECTION_ERASE,
 		ROW_ERASE,
-		NONE,
+		NO_ERASE,
 	};
 
 	HighLevelController(std::unique_ptr<Controller> controller, std::unique_ptr<DeviceDb> device_db)
@@ -87,6 +87,7 @@ private:
 	Status InitDevice();
 	void CloseDevice();
 	Status ReadData(Section section, Datastring *data, uint32_t base_address, uint32_t target_size);
+	Status VerifyData(Section, const Datastring &data, uint32_t base_address);
 
 	bool device_open_ = false;
 	DeviceDb::DeviceInfo device_info_;

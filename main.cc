@@ -22,9 +22,11 @@ DEFINE_string(sections, "",
 		"or a combination of flash, user-id, config, eeprom.");
 DEFINE_string(family, "pic18", "Device family to use. One of pic18.");
 DEFINE_bool(two_pin_programming, true, "Enable two-pin single-supply-voltage (LVP) programming.");
-DEFINE_string(input, "", "Intel HEX file to read and program.");
 
-std::vector<Section> ParseSections() {
+DEFINE_string(input, "", "Intel HEX file to read and program.");
+DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, row, none.");
+
+static std::vector<Section> ParseSections() {
 	std::vector<Section> sections;
 	if (FLAGS_sections == "all" || FLAGS_sections.empty()) {
 		return {FLASH, USER_ID, CONFIGURATION, EEPROM};
@@ -50,6 +52,20 @@ std::vector<Section> ParseSections() {
 
 	}
 	return sections;
+}
+
+static HighLevelController::EraseMode ParseEraseMode() {
+	if (FLAGS_erase_mode == "chip") {
+		return HighLevelController::CHIP_ERASE;
+	} else if (FLAGS_erase_mode == "section") {
+		return HighLevelController::SECTION_ERASE;
+	} else if (FLAGS_erase_mode == "row") {
+		return HighLevelController::ROW_ERASE;
+	} else if (FLAGS_erase_mode == "none") {
+		return HighLevelController::NO_ERASE;
+	} else {
+		fatal("No such erase mode '%s'\n", FLAGS_erase_mode.c_str());
+	}
 }
 
 int main(int argc, char **argv) {
@@ -93,6 +109,7 @@ int main(int argc, char **argv) {
 			fatal("Could not open file '%s': %s\n", FLAGS_input.c_str(), strerror(errno));
 		}
 		CHECK_OK(ReadIhex(&program, in));
+		CHECK_OK(high_level_controller.WriteProgram(ParseSections(), program, ParseEraseMode()));
 	} else if (FLAGS_action == "identify") {
 		CHECK_OK(high_level_controller.Identify());
 	} else {

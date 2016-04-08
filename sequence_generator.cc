@@ -18,12 +18,12 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(TimedSequenceTyp
 			break;
 		case WRITE_SEQUENCE:
 			result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC}, MilliSeconds(1)});
-			result.push_back(TimedStep{{0}, MicroSeconds(200)});
+			result.push_back(TimedStep{{base}, MicroSeconds(200)});
 			result.push_back(TimedStep{GenerateBitSequence(0, 16), base});
 			break;
 		case WRITE_CONFIG_SEQUENCE:
 			result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC}, MilliSeconds(5)});
-			result.push_back(TimedStep{{0}, MicroSeconds(200)});
+			result.push_back(TimedStep{{base}, MicroSeconds(200)});
 			result.push_back(TimedStep{GenerateBitSequence(0, 16), base});
 			break;
 		default:

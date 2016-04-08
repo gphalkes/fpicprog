@@ -54,32 +54,37 @@ Status Pic18Controller::Read(Section section, uint32_t start_address, uint32_t e
 }
 
 Status Pic18Controller::Write(Section section, uint32_t address, const Datastring &data, uint32_t block_size) {
+	if (data.size() % block_size) {
+		return Status(Code::INVALID_ARGUMENT, strings::Cat("Data must be a multiple of the block size (", data.size(), " / ", block_size, ")"));
+	}
 	if (section == FLASH || section == USER_ID) {
 		if (block_size % 2 != 0 || block_size < 2) {
 			return Status(Code::INVALID_ARGUMENT, "Block size for writing must be a multiple of 2");
 		}
-		// BSF EECON1, EEPGD
-		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
-		// BCF EECON1, CFGS
-		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
-		// BSF EECON1, WREN
-		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
-		RETURN_IF_ERROR(LoadAddress(address));
 		for (size_t i = 0; i < data.size(); i += block_size) {
+			printf("Wrting block at address %06zx\n", address + i);
+			// BSF EECON1, EEPGD
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
+			// BCF EECON1, CFGS
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
+			// BSF EECON1, WREN
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
+			RETURN_IF_ERROR(LoadAddress(address + i));
 			for (size_t j = 0; j < block_size - 2; j += 2) {
 				RETURN_IF_ERROR(WriteCommand(TABLE_WRITE_post_inc2, (static_cast<uint16_t>(data[i + j + 1]) << 8) | data[i + j]));
 			}
-			RETURN_IF_ERROR(WriteCommand(TABLE_WRITE_post_inc2_start_pgm, (static_cast<uint16_t>(data[i + block_size - 1]) << 8) | data[i + block_size - 2]));
+			RETURN_IF_ERROR(WriteCommand(TABLE_WRITE_post_inc2_start_pgm,
+					(static_cast<uint16_t>(data[i + block_size - 1]) << 8) | data[i + block_size - 2]));
 			RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE));
 		}
 	} else if (section == CONFIGURATION) {
-		// BSF EECON1, EEPGD
-		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
-		// BSF EECON1, CFGS
-		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8CA6));
-		// BSF EECON1, WREN
-		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
 		for (const uint8_t byte : data) {
+			// BSF EECON1, EEPGD
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
+			// BSF EECON1, CFGS
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8CA6));
+			// BSF EECON1, WREN
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
 			RETURN_IF_ERROR(LoadAddress(address));
 			// Only one of the two copies of byte is actually used. Which one depends on whether address
 			// is odd or even. The other byte is ignored.
@@ -88,11 +93,11 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
 			++address;
 		}
 	} else if (section == EEPROM){
-		// BCF EECON1, EEPGD
-		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9EA6));
-		// BCF EECON1, CFGS
-		RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
 		for (const uint8_t byte : data) {
+			// BCF EECON1, EEPGD
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9EA6));
+			// BCF EECON1, CFGS
+			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
 			RETURN_IF_ERROR(LoadEepromAddress(address));
 			// MOVLW <data>
 			RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0E00 | byte));
@@ -273,7 +278,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections, c
 	DeviceCloser closer(this);
 	RETURN_IF_ERROR(InitDevice());
 
-	Program block_aligned_program;
+	Program block_aligned_program = program;
 
 	std::vector<std::pair<uint32_t, uint32_t>> missing_ranges;
 	uint32_t last_end = 0;
@@ -331,15 +336,11 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections, c
 
 	printf("Program section addresses + sizes dump\n");
 	for (const auto &section : block_aligned_program) {
-		printf("Section: %06x-%06zx", section.first, section.first + section.second.size());
+		printf("Section: %06x-%06zx\n", section.first, section.first + section.second.size());
 	}
 
-	printf("Not actually writing :-)\n");
-	return Status::OK;
-
 	std::set<Section> erase_sections;
-	for (const auto &section : program) {
-		block_aligned_program[section.first] = section.second;
+	for (const auto &section : block_aligned_program) {
 		if (section.first < device_info_.program_memory_size) {
 			erase_sections.insert(FLASH);
 		} else if (section.first >= device_info_.user_id_offset &&
@@ -382,15 +383,17 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections, c
 				RETURN_IF_ERROR(controller_->SectionErase(EEPROM, device_info_));
 			}
 			break;
-		case NONE:
+		case NO_ERASE:
 			break;
 		default:
 			fatal("Unsupported erase mode\n");
 	}
 
-	for (const auto &section : program) {
+	for (const auto &section : block_aligned_program) {
+		printf("Writing section %06x-%06lx\n", section.first, section.first + section.second.size());
 		if (ContainsKey(write_sections, FLASH) && section.first < device_info_.program_memory_size) {
 			if (erase_mode == ROW_ERASE) {
+				printf("Erasing flash rows\n");
 				// Erase the relevant blocks. The program sections have been aligned and sized to be
 				// a multiple of the erase block size.
 				for (uint32_t address = section.first; address < section.first + section.second.size();
@@ -398,16 +401,25 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections, c
 					RETURN_IF_ERROR(controller_->RowErase(address));
 				}
 			}
+			printf("Writing flash data\n");
 			RETURN_IF_ERROR(controller_->Write(FLASH, section.first, section.second, device_info_.write_block_size));
+			printf("Verifying written flash data\n");
+			RETURN_IF_ERROR(VerifyData(FLASH, section.second, section.first));
 		} else if (ContainsKey(write_sections, USER_ID) && section.first >= device_info_.user_id_offset &&
 				section.first < device_info_.user_id_offset + device_info_.user_id_size) {
 			RETURN_IF_ERROR(controller_->Write(USER_ID, section.first, section.second, device_info_.user_id_size));
+			printf("Verifying written user ID data\n");
+			RETURN_IF_ERROR(VerifyData(USER_ID, section.second, section.first));
 		} else if (ContainsKey(write_sections, CONFIGURATION) && section.first >= device_info_.config_offset &&
 				section.first < device_info_.config_offset + device_info_.config_size) {
 			RETURN_IF_ERROR(controller_->Write(CONFIGURATION, section.first, section.second, 1));
+			printf("Verifying written configuration data\n");
+			RETURN_IF_ERROR(VerifyData(CONFIGURATION, section.second, section.first));
 		} else if (ContainsKey(write_sections, EEPROM) && section.first >= device_info_.eeprom_offset &&
 				section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
 			RETURN_IF_ERROR(controller_->Write(EEPROM, section.first, section.second, 1));
+			printf("Verifying written EEPROM data\n");
+			RETURN_IF_ERROR(VerifyData(EEPROM, section.second, section.first));
 		}
 	}
 
@@ -491,6 +503,32 @@ Status HighLevelController::ReadData(Section section, Datastring *data, uint32_t
 		} else {
 			return status;
 		}
+	}
+	return Status::OK;
+}
+
+static std::string HexByte(uint8_t byte) {
+	static char convert[] = "0123456789ABCDEF";
+	return std::string(1, convert[byte >> 4]) + convert[byte & 0xf];
+}
+
+
+Status HighLevelController::VerifyData(Section, const Datastring &data, uint32_t base_address) {
+	Datastring written_data;
+	RETURN_IF_ERROR(controller_->Read(FLASH, base_address, base_address + data.size(), &written_data));
+	if (written_data != data) {
+		std::string data_as_bytes;
+		for (const uint8_t byte : data) {
+			data_as_bytes += HexByte(byte);
+		}
+		printf("Data        : %s\n", data_as_bytes.c_str());
+		data_as_bytes.clear();
+		for (const uint8_t byte : written_data) {
+			data_as_bytes += HexByte(byte);
+		}
+		printf("Written data: %s\n", data_as_bytes.c_str());
+
+		return Status(Code::VERIFICATION_ERROR, "Data read back is not what was written");
 	}
 	return Status::OK;
 }

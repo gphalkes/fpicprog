@@ -130,11 +130,11 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
 	return Status::OK;
 }
 
-Status Pic18Controller::ChipErase(const DeviceDb::DeviceInfo &device_info) {
+Status Pic18Controller::ChipErase(const DeviceInfo &device_info) {
 	return ExecuteBulkErase(device_info.chip_erase_sequence, device_info.bulk_erase_timing);
 }
 
-Status Pic18Controller::SectionErase(Section section, const DeviceDb::DeviceInfo &device_info) {
+Status Pic18Controller::SectionErase(Section section, const DeviceInfo &device_info) {
 	switch (section) {
 		case FLASH:
 			return ExecuteBulkErase(device_info.flash_erase_sequence, device_info.bulk_erase_timing);
@@ -496,7 +496,16 @@ Status HighLevelController::ReadData(Section section, Datastring *data, uint32_t
 			data->append(buffer);
 		} else if (status.code() == Code::SYNC_LOST) {
 			uint16_t device_id, revision;
-			RETURN_IF_ERROR(controller_->ReadDeviceId(&device_id, &revision));
+			Status device_id_read_status;
+			// Attempt to read the device ID. As this may also fail with SYNC_LOST,
+			// 10 attempts are made. If all of those fail, then something is really wrong.
+			for (int i = 0; i < 10; ++i) {
+				device_id_read_status = controller_->ReadDeviceId(&device_id, &revision);
+				if (device_id_read_status.code() != Code::SYNC_LOST) {
+					break;
+				}
+			}
+			RETURN_IF_ERROR(device_id_read_status);
 			if (device_id != device_info_.device_id) {
 				return status;
 			}

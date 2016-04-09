@@ -27,8 +27,8 @@ public:
 	virtual Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) = 0;
 	virtual Status Read(Section section, uint32_t start_address, uint32_t end_address, Datastring *result) = 0;
 	virtual Status Write(Section section, uint32_t address, const Datastring &data, uint32_t block_size) = 0;
-	virtual Status ChipErase(const DeviceDb::DeviceInfo &device_info) = 0;
-	virtual Status SectionErase(Section section, const DeviceDb::DeviceInfo &device_info) = 0;
+	virtual Status ChipErase(const DeviceInfo &device_info) = 0;
+	virtual Status SectionErase(Section section, const DeviceInfo &device_info) = 0;
 	virtual Status RowErase(uint32_t address) = 0;
 };
 
@@ -42,8 +42,8 @@ public:
 	Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) override;
 	Status Read(Section section, uint32_t start_address, uint32_t end_address, Datastring *result) override;
 	Status Write(Section section, uint32_t address, const Datastring &data, uint32_t block_size) override;
-	Status ChipErase(const DeviceDb::DeviceInfo &device_info) override;
-	Status SectionErase(Section section, const DeviceDb::DeviceInfo &device_info) override;
+	Status ChipErase(const DeviceInfo &device_info) override;
+	Status SectionErase(Section section, const DeviceInfo &device_info) override;
 	Status RowErase(uint32_t address) override;
 
 private:
@@ -90,7 +90,7 @@ private:
 	Status VerifyData(Section, const Datastring &data, uint32_t base_address);
 
 	bool device_open_ = false;
-	DeviceDb::DeviceInfo device_info_;
+	DeviceInfo device_info_;
 	std::unique_ptr<Controller> controller_;
 	std::unique_ptr<DeviceDb> device_db_;
 };

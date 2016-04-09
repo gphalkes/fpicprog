@@ -183,7 +183,7 @@ void WriteIhex(const Program &program, FILE *out) {
 	fprintf(out, ":00000001FF\n");
 }
 
-Status MergeProgramBlocks(Program *program, const DeviceDb::DeviceInfo &device_info) {
+Status MergeProgramBlocks(Program *program, const DeviceInfo &device_info) {
 	std::set<uint32_t> section_boundaries;
 	section_boundaries.insert(device_info.user_id_offset);
 	section_boundaries.insert(device_info.config_offset);

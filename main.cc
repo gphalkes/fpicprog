@@ -23,6 +23,7 @@ DEFINE_string(sections, "",
 DEFINE_string(family, "pic18", "Device family to use. One of pic18.");
 DEFINE_bool(two_pin_programming, true, "Enable two-pin single-supply-voltage (LVP) programming.");
 
+DEFINE_string(output, "", "File to write the Intel HEX data to.");
 DEFINE_string(input, "", "Intel HEX file to read and program.");
 DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, row, none.");
 
@@ -99,7 +100,10 @@ int main(int argc, char **argv) {
 	} else if (FLAGS_action == "dump-program") {
 		Program program;
 		CHECK_OK(high_level_controller.ReadProgram(ParseSections(), &program));
-		FILE *out = fopen("dump.hex", "w+b");
+		FILE *out = fopen(FLAGS_output.c_str(), "w+b");
+		if (!out) {
+			fatal("Could not open file '%s': %s\n", FLAGS_output.c_str(), strerror(errno));
+		}
 		WriteIhex(program, out);
 		fclose(out);
 	} else if (FLAGS_action == "write-program") {

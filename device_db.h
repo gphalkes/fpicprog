@@ -8,27 +8,29 @@
 
 struct DeviceInfo {
   std::string name;
-  uint16_t device_id;
-  uint32_t program_memory_size;
-  uint32_t user_id_size;
-  uint32_t user_id_offset;
-  uint32_t config_size;
-  uint32_t config_offset;
-  uint32_t eeprom_size;
-  uint32_t eeprom_offset;
-  uint16_t write_block_size;
-  uint16_t erase_block_size;
+  uint16_t device_id = 0;
+  uint32_t program_memory_size = 0;
+  uint32_t user_id_size = 0;
+  uint32_t user_id_offset = 0;
+  uint32_t config_size = 0;
+  uint32_t config_offset = 0;
+  uint32_t eeprom_size = 0;
+  uint32_t eeprom_offset = 0;
+  uint16_t write_block_size = 0;
+  uint16_t erase_block_size = 0;
   Datastring16 chip_erase_sequence;
-  Datastring16 user_id_erase_sequence;
-  Datastring16 eeprom_erase_sequence;
-  Datastring16 config_erase_sequence;
   Datastring16 flash_erase_sequence;
-  Duration bulk_erase_timing;
+  Datastring16 user_id_erase_sequence;
+  Datastring16 config_erase_sequence;
+  Datastring16 eeprom_erase_sequence;
+  Duration bulk_erase_timing = 0;
+
+  void Dump() const;
 };
 
 class DeviceDb {
  public:
-  Status Load();
+  Status Load(const std::string &name);
 
   Status GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info);
 

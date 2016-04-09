@@ -31,6 +31,26 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(TimedSequenceTyp
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
       result.push_back(TimedStep{GenerateBitSequence(0, 16), base});
       break;
+    case INIT_SEQUENCE:
+      // This sequence combines the requirements for both the two and the three pin programming.
+      // It inserts a little extra wait, but that is a small price to pay for the extra convenience
+      // of having only a single sequence.
+      result.push_back(TimedStep{{0, nMCLR, 0}, MilliSeconds(1)});
+      {
+        Datastring magic;
+        uint32_t key = 0x4D434850;  // MCHP
+        for (int i = 31; i >= 0; --i) {
+          bool bit_set = (key >> i) & 1;
+          magic.push_back(bit_set ? PGD : 0);
+          magic.push_back(PGC | (bit_set ? PGD : 0));
+        }
+        // Needs to be held for 40ns for the three-pin sequence, but for several microseconds for
+        // the two-pin version.
+        magic.push_back(PGM);
+        result.push_back(TimedStep{magic, MicroSeconds(20)});
+      }
+      result.push_back(TimedStep{{PGM | nMCLR}, MicroSeconds(400)});
+      break;
     default:
       FATAL("Requested unimplemented sequence %d\n", type);
   }
@@ -39,45 +59,11 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(TimedSequenceTyp
 
 Datastring Pic18SequenceGenerator::GenerateBitSequence(uint32_t data, int bits) const {
   Datastring result;
+  const uint8_t base = nMCLR | PGM;
   for (int i = 0; i < bits; ++i) {
     bool bit_set = (data >> i) & 1;
-    uint8_t base = nMCLR | PGM;
     result.push_back(base | PGC | (bit_set ? PGD : 0));
     result.push_back(base | (bit_set ? PGD : 0));
   }
   return result;
-}
-
-std::vector<TimedStep> PgmSequenceGenerator::GetTimedSequence(TimedSequenceType type) const {
-  if (type == INIT_SEQUENCE) {
-    std::vector<TimedStep> result;
-    result.push_back(TimedStep{{0, PGM, 0}, MicroSeconds(2)});
-    result.push_back(TimedStep{{0, nMCLR | PGM, 0}, MicroSeconds(2)});
-    return result;
-  } else {
-    return Pic18SequenceGenerator::GetTimedSequence(type);
-  }
-}
-
-std::vector<TimedStep> KeySequenceGenerator::GetTimedSequence(TimedSequenceType type) const {
-  if (type == INIT_SEQUENCE) {
-    std::vector<TimedStep> result;
-    result.push_back(TimedStep{{0, nMCLR, 0}, MilliSeconds(1)});
-    {
-      Datastring magic;
-      uint32_t key = 0x4D434850;  // MCHP
-      for (int i = 31; i >= 0; --i) {
-        bool bit_set = (key >> i) & 1;
-        magic.push_back(bit_set ? PGD : 0);
-        magic.push_back(PGC | (bit_set ? PGD : 0));
-      }
-      // Needs to be held for 40ns. Even at 25M symbols per second, this is only a single symbol.
-      magic.push_back(0);
-      magic.push_back(nMCLR);
-      result.push_back(TimedStep{magic, MicroSeconds(400)});
-    }
-    return result;
-  } else {
-    return Pic18SequenceGenerator::GetTimedSequence(type);
-  }
 }

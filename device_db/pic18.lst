@@ -1,0 +1,179 @@
+[18F24K50]
+device_id = 5C60h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 13ms
+
+[18LF24K50]
+device_id = 5CE0h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 13ms
+
+[18F25K50]
+device_id = 5C20h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = f00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0f8fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 16ms
+
+[18LF25K50]
+device_id = 5CA0h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 16ms
+
+[18F45K50]
+device_id = 5C00h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 16ms
+
+[18LF45K50]
+device_id = 5C80h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 16ms
+
+[18F26K50]
+device_id = 5D20h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 16ms
+
+[18LF26K50]
+device_id = 5D60h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 16ms
+
+[18F46K50]
+device_id = 5D00h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 16ms
+
+[18LF46K50]
+device_id = 5D40h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 64
+erase_block_size = 64
+chip_erase_sequence = 0F8Fh
+user_id_erase_sequence = 0088h
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 16ms

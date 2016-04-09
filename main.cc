@@ -22,7 +22,6 @@ DEFINE_string(sections, "",
               "Comma separate list of sections to operate on. Possible values: either all "
               "or a combination of flash, user-id, config, eeprom.");
 DEFINE_string(family, "pic18", "Device family to use. One of pic18.");
-DEFINE_bool(two_pin_programming, true, "Enable two-pin single-supply-voltage (LVP) programming.");
 
 DEFINE_string(output, "", "File to write the Intel HEX data to.");
 DEFINE_string(input, "", "Intel HEX file to read and program.");
@@ -76,17 +75,15 @@ int main(int argc, char **argv) {
   std::unique_ptr<Controller> controller;
   if (FLAGS_family == "pic18") {
     std::unique_ptr<Pic18SequenceGenerator> sequence_generator;
-    if (FLAGS_two_pin_programming) {
-      sequence_generator.reset(new KeySequenceGenerator);
-    } else {
-      sequence_generator.reset(new PgmSequenceGenerator);
-    }
+    sequence_generator.reset(new Pic18SequenceGenerator);
     controller.reset(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
   } else {
     fatal("Unknown family %s.\n", FLAGS_family.c_str());
   }
   auto device_db = std::make_unique<DeviceDb>();
-  CHECK_OK(device_db->Load());
+  // FIXME: open the correct device db file and pass the pointer
+  CHECK_OK(device_db->Load("device_db/pic18.lst"));
+
   HighLevelController high_level_controller(std::move(controller), std::move(device_db));
 
   if (FLAGS_action == "erase") {
@@ -117,7 +114,7 @@ int main(int argc, char **argv) {
   } else if (FLAGS_action == "identify") {
     CHECK_OK(high_level_controller.Identify());
   } else {
-    fatal("Unknown action %s\n.", FLAGS_action.c_str());
+    fatal("Unknown action '%s'\n", FLAGS_action.c_str());
   }
   return EXIT_SUCCESS;
 }

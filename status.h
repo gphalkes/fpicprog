@@ -16,6 +16,7 @@ enum Code {
   INVALID_ARGUMENT,
   PARSE_ERROR,
   VERIFICATION_ERROR,
+  FILE_NOT_FOUND,
 };
 
 class __attribute__((warn_unused_result)) Status {

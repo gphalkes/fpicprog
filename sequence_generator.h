@@ -30,14 +30,4 @@ class Pic18SequenceGenerator {
   Datastring GenerateBitSequence(uint32_t data, int bits) const;
 };
 
-class PgmSequenceGenerator : public Pic18SequenceGenerator {
- public:
-  std::vector<TimedStep> GetTimedSequence(TimedSequenceType type) const override;
-};
-
-class KeySequenceGenerator : public Pic18SequenceGenerator {
- public:
-  std::vector<TimedStep> GetTimedSequence(TimedSequenceType type) const override;
-};
-
 #endif

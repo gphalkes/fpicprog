@@ -1,9 +1,12 @@
 #include "program.h"
 
+#include <gflags/gflags.h>
 #include <limits>
 
 #include "interval_set.h"
 #include "strings.h"
+
+DEFINE_int32(ihex_bytes_per_line, 16, "Number of bytes to write per line in an Intel HEX file.");
 
 class IHexChecksum {
 public:
@@ -155,7 +158,8 @@ Status ReadIhex(Program *program, FILE *in) {
 }
 
 void WriteIhex(const Program &program, FILE *out) {
-#define BYTES_PER_LINE 16
+	int bytes_per_line = std::max(1, std::min<int>(FLAGS_ihex_bytes_per_line, 255));
+
 	for (const auto &section : program) {
 		size_t section_size = section.second.size();
 		uint32_t section_offset = section.first;
@@ -165,7 +169,7 @@ void WriteIhex(const Program &program, FILE *out) {
 			if ((next_offset >> 16) != (last_address >> 16)) {
 				fprintf(out, ":02000004%04X%02X\n", next_offset >> 16, (IHexChecksum() << 2 << 4 << (next_offset >> 24) << (next_offset >> 16)).Get());
 			}
-			uint32_t line_length = std::min<uint32_t>(BYTES_PER_LINE, ((next_offset + 0x10000) & 0xffff0000) - next_offset);
+			uint32_t line_length = std::min<uint32_t>(bytes_per_line, ((next_offset + 0x10000) & 0xffff0000) - next_offset);
 			if (line_length + idx > section_size) {
 				line_length = section_size - idx;
 			}

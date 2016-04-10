@@ -47,12 +47,11 @@ class __attribute__((warn_unused_result)) Status {
     Status _x = (x);         \
     if (!_x.ok()) return _x; \
   } while (0)
-// FIXME: print the error code as well.
-#define CHECK_OK(x)                                                   \
-  do {                                                                \
-    Status _x = (x);                                                  \
-    if (!_x.ok()) {                                                   \
-      fatal("%s:%d: %s\n", __FILE__, __LINE__, _x.message().c_str()); \
-    }                                                                 \
+#define CHECK_OK(x)                                                                   \
+  do {                                                                                \
+    Status _x = (x);                                                                  \
+    if (!_x.ok()) {                                                                   \
+      fatal("%s:%d: (%d) %s\n", __FILE__, __LINE__, _x.code(), _x.message().c_str()); \
+    }                                                                                 \
   } while (0)
 #endif

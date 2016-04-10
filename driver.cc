@@ -89,7 +89,7 @@ Status FT232RDriver::Open() {
                   strings::Cat("Could not purge USB buffers: ", ftdi_get_error_string(&ftdic_)));
   }
   memset(translate_pins_, 0, sizeof(translate_pins_));
-  translate_pins_[nMCLR] = FLAGS_nMCLR == "NC" ? 0: PinNameToValue(FLAGS_nMCLR);
+  translate_pins_[nMCLR] = FLAGS_nMCLR == "NC" ? 0 : PinNameToValue(FLAGS_nMCLR);
   translate_pins_[PGC] = PinNameToValue(FLAGS_PGC);
   translate_pins_[PGD] = PinNameToValue(FLAGS_PGD);
   translate_pins_[PGM] = FLAGS_PGM == "NC" ? 0 : PinNameToValue(FLAGS_PGM);
@@ -133,7 +133,8 @@ Status FT232RDriver::FlushOutput() {
     // we write more than 64 bytes at a time.
     int size = std::min<int>(64, output_buffer_.size());
     if (ftdi_write_data(&ftdic_, const_cast<uint8_t *>(output_buffer_.data()), size) != size) {
-      return Status(Code::USB_WRITE_ERROR, strings::Cat("Write failed: ", ftdi_get_error_string(&ftdic_)));
+      return Status(Code::USB_WRITE_ERROR,
+                    strings::Cat("Write failed: ", ftdi_get_error_string(&ftdic_)));
     }
     output_buffer_.erase(0, size);
     status.Update(DrainInput(size));

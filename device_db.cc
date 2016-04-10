@@ -71,7 +71,8 @@ Status DeviceDb::Load(const std::string &name) {
     db.append(buffer, bytes_read);
   }
   if (!feof(in) || ferror(in)) {
-    return Status(PARSE_ERROR, strings::Cat("Could not read device DB '", name, "': ", strerror(errno)));
+    return Status(PARSE_ERROR,
+                  strings::Cat("Could not read device DB '", name, "': ", strerror(errno)));
   }
 
   std::vector<std::string> lines = strings::Split<std::string>(db, '\n', true);
@@ -149,7 +150,8 @@ Status DeviceDb::Load(const std::string &name) {
 
 Status DeviceDb::GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info) {
   if (device_db_.find(device_id) == device_db_.end()) {
-    return Status(DEVICE_NOT_FOUND, strings::Cat("Device with ID ", HexUint16(device_id), " not found"));
+    return Status(DEVICE_NOT_FOUND,
+                  strings::Cat("Device with ID ", HexUint16(device_id), " not found"));
   }
   *device_info = device_db_.at(device_id);
   return Status::OK;

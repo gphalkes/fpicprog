@@ -7,6 +7,7 @@
 
 #include "controller.h"
 #include "driver.h"
+#include "high_level_controller.h"
 #include "program.h"
 #include "sequence_generator.h"
 #include "status.h"
@@ -26,6 +27,8 @@ DEFINE_string(family, "pic18", "Device family to use. One of pic18.");
 DEFINE_string(output, "", "File to write the Intel HEX data to.");
 DEFINE_string(input, "", "Intel HEX file to read and program.");
 DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, row, none.");
+DEFINE_string(device_db, "",
+              "Device DB file to load. Defaults to " DEVICE_DB_PATH "/<family>.lst.");
 
 static std::vector<Section> ParseSections() {
   std::vector<Section> sections;
@@ -81,8 +84,12 @@ int main(int argc, char **argv) {
     fatal("Unknown family %s.\n", FLAGS_family.c_str());
   }
   auto device_db = std::make_unique<DeviceDb>();
-  // FIXME: open the correct device db file and pass the pointer
-  CHECK_OK(device_db->Load("device_db/pic18.lst"));
+
+  std::string filename = FLAGS_device_db;
+  if (filename.empty()) {
+    filename = strings::Cat(DEVICE_DB_PATH, FLAGS_family, ".lst");
+  }
+  CHECK_OK(device_db->Load(filename));
 
   HighLevelController high_level_controller(std::move(controller), std::move(device_db));
 

@@ -117,15 +117,24 @@ Status ReadIhex(Program *program, FILE *in) {
         (*program)[high_address + offset] = bytes;
         break;
       case 0x01: {
-        // FIXME: Handle EOF properly
+        while (true) {
+          c = fgetc(in);
+          if (c == EOF) {
+            break;
+          } else if (c != '\n' && c != ' ') {
+            fprintf(stderr, "Warning: extra data after EOF record in IHEX file.");
+            break;
+          }
+        }
+
         uint32_t last_start = 0;
         uint32_t last_end = 0;
         for (const auto &section : *program) {
           if (last_end > section.first) {
             return Status(
                 Code::PARSE_ERROR,
-                strings::Cat("Overlapping program parts in IHEX file (", HexUint32(last_start),
-                             "-", HexUint32(last_end), " and ", HexUint32(section.first), "-",
+                strings::Cat("Overlapping program parts in IHEX file (", HexUint32(last_start), "-",
+                             HexUint32(last_end), " and ", HexUint32(section.first), "-",
                              HexUint32(section.first + section.second.size()), ")"));
           }
           last_start = section.first;

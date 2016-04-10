@@ -17,9 +17,11 @@ class Driver {
 
   virtual Status Open() = 0;
   virtual void Close() = 0;
+  virtual Status List(std::vector<std::string> *list) const = 0;
 
   Status WriteTimedSequence(const TimedSequence &sequence);
   Status WriteDatastring(const Datastring &data);
+
   virtual Status ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count,
                                   uint32_t count, Datastring16 *result) = 0;
 

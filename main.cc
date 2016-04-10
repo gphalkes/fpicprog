@@ -15,8 +15,8 @@
 
 DEFINE_string(
     action, "",
-    "Action to perform. One of erase, dump-program, write-program, identify. When using erase, "
-    "dump-program or write-program, the --sections flag can be used to "
+    "Action to perform. One of erase, dump-program, write-program, identify, list-programmers. "
+    "When using erase, dump-program or write-program, the --sections flag can be used to "
     "indicate which sections to operate on. For write-program and dump-program an empty "
     "flag means all sections, while for erase an explicit --sections=all must be passed.");
 DEFINE_string(sections, "",
@@ -75,6 +75,15 @@ int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   std::unique_ptr<Driver> driver = Driver::CreateFromFlags();
+  if (FLAGS_action == "list-programmers") {
+    std::vector<std::string> devices;
+    CHECK_OK(driver->List(&devices));
+    for (const auto &device : devices) {
+      printf("Device:\n%s", device.c_str());
+    }
+    exit(0);
+  }
+
   std::unique_ptr<Controller> controller;
   if (FLAGS_family == "pic18") {
     std::unique_ptr<Pic18SequenceGenerator> sequence_generator;

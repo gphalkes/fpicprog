@@ -5,8 +5,11 @@
 #include "strings.h"
 #include "util.h"
 
-Status Pic18Controller::Open() {
+Status Pic18Controller::Open(bool lvp) {
   RETURN_IF_ERROR(driver_->Open());
+  if (!lvp) {
+    return Status::OK;
+  }
   return WriteTimedSequence(Pic18SequenceGenerator::INIT_SEQUENCE);
 }
 

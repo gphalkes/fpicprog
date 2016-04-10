@@ -13,7 +13,7 @@ class Controller {
  public:
   virtual ~Controller() = default;
 
-  virtual Status Open() = 0;
+  virtual Status Open(bool lvp) = 0;
   virtual void Close() = 0;
   virtual Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) = 0;
   virtual Status Read(Section section, uint32_t start_address, uint32_t end_address,
@@ -31,7 +31,7 @@ class Pic18Controller : public Controller {
                   std::unique_ptr<Pic18SequenceGenerator> sequence_generator)
       : driver_(std::move(driver)), sequence_generator_(std::move(sequence_generator)) {}
 
-  Status Open() override;
+  Status Open(bool lvp) override;
   void Close() override;
   Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) override;
   Status Read(Section section, uint32_t start_address, uint32_t end_address,

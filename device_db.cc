@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "interval_set.h"
 #include "strings.h"
 
 template <typename T>
@@ -93,7 +94,13 @@ Status DeviceDb::Load(const std::string &name) {
       continue;
     } else if (std::regex_match(lines[i], match_results, section_regex)) {
       if (!last_info.name.empty()) {
-        // FIXME: validate device info.
+        RETURN_IF_ERROR(last_info.Validate());
+        if (ContainsKey(device_db_, last_info.device_id)) {
+          return Status(
+              PARSE_ERROR,
+              strings::Cat("Duplicate device ID ", HexUint16(last_info.device_id), " (",
+                           last_info.name, ", ", device_db_[last_info.device_id].name, ")"));
+        }
         device_db_[last_info.device_id] = last_info;
       }
       last_info = DeviceInfo();
@@ -102,37 +109,53 @@ Status DeviceDb::Load(const std::string &name) {
       const std::string &key = match_results[1].str();
       const std::string &value = match_results[2].str();
       if (key == "device_id") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.device_id));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.device_id),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "program_memory_size") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.program_memory_size));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.program_memory_size),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "user_id_size") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.user_id_size));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.user_id_size),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "user_id_offset") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.user_id_offset));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.user_id_offset),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "config_size") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.config_size));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.config_size),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "config_offset") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.config_offset));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.config_offset),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "eeprom_size") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.eeprom_size));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.eeprom_size),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "eeprom_offset") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.eeprom_offset));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.eeprom_offset),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "write_block_size") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.write_block_size));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.write_block_size),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "erase_block_size") {
-        RETURN_IF_ERROR(NumericalValue(value, &last_info.erase_block_size));
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.erase_block_size),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "chip_erase_sequence") {
-        RETURN_IF_ERROR(SequenceValue(value, &last_info.chip_erase_sequence));
+        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.chip_erase_sequence),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "flash_erase_sequence") {
-        RETURN_IF_ERROR(SequenceValue(value, &last_info.flash_erase_sequence));
+        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.flash_erase_sequence),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "user_id_erase_sequence") {
-        RETURN_IF_ERROR(SequenceValue(value, &last_info.user_id_erase_sequence));
+        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.user_id_erase_sequence),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "config_erase_sequence") {
-        RETURN_IF_ERROR(SequenceValue(value, &last_info.config_erase_sequence));
+        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.config_erase_sequence),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "eeprom_erase_sequence") {
-        RETURN_IF_ERROR(SequenceValue(value, &last_info.eeprom_erase_sequence));
+        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.eeprom_erase_sequence),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "bulk_erase_timing") {
-        RETURN_IF_ERROR(DurationValue(value, &last_info.bulk_erase_timing));
+        RETURN_IF_ERROR_WITH_APPEND(DurationValue(value, &last_info.bulk_erase_timing),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else {
         return Status(PARSE_ERROR, strings::Cat("Device database has unknown key on line ", i + 1));
       }
@@ -141,7 +164,12 @@ Status DeviceDb::Load(const std::string &name) {
     }
   }
   if (!last_info.name.empty()) {
-    // FIXME: validate device info.
+    RETURN_IF_ERROR(last_info.Validate());
+    if (ContainsKey(device_db_, last_info.device_id)) {
+      return Status(PARSE_ERROR,
+                    strings::Cat("Duplicate device ID ", HexUint16(last_info.device_id), " (",
+                                 last_info.name, ", ", device_db_[last_info.device_id].name, ")"));
+    }
     device_db_[last_info.device_id] = last_info;
   }
 
@@ -183,4 +211,41 @@ void DeviceInfo::Dump() const {
   DumpSequence("Config erase sequence:", config_erase_sequence);
   DumpSequence("EEPROM erase sequence:", eeprom_erase_sequence);
   printf("Bulk erase timing: %ldns\n", bulk_erase_timing);
+}
+
+Status DeviceInfo::Validate() const {
+  if (device_id == 0) {
+    return Status(PARSE_ERROR, strings::Cat(name, ": Device ID can not be 0"));
+  }
+  if (program_memory_size == 0) {
+    return Status(PARSE_ERROR, strings::Cat(name, ": Program memory must be larger than 0"));
+  }
+
+  IntervalSet<uint32_t> used_intervals;
+  used_intervals.Add(Interval<uint32_t>(0, program_memory_size));
+  if (user_id_size > 0) {
+    Interval<uint32_t> user_id_interval(user_id_offset, user_id_offset + user_id_size);
+    if (used_intervals.Overlaps(user_id_interval)) {
+      return Status(PARSE_ERROR, strings::Cat(name, ": User ID overlaps with other segments"));
+    }
+    used_intervals.Add(user_id_interval);
+  }
+
+  if (config_size > 0) {
+    Interval<uint32_t> config_interval(config_offset, config_offset + user_id_size);
+    if (used_intervals.Overlaps(config_interval)) {
+      return Status(PARSE_ERROR,
+                    strings::Cat(name, ": Configuration overlaps with other segments"));
+    }
+    used_intervals.Add(config_interval);
+  }
+
+  if (eeprom_size > 0) {
+    Interval<uint32_t> eeprom_interval(user_id_offset, user_id_offset + user_id_size);
+    if (used_intervals.Overlaps(eeprom_interval)) {
+      return Status(PARSE_ERROR, strings::Cat(name, ": EERPOM overlaps with other segments"));
+    }
+    used_intervals.Add(eeprom_interval);
+  }
+  return Status::OK;
 }

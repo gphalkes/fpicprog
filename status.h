@@ -47,6 +47,12 @@ class __attribute__((warn_unused_result)) Status {
     Status _x = (x);         \
     if (!_x.ok()) return _x; \
   } while (0)
+#define RETURN_IF_ERROR_WITH_APPEND(x, m)                     \
+  do {                                                        \
+    Status _x = (x);                                          \
+    if (!_x.ok()) return Status(_x.code(), _x.message() + m); \
+  } while (0)
+
 #define CHECK_OK(x)                                                                   \
   do {                                                                                \
     Status _x = (x);                                                                  \

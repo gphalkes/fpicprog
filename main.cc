@@ -29,6 +29,7 @@ DEFINE_string(input, "", "Intel HEX file to read and program.");
 DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, row, none.");
 DEFINE_string(device_db, "",
               "Device DB file to load. Defaults to " DEVICE_DB_PATH "/<family>.lst.");
+DEFINE_bool(lvp, true, "Use low-voltage programming (aka single-supply voltage programming).");
 
 static std::vector<Section> ParseSections() {
   std::vector<Section> sections;
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
   }
   CHECK_OK(device_db->Load(filename));
 
-  HighLevelController high_level_controller(std::move(controller), std::move(device_db));
+  HighLevelController high_level_controller(std::move(controller), std::move(device_db), FLAGS_lvp);
 
   if (FLAGS_action == "erase") {
     if (FLAGS_sections.empty()) {

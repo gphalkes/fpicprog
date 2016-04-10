@@ -25,7 +25,6 @@ Status FtdiSbDriver::Open() {
     return Status(Code::INIT_FAILED, strings::Cat("Couldn't initialize ftdi_context struct: ",
                                                   ftdi_get_error_string(&ftdic_)));
   }
-  // TODO: allow more specification of which device to open.
   if (ftdi_usb_open_desc(&ftdic_, FLAGS_ftdi_vendor_id == 0 ? 0x0403 : FLAGS_ftdi_vendor_id,
                          FLAGS_ftdi_product_id == 0 ? 0x6001 : FLAGS_ftdi_product_id,
                          FLAGS_ftdi_description.empty() ? nullptr : FLAGS_ftdi_description.c_str(),

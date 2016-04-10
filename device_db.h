@@ -26,6 +26,7 @@ struct DeviceInfo {
   Duration bulk_erase_timing = 0;
 
   void Dump() const;
+  Status Validate() const;
 };
 
 class DeviceDb {

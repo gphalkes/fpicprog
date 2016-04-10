@@ -66,16 +66,6 @@ static Status ReadAsciiByte(int line_number, FILE *in, uint8_t *byte) {
   return Status::OK;
 }
 
-static std::string HexByte(uint8_t byte) {
-  static char convert[] = "0123456789ABCDEF";
-  return std::string(1, convert[byte >> 4]) + convert[byte & 0xf];
-}
-
-static std::string HexAddress(uint32_t address) {
-  return HexByte(address >> 24) + HexByte((address >> 16) & 0xff) + HexByte((address >> 8) & 0xff) +
-         HexByte(address & 0xff);
-}
-
 Status ReadIhex(Program *program, FILE *in) {
   uint32_t high_address = 0;
   for (int line_number = 1;; ++line_number) {
@@ -134,9 +124,9 @@ Status ReadIhex(Program *program, FILE *in) {
           if (last_end > section.first) {
             return Status(
                 Code::PARSE_ERROR,
-                strings::Cat("Overlapping program parts in IHEX file (", HexAddress(last_start),
-                             "-", HexAddress(last_end), " and ", HexAddress(section.first), "-",
-                             HexAddress(section.first + section.second.size()), ")"));
+                strings::Cat("Overlapping program parts in IHEX file (", HexUint32(last_start),
+                             "-", HexUint32(last_end), " and ", HexUint32(section.first), "-",
+                             HexUint32(section.first + section.second.size()), ")"));
           }
           last_start = section.first;
           last_end = section.first + section.second.size();
@@ -248,8 +238,8 @@ Status MergeProgramBlocks(Program *program, const DeviceInfo &device_info) {
     if (!contained) {
       return Status(Code::INVALID_PROGRAM,
                     strings::Cat("Data outside device memory or crossing section boundaries: ",
-                                 HexAddress(section.first), "-",
-                                 HexAddress(section.first + section.second.size())));
+                                 HexUint32(section.first), "-",
+                                 HexUint32(section.first + section.second.size())));
     }
   }
   return Status::OK;

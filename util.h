@@ -68,4 +68,8 @@ void set_subtract(std::set<T> *a, const std::set<T> &b) {
   }
 }
 
+std::string HexByte(uint8_t byte);
+std::string HexUint16(uint16_t word);
+std::string HexUint32(uint32_t address);
+
 #endif

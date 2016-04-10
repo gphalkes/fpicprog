@@ -70,7 +70,10 @@ Status DeviceDb::Load(const std::string &name) {
   while ((bytes_read = fread(buffer, 1, sizeof(buffer), in)) > 0) {
     db.append(buffer, bytes_read);
   }
-  // FIXME: check feof and ferror.
+  if (!feof(in) || ferror(in)) {
+    return Status(PARSE_ERROR, strings::Cat("Could not read device DB '", name, "': ", strerror(errno)));
+  }
+
   std::vector<std::string> lines = strings::Split<std::string>(db, '\n', true);
 
   std::regex strip_regex(R"(\s*(.*?)\s*)");
@@ -146,8 +149,7 @@ Status DeviceDb::Load(const std::string &name) {
 
 Status DeviceDb::GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info) {
   if (device_db_.find(device_id) == device_db_.end()) {
-    // FIXME: Print hex device ID
-    return Status(DEVICE_NOT_FOUND, strings::Cat("Device with id ", device_id, " not found"));
+    return Status(DEVICE_NOT_FOUND, strings::Cat("Device with ID ", HexUint16(device_id), " not found"));
   }
   *device_info = device_db_.at(device_id);
   return Status::OK;

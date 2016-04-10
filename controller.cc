@@ -535,11 +535,6 @@ Status HighLevelController::ReadData(Section section, Datastring *data, uint32_t
   return Status::OK;
 }
 
-static std::string HexByte(uint8_t byte) {
-  static char convert[] = "0123456789ABCDEF";
-  return std::string(1, convert[byte >> 4]) + convert[byte & 0xf];
-}
-
 Status HighLevelController::VerifyData(Section, const Datastring &data, uint32_t base_address) {
   Datastring written_data;
   RETURN_IF_ERROR(

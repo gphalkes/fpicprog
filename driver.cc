@@ -89,7 +89,7 @@ Status FT232RDriver::Open() {
                   strings::Cat("Could not purge USB buffers: ", ftdi_get_error_string(&ftdic_)));
   }
   memset(translate_pins_, 0, sizeof(translate_pins_));
-  translate_pins_[nMCLR] = PinNameToValue(FLAGS_nMCLR);
+  translate_pins_[nMCLR] = FLAGS_nMCLR == "NC" ? 0: PinNameToValue(FLAGS_nMCLR);
   translate_pins_[PGC] = PinNameToValue(FLAGS_PGC);
   translate_pins_[PGD] = PinNameToValue(FLAGS_PGD);
   translate_pins_[PGM] = FLAGS_PGM == "NC" ? 0 : PinNameToValue(FLAGS_PGM);
@@ -131,15 +131,9 @@ Status FT232RDriver::FlushOutput() {
   while (!output_buffer_.empty()) {
     // In theory we should be able to push this up to 128. However, reading becomes unreliable when
     // we write more than 64 bytes at a time.
-    // TODO: test if writing does work reliably at 128. If so, then we can speed up writing, as the
-    // speed is mostly determined by this value. Also, maybe resetting the device occasionally may
-    // be
-    // faster than trying to get the device to work reliably
     int size = std::min<int>(64, output_buffer_.size());
     if (ftdi_write_data(&ftdic_, const_cast<uint8_t *>(output_buffer_.data()), size) != size) {
-      // FIXME: use strings::Cat to complete the error message
-      return Status(Code::USB_WRITE_ERROR, "Write failed");
-      // FATAL("Wrote fewer bytes than requested: %s\n", ftdi_get_error_string(&ftdic_));
+      return Status(Code::USB_WRITE_ERROR, strings::Cat("Write failed: ", ftdi_get_error_string(&ftdic_)));
     }
     output_buffer_.erase(0, size);
     status.Update(DrainInput(size));
@@ -159,7 +153,6 @@ uint8_t ReverseBits(uint8_t data) {
 
 Status FT232RDriver::ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count,
                                       uint32_t count, Datastring16 *result) {
-  // FIXME: start using bit_offset and bit_count!
   result->clear();
   RETURN_IF_ERROR(FlushOutput());
   received_data_.clear();
@@ -172,16 +165,13 @@ Status FT232RDriver::ReadWithSequence(const Datastring &sequence, int bit_offset
   RETURN_IF_ERROR(FlushOutput());
   write_mode_ = true;
 
+  BitStreamWrapper bit_stream(&received_data_);
   for (uint32_t i = 0; i < count; ++i) {
-    uint16_t bits =
-        received_data_[i * 5 + 3] | (static_cast<uint16_t>(received_data_[i * 5 + 4]) << 8);
-    uint8_t byte = 0;
-    for (int j = 0; j < 8; ++j) {
-      if (bits & (1 << (j * 2 + 1))) {
-        byte |= 1 << j;
-      }
+    uint16_t datum = 0;
+    for (int j = 0; j < bit_count; ++j) {
+      datum |= bit_stream.GetBit(i * sequence.size() + (bit_offset + j) * 2 + 1) << j;
     }
-    *result += byte;
+    *result += datum;
   }
   return Status::OK;
 }

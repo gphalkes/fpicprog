@@ -35,4 +35,17 @@ class Driver {
   Driver &operator=(Driver &&) = delete;
 };
 
+class BitStreamWrapper {
+ public:
+  BitStreamWrapper(const Datastring *data) : data_(data) {}
+
+  int GetBit(int idx) {
+    // Using !! to ensure a value of either 0 or 1.
+    return !!((*data_)[idx / 8] & (1 << (idx % 8)));
+  }
+
+ private:
+  const Datastring *data_;
+};
+
 #endif

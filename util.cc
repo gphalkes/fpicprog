@@ -25,3 +25,17 @@ void Sleep(Duration duration) {
     if (errno != EINTR) FATAL("nanosleep failed: %s\n", strerror(errno));
   }
 }
+
+std::string HexByte(uint8_t byte) {
+  static char convert[] = "0123456789ABCDEF";
+  return std::string(1, convert[byte >> 4]) + convert[byte & 0xf];
+}
+
+std::string HexUint16(uint16_t word) {
+  return HexByte((word >> 8) & 0xff) + HexByte(word & 0xff);
+}
+
+std::string HexUint32(uint32_t word) {
+  return HexByte(word >> 24) + HexByte((word >> 16) & 0xff) + HexByte((word >> 8) & 0xff) +
+         HexByte(word & 0xff);
+}

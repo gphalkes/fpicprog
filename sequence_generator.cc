@@ -8,7 +8,8 @@ Datastring Pic18SequenceGenerator::GetCommandSequence(Pic18Command command,
   return result;
 }
 
-std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(TimedSequenceType type) const {
+std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
+    TimedSequenceType type, const DeviceInfo *device_info) const {
   std::vector<TimedStep> result;
   constexpr int base = nMCLR | PGM;
 
@@ -16,20 +17,20 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(TimedSequenceTyp
     case BULK_ERASE_SEQUENCE:
       result.push_back(
           TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC, base},
-                    MilliSeconds(16)});  // FIXME: this is device dependent. 15ms is for 18f45k50
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), base});
+                    device_info ? device_info->bulk_erase_timing : MilliSeconds(500)});
+      result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
       break;
     case WRITE_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
                                  MilliSeconds(1)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), base});
+      result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
       break;
     case WRITE_CONFIG_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
                                  MilliSeconds(5)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), base});
+      result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
       break;
     case INIT_SEQUENCE:
       // This sequence combines the requirements for both the two and the three pin programming.

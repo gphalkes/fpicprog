@@ -10,10 +10,7 @@ Status Pic18Controller::Open() {
   return WriteTimedSequence(Pic18SequenceGenerator::INIT_SEQUENCE);
 }
 
-void Pic18Controller::Close() {
-  // FIXME: use the correct sequence to shutdown the device
-  driver_->Close();
-}
+void Pic18Controller::Close() { driver_->Close(); }
 
 Status Pic18Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
   RETURN_IF_ERROR(LoadAddress(0x3ffffe));
@@ -127,8 +124,9 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
         RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
         RETURN_IF_ERROR(ReadWithCommand(SHIFT_OUT_TABLAT, 1, &value));
       } while (value[0] & 2);
-      // FIXME: this is likely to be device specific!
-      Sleep(MicroSeconds(200));
+      // 200us is the minimum requirement for the PIC18s I've seen. However, for safety we add a
+      // bit of margin.
+      Sleep(MicroSeconds(500));
       ++address;
     }
     // BSF EECON1, WREN
@@ -138,19 +136,19 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
 }
 
 Status Pic18Controller::ChipErase(const DeviceInfo &device_info) {
-  return ExecuteBulkErase(device_info.chip_erase_sequence, device_info.bulk_erase_timing);
+  return ExecuteBulkErase(device_info.chip_erase_sequence, device_info);
 }
 
 Status Pic18Controller::SectionErase(Section section, const DeviceInfo &device_info) {
   switch (section) {
     case FLASH:
-      return ExecuteBulkErase(device_info.flash_erase_sequence, device_info.bulk_erase_timing);
+      return ExecuteBulkErase(device_info.flash_erase_sequence, device_info);
     case USER_ID:
-      return ExecuteBulkErase(device_info.user_id_erase_sequence, device_info.bulk_erase_timing);
+      return ExecuteBulkErase(device_info.user_id_erase_sequence, device_info);
     case CONFIGURATION:
-      return ExecuteBulkErase(device_info.config_erase_sequence, device_info.bulk_erase_timing);
+      return ExecuteBulkErase(device_info.config_erase_sequence, device_info);
     case EEPROM:
-      return ExecuteBulkErase(device_info.eeprom_erase_sequence, device_info.bulk_erase_timing);
+      return ExecuteBulkErase(device_info.eeprom_erase_sequence, device_info);
     default:
       return Status(Code::UNIMPLEMENTED,
                     strings::Cat("Section erase not implemented for section type ", section));
@@ -207,7 +205,7 @@ Status Pic18Controller::ReadWithCommand(Pic18Command command, uint32_t count, Da
 }
 
 Status Pic18Controller::WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type) {
-  return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type));
+  return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, nullptr));
 }
 
 Status Pic18Controller::LoadAddress(uint32_t address) {
@@ -236,10 +234,10 @@ Status Pic18Controller::LoadEepromAddress(uint32_t address) {
   return WriteCommand(CORE_INST, 0x6EAA);
 }
 
-Status Pic18Controller::ExecuteBulkErase(const Datastring16 &sequence, Duration bulk_erase_timing) {
-  auto timed_sequence =
-      sequence_generator_->GetTimedSequence(Pic18SequenceGenerator::BULK_ERASE_SEQUENCE);
-  timed_sequence.back().sleep = bulk_erase_timing;
+Status Pic18Controller::ExecuteBulkErase(const Datastring16 &sequence,
+                                         const DeviceInfo &device_info) {
+  auto timed_sequence = sequence_generator_->GetTimedSequence(
+      Pic18SequenceGenerator::BULK_ERASE_SEQUENCE, &device_info);
   for (uint16_t value : sequence) {
     RETURN_IF_ERROR(LoadAddress(0x3C0005));
     // 1100 HH HH Write HHh to 3C0005h

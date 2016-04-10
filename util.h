@@ -22,6 +22,20 @@ enum Pic18Command {
   TABLE_WRITE_start_pgm = 15,
 };
 
+enum Section {
+  FLASH,
+  USER_ID,
+  CONFIGURATION,
+  EEPROM,
+};
+
+enum EraseMode {
+  CHIP_ERASE,
+  SECTION_ERASE,
+  ROW_ERASE,
+  NO_ERASE,
+};
+
 enum Pins {
   nMCLR = (1 << 0),
   PGM = (1 << 1),

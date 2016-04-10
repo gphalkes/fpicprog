@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "device_db.h"
 #include "util.h"
 
 struct TimedStep {
@@ -23,7 +24,8 @@ class Pic18SequenceGenerator {
   };
 
   Datastring GetCommandSequence(Pic18Command command, uint16_t payload) const;
-  virtual std::vector<TimedStep> GetTimedSequence(TimedSequenceType type) const;
+  virtual std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
+                                                  const DeviceInfo *device_info) const;
   virtual ~Pic18SequenceGenerator() = default;
 
  private:

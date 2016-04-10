@@ -9,14 +9,6 @@
 #include "driver.h"
 #include "program.h"
 
-// FIXME: put this into its own header with utils for reading and writing
-enum Section {
-  FLASH,
-  USER_ID,
-  CONFIGURATION,
-  EEPROM,
-};
-
 class Controller {
  public:
   virtual ~Controller() = default;
@@ -56,7 +48,7 @@ class Pic18Controller : public Controller {
   Status WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type);
   Status LoadAddress(uint32_t address);
   Status LoadEepromAddress(uint32_t address);
-  Status ExecuteBulkErase(const Datastring16 &sequence, Duration bulk_erase_timing);
+  Status ExecuteBulkErase(const Datastring16 &sequence, const DeviceInfo &device_info);
 
   std::unique_ptr<Driver> driver_;
   std::unique_ptr<Pic18SequenceGenerator> sequence_generator_;

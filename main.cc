@@ -57,15 +57,15 @@ static std::vector<Section> ParseSections() {
   return sections;
 }
 
-static HighLevelController::EraseMode ParseEraseMode() {
+static EraseMode ParseEraseMode() {
   if (FLAGS_erase_mode == "chip") {
-    return HighLevelController::CHIP_ERASE;
+    return CHIP_ERASE;
   } else if (FLAGS_erase_mode == "section") {
-    return HighLevelController::SECTION_ERASE;
+    return SECTION_ERASE;
   } else if (FLAGS_erase_mode == "row") {
-    return HighLevelController::ROW_ERASE;
+    return ROW_ERASE;
   } else if (FLAGS_erase_mode == "none") {
-    return HighLevelController::NO_ERASE;
+    return NO_ERASE;
   } else {
     fatal("No such erase mode '%s'\n", FLAGS_erase_mode.c_str());
   }
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
   std::string filename = FLAGS_device_db;
   if (filename.empty()) {
-    filename = strings::Cat(DEVICE_DB_PATH, FLAGS_family, ".lst");
+    filename = strings::Cat(DEVICE_DB_PATH, "/", FLAGS_family, ".lst");
   }
   CHECK_OK(device_db->Load(filename));
 

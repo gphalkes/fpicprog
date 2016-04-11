@@ -8,7 +8,9 @@
 Status Pic18Controller::Open(bool lvp) {
   RETURN_IF_ERROR(driver_->Open());
   if (!lvp) {
-    return Status::OK;
+    // Set the nMCLR pin high. If connected to something that is driving a high voltage, this will
+    // enable programming.
+    return driver_->WriteDatastring({nMCLR});
   }
   return WriteTimedSequence(Pic18SequenceGenerator::INIT_SEQUENCE);
 }

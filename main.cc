@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
     sequence_generator.reset(new Pic18SequenceGenerator);
     controller.reset(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
   } else {
-    fatal("Unknown family %s.\n", FLAGS_family.c_str());
+    fatal("Unknown device family %s.\n", FLAGS_family.c_str());
   }
   auto device_db = std::make_unique<DeviceDb>();
 

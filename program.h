@@ -14,5 +14,6 @@ typedef std::map<uint32_t, Datastring> Program;
 Status ReadIhex(Program *program, FILE *in);
 void WriteIhex(const Program &program, FILE *out);
 Status MergeProgramBlocks(Program *program, const DeviceInfo &device_info);
+void RemoveMissingConfigBytes(Program *program, const DeviceInfo &device_info);
 
 #endif

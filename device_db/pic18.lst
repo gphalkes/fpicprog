@@ -15,6 +15,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h
 bulk_erase_timing = 13ms
+missing_locations = 300007h
 
 [18LF24K50]
 device_id = 5CE0h
@@ -33,6 +34,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h
 bulk_erase_timing = 13ms
+missing_locations = 300007h
 
 [18F25K50]
 device_id = 5C20h
@@ -51,6 +53,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
+missing_locations = 300007h
 
 [18LF25K50]
 device_id = 5CA0h
@@ -69,6 +72,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
+missing_locations = 300007h
 
 [18F45K50]
 device_id = 5C00h
@@ -87,6 +91,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
+missing_locations = 300007h
 
 [18LF45K50]
 device_id = 5C80h
@@ -105,6 +110,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
+missing_locations = 300007h
 
 [18F26K50]
 device_id = 5D20h
@@ -123,6 +129,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
+missing_locations = 300007h
 
 [18LF26K50]
 device_id = 5D60h
@@ -141,6 +148,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
+missing_locations = 300007h
 
 [18F46K50]
 device_id = 5D00h
@@ -159,6 +167,7 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
+missing_locations = 300007h
 
 [18LF46K50]
 device_id = 5D40h
@@ -177,3 +186,4 @@ eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
+missing_locations = 300007h

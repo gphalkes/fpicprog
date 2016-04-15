@@ -31,6 +31,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
   std::set<Section> write_sections(sections.begin(), sections.end());
   DeviceCloser closer(this);
   RETURN_IF_ERROR(InitDevice());
+  printf("Initialized device [%s]\n", device_info_.name.c_str());
 
   Program block_aligned_program = program;
 
@@ -87,6 +88,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
     }
   }
   RETURN_IF_ERROR(MergeProgramBlocks(&block_aligned_program, device_info_));
+  RemoveMissingConfigBytes(&block_aligned_program, device_info_);
 
   printf("Program section addresses + sizes dump\n");
   for (const auto &section : block_aligned_program) {
@@ -279,19 +281,18 @@ Status HighLevelController::ReadData(Section section, Datastring *data, uint32_t
 
 Status HighLevelController::VerifyData(Section, const Datastring &data, uint32_t base_address) {
   Datastring written_data;
-  RETURN_IF_ERROR(
-      controller_->Read(FLASH, base_address, base_address + data.size(), &written_data));
+  RETURN_IF_ERROR(ReadData(FLASH, &written_data, base_address, data.size()));
   if (written_data != data) {
     std::string data_as_bytes;
     for (const uint8_t byte : data) {
       data_as_bytes += HexByte(byte);
     }
-    printf("Data        : %s\n", data_as_bytes.c_str());
+    printf("Data written: %s\n", data_as_bytes.c_str());
     data_as_bytes.clear();
     for (const uint8_t byte : written_data) {
       data_as_bytes += HexByte(byte);
     }
-    printf("Written data: %s\n", data_as_bytes.c_str());
+    printf("Data read   : %s\n", data_as_bytes.c_str());
 
     return Status(Code::VERIFICATION_ERROR, "Data read back is not what was written");
   }

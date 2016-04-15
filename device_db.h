@@ -2,6 +2,7 @@
 #define DEVICE_DB_H_
 
 #include <map>
+#include <vector>
 
 #include "status.h"
 #include "util.h"
@@ -24,6 +25,7 @@ struct DeviceInfo {
   Datastring16 config_erase_sequence;
   Datastring16 eeprom_erase_sequence;
   Duration bulk_erase_timing = 0;
+  std::vector<uint32_t> missing_locations;
 
   void Dump() const;
   Status Validate() const;

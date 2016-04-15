@@ -156,6 +156,13 @@ Status DeviceDb::Load(const std::string &name) {
       } else if (key == "bulk_erase_timing") {
         RETURN_IF_ERROR_WITH_APPEND(DurationValue(value, &last_info.bulk_erase_timing),
                                     strings::Cat(" in device database at line ", i + 1));
+      } else if (key == "missing_locations") {
+        std::vector<std::string> sequence = strings::Split<std::string>(value, ' ', false);
+        for (const auto &single_value : sequence) {
+          uint32_t parsed_value;
+          RETURN_IF_ERROR(NumericalValue(single_value, &parsed_value));
+          last_info.missing_locations.push_back(parsed_value);
+        }
       } else {
         return Status(PARSE_ERROR, strings::Cat("Device database has unknown key on line ", i + 1));
       }

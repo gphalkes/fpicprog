@@ -253,3 +253,27 @@ Status MergeProgramBlocks(Program *program, const DeviceInfo &device_info) {
   }
   return Status::OK;
 }
+
+void RemoveMissingConfigBytes(Program *program, const DeviceInfo &device_info) {
+  for (auto missing_address :device_info.missing_locations) {
+    auto iter = std::upper_bound(program->begin(), program->end(), missing_address,
+                                 [](uint32_t address, const auto &section) {
+      return address < section.first + section.second.size();
+    });
+    if (iter == program->end() || iter->first > missing_address) {
+      continue;
+    }
+    if (missing_address >= iter->first && missing_address < iter->first + iter->second.size()) {
+      Datastring first = iter->second.substr(0, missing_address - iter->first);
+      Datastring second = iter->second.substr(missing_address + 1 - iter->first, Datastring::npos);
+      if (!second.empty()) {
+        (*program)[iter->first + missing_address + 1] = second;
+      }
+      if (first.empty()) {
+        program->erase(iter);
+      } else {
+        iter->second = first;
+      }
+    }
+  }
+}

@@ -68,7 +68,6 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
       return Status(Code::INVALID_ARGUMENT, "Block size for writing must be a multiple of 2");
     }
     for (size_t i = 0; i < data.size(); i += block_size) {
-      printf("Wrting block at address %06zx\n", address + i);
       // BSF EECON1, EEPGD
       RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
       // BCF EECON1, CFGS

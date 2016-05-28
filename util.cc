@@ -5,7 +5,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <gflags/gflags.h>
 #include <time.h>
+
+DEFINE_int32(verbosity, 1, "Verbosity level. 0 for no output, higher number for more output.");
 
 void fatal(const char *fmt, ...) {
   va_list args;
@@ -36,4 +39,28 @@ std::string HexUint16(uint16_t word) { return HexByte((word >> 8) & 0xff) + HexB
 std::string HexUint32(uint32_t word) {
   return HexByte(word >> 24) + HexByte((word >> 16) & 0xff) + HexByte((word >> 8) & 0xff) +
          HexByte(word & 0xff);
+}
+
+const char *SectionToName(Section section) {
+  switch (section) {
+    case FLASH:
+      return "flash";
+    case USER_ID:
+      return "user ID";
+    case CONFIGURATION:
+      return "configuration";
+    case EEPROM:
+      return "EEPROM";
+    default:
+      return "unknown";
+  }
+}
+
+void print_msg(int level, const char *fmt, ...) {
+  if (level <= FLAGS_verbosity) {
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+  }
 }

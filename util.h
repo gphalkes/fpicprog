@@ -1,6 +1,7 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <set>
@@ -82,8 +83,20 @@ void set_subtract(std::set<T> *a, const std::set<T> &b) {
   }
 }
 
+template <class T>
+void set_intersect(std::set<T> *a, const std::set<T> &b) {
+  std::vector<T> output;
+  std::set_intersection(a->begin(), a->end(), b.begin(), b.end(), std::back_inserter(output));
+  a->clear();
+  a->insert(output.begin(), output.end());
+}
+
+const char *SectionToName(Section section);
+
 std::string HexByte(uint8_t byte);
 std::string HexUint16(uint16_t word);
 std::string HexUint32(uint32_t address);
+
+void print_msg(int level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 
 #endif

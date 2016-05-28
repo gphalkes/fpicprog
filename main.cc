@@ -121,6 +121,9 @@ int main(int argc, char **argv) {
     WriteIhex(program, out);
     fclose(out);
   } else if (FLAGS_action == "write-program") {
+    if (FLAGS_input.empty()) {
+      fatal("--input is required for action write-program\n");
+    }
     Program program;
     FILE *in = fopen(FLAGS_input.c_str(), "rb");
     if (!in) {

@@ -1,3 +1,16 @@
+/* Copyright (C) 2016 G.P. Halkes
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 3, as
+   published by the Free Software Foundation.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "sequence_generator.h"
 
 Datastring Pic18SequenceGenerator::GetCommandSequence(Pic18Command command,
@@ -22,7 +35,7 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
       break;
     case WRITE_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
-                                 MilliSeconds(1)});
+                                 device_info->block_write_timing});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
       result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
       break;

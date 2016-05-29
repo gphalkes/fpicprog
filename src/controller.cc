@@ -1,3 +1,16 @@
+/* Copyright (C) 2016 G.P. Halkes
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 3, as
+   published by the Free Software Foundation.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "controller.h"
 
 #include <set>
@@ -161,40 +174,6 @@ Status Pic18Controller::SectionErase(Section section, const DeviceInfo &device_i
       return Status(Code::UNIMPLEMENTED,
                     strings::Cat("Section erase not implemented for section type ", section));
   }
-}
-
-Status Pic18Controller::RowErase(uint32_t address) {
-  // BSF EECON1, EEPGD
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
-  // BCF EECON1, CFGS
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
-  // BSF EECON1, WREN,
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
-  RETURN_IF_ERROR(LoadAddress(address));
-  // BSF EECON1, FREE
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x88A6));
-  // BSR EECON1, WR
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x82A6));
-  // NOP
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
-  // NOP
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
-
-  // Loop until the WR bit in EECON1 is clear.
-  Datastring value;
-  do {
-    // MOVF EECON1, W, 0
-    RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x50A6));
-    // MOVWF TABLAT
-    RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x6EF5));
-    // NOP
-    RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
-    // Read value from TABLAT
-    RETURN_IF_ERROR(ReadWithCommand(SHIFT_OUT_TABLAT, 1, &value));
-  } while (value[0] & 2);
-  Sleep(MicroSeconds(200));
-  // BCF EECON1, WREN
-  return WriteCommand(CORE_INST, 0x9AA6);
 }
 
 Status Pic18Controller::WriteCommand(Pic18Command command, uint16_t payload) {

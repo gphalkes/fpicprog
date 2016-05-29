@@ -1,3 +1,16 @@
+/* Copyright (C) 2016 G.P. Halkes
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 3, as
+   published by the Free Software Foundation.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #ifndef CONTROLLER_H_
 #define CONTROLLER_H_
 
@@ -22,7 +35,6 @@ class Controller {
                        uint32_t block_size) = 0;
   virtual Status ChipErase(const DeviceInfo &device_info) = 0;
   virtual Status SectionErase(Section section, const DeviceInfo &device_info) = 0;
-  virtual Status RowErase(uint32_t address) = 0;
 };
 
 class Pic18Controller : public Controller {
@@ -40,7 +52,6 @@ class Pic18Controller : public Controller {
                uint32_t block_size) override;
   Status ChipErase(const DeviceInfo &device_info) override;
   Status SectionErase(Section section, const DeviceInfo &device_info) override;
-  Status RowErase(uint32_t address) override;
 
  private:
   Status WriteCommand(Pic18Command command, uint16_t payload);

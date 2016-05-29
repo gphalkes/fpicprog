@@ -1,3 +1,16 @@
+/* Copyright (C) 2016 G.P. Halkes
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 3, as
+   published by the Free Software Foundation.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "high_level_controller.h"
 
 #include "status.h"
@@ -53,8 +66,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
     missing_ranges.emplace_back(last_end, device_info_.program_memory_size);
   }
 
-  uint32_t block_size =
-      erase_mode == ROW_ERASE ? device_info_.erase_block_size : device_info_.write_block_size;
+  const uint32_t block_size = device_info_.write_block_size;
   for (const auto &range : missing_ranges) {
     uint32_t lower = ((range.first + block_size - 1) / block_size) * block_size;
     uint32_t higher = (range.second / block_size) * block_size;
@@ -147,15 +159,6 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
 
   for (const auto &section : block_aligned_program) {
     if (ContainsKey(write_sections, FLASH) && section.first < device_info_.program_memory_size) {
-      if (erase_mode == ROW_ERASE) {
-        print_msg(1, "Erasing flash rows\n");
-        // Erase the relevant blocks. The program sections have been aligned and sized to be
-        // a multiple of the erase block size.
-        for (uint32_t address = section.first; address < section.first + section.second.size();
-             address += device_info_.erase_block_size) {
-          RETURN_IF_ERROR(controller_->RowErase(address));
-        }
-      }
       print_msg(1, "Writing flash data %06x-%06lx\n", section.first, section.first + section.second.size());
       RETURN_IF_ERROR(
           controller_->Write(FLASH, section.first, section.second, device_info_.write_block_size));
@@ -208,7 +211,7 @@ Status HighLevelController::SectionErase(const std::vector<Section> &sections) {
 Status HighLevelController::Identify() {
   DeviceCloser closer(this);
   RETURN_IF_ERROR(InitDevice());
-  printf("Initialized device [%s]\n", device_info_.name.c_str());
+  printf("Device %s, revision %ud\n", device_info_.name.c_str(), revision_);
   return Status::OK;
 }
 
@@ -217,14 +220,14 @@ Status HighLevelController::InitDevice() {
     return Status::OK;
   }
   Status status;
-  uint16_t device_id, revision;
+  uint16_t device_id;
   for (int attempts = 0; attempts < 10; ++attempts) {
     status = controller_->Open(lvp_);
     if (!status.ok()) {
       controller_->Close();
       continue;
     }
-    status = controller_->ReadDeviceId(&device_id, &revision);
+    status = controller_->ReadDeviceId(&device_id, &revision_);
     if (!status.ok() || device_id == 0) {
       controller_->Close();
       continue;

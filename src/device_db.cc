@@ -1,3 +1,16 @@
+/* Copyright (C) 2016 G.P. Halkes
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 3, as
+   published by the Free Software Foundation.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "device_db.h"
 
 #include <regex>
@@ -80,7 +93,7 @@ Status DeviceDb::Load(const std::string &name) {
 
   std::regex strip_regex(R"(\s*(.*?)\s*)");
   std::regex comment_regex(R"(#.*)");
-  std::regex section_regex(R"(\[\s*(\w+)\s*\]\w*)");
+  std::regex section_regex(R"(\[\s*((?:\w|/)+)\s*\]\w*)");
   std::regex key_value_regex(R"((\w+)\s*=\s*(.*))");
   DeviceInfo last_info;
   for (size_t i = 0; i < lines.size(); ++i) {
@@ -135,9 +148,6 @@ Status DeviceDb::Load(const std::string &name) {
       } else if (key == "write_block_size") {
         RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.write_block_size),
                                     strings::Cat(" in device database at line ", i + 1));
-      } else if (key == "erase_block_size") {
-        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.erase_block_size),
-                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "chip_erase_sequence") {
         RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.chip_erase_sequence),
                                     strings::Cat(" in device database at line ", i + 1));
@@ -155,6 +165,9 @@ Status DeviceDb::Load(const std::string &name) {
                                     strings::Cat(" in device database at line ", i + 1));
       } else if (key == "bulk_erase_timing") {
         RETURN_IF_ERROR_WITH_APPEND(DurationValue(value, &last_info.bulk_erase_timing),
+                                    strings::Cat(" in device database at line ", i + 1));
+      } else if (key == "block_write_timing") {
+        RETURN_IF_ERROR_WITH_APPEND(DurationValue(value, &last_info.block_write_timing),
                                     strings::Cat(" in device database at line ", i + 1));
       } else if (key == "missing_locations") {
         std::vector<std::string> sequence = strings::Split<std::string>(value, ' ', false);
@@ -211,13 +224,19 @@ void DeviceInfo::Dump() const {
   printf("EEPROM size: %d\n", eeprom_size);
   printf("EEPROM offset: %06Xh\n", eeprom_offset);
   printf("Write block size: %d\n", write_block_size);
-  printf("Erase block size: %d\n", erase_block_size);
   DumpSequence("Chip erase sequence:", chip_erase_sequence);
   DumpSequence("Flash erase sequence:", flash_erase_sequence);
   DumpSequence("User ID erase sequence:", user_id_erase_sequence);
   DumpSequence("Config erase sequence:", config_erase_sequence);
   DumpSequence("EEPROM erase sequence:", eeprom_erase_sequence);
   printf("Bulk erase timing: %ldns\n", bulk_erase_timing);
+  printf("Block write timing: %ldns\n", block_write_timing);
+  printf("Config write timing: %ldns\n", config_write_timing);
+  printf("Missing locations:");
+  for (const auto &location : missing_locations) {
+    printf("%06Xh", location);
+  }
+  printf("\n");
 }
 
 Status DeviceInfo::Validate() const {

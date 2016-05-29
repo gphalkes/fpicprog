@@ -8,14 +8,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h
 bulk_erase_timing = 13ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18LF24K50]
 device_id = 5CE0h
@@ -27,14 +26,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h
 bulk_erase_timing = 13ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18F25K50]
 device_id = 5C20h
@@ -46,14 +44,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = f00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0f8fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18LF25K50]
 device_id = 5CA0h
@@ -65,14 +62,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18F45K50]
 device_id = 5C00h
@@ -84,14 +80,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18LF45K50]
 device_id = 5C80h
@@ -103,14 +98,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18F26K50]
 device_id = 5D20h
@@ -122,14 +116,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18LF26K50]
 device_id = 5D60h
@@ -141,14 +134,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18F46K50]
 device_id = 5D00h
@@ -160,14 +152,13 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
 
 [18LF46K50]
 device_id = 5D40h
@@ -179,11 +170,1077 @@ config_offset = 300000h
 eeprom_size = 256
 eeprom_offset = F00000h
 write_block_size = 64
-erase_block_size = 64
 chip_erase_sequence = 0F8Fh
 user_id_erase_sequence = 0088h
 eeprom_erase_sequence = 0084h
 config_erase_sequence = 0082h
 flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
 bulk_erase_timing = 16ms
-missing_locations = 300007h
+missing_locations = 300004h 300007h
+
+
+[18F2221]
+device_id = 2160h
+program_memory_size = 1000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 8
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2321]
+device_id = 2120h
+program_memory_size = 2000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 8
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2410]
+device_id = 1160h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2420/18F2423]
+device_id = 1140h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2450]
+device_id = 2420h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 16
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2455]
+device_id = 1260h
+program_memory_size = 6000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2458]
+device_id = 2A60h
+program_memory_size = 6000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2480]
+device_id = 1AE0h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2510]
+device_id = 1120h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2515]
+device_id = 0CE0h
+program_memory_size = C000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2520/18F2523]
+device_id = 1100h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2525]
+device_id = 0CC0h
+program_memory_size = C000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2550]
+device_id = 1240h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2553]
+device_id = 2A40h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2580]
+device_id = 1AC0h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2585]
+device_id = 0EE0h
+program_memory_size = C000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2610]
+device_id = 0CA0h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2620]
+device_id = 0C80h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2680]
+device_id = 0EC0h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2682]
+device_id = 2700h
+program_memory_size = 14000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h 1080h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F2685]
+device_id = 2720h
+program_memory_size = 18000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h 1080h 2080h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4221]
+device_id = 2140h
+program_memory_size = 1000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 8
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4321]
+device_id = 2100h
+program_memory_size = 2000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 8
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4410]
+device_id = 10E0h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4420/18F4423]
+device_id = 10C0h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4450]
+device_id = 2400h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 16
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4455]
+device_id = 1220h
+program_memory_size = 6000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4458]
+device_id = 2A20h
+program_memory_size = 6000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4480]
+device_id = 1AA0h
+program_memory_size = 4000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4510]
+device_id = 10A0h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4515]
+device_id = 0C60h
+program_memory_size = C000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4520/18F4523]
+device_id = 1080h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4525]
+device_id = 0C40h
+program_memory_size = C000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4550]
+device_id = 1200h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4553]
+device_id = 2A00h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4580]
+device_id = 1A80h
+program_memory_size = 8000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 256
+eeprom_offset = F00000h
+write_block_size = 32
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4585]
+device_id = 0EA0h
+program_memory_size = C000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4610]
+device_id = 0C20h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4620]
+device_id = 0C00h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4680]
+device_id = 0E80h
+program_memory_size = 10000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4682]
+device_id = 2740h
+program_memory_size = 14000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h 1080h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F4685]
+device_id = 2760h
+program_memory_size = 18000h
+user_id_size = 8
+user_id_offset = 200000h
+config_size = 14
+config_offset = 300000h
+eeprom_size = 1024
+eeprom_offset = F00000h
+write_block_size = 64
+chip_erase_sequence = 3F8Fh
+eeprom_erase_sequence = 0084h
+config_erase_sequence = 0082h
+flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h 1080h 2080h
+bulk_erase_timing = 6ms
+missing_locations = 300004h 300007h
+
+[18F24J10]
+device_id = 1D00h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 3400us
+
+[18F25J10]
+device_id = 1C00h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 3400us
+
+[18F44J10]
+device_id = 1D20h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 3400us
+
+[18F45J10]
+device_id = 1C20h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 3400us
+
+[18LF24J10]
+device_id = 1D40h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 3400us
+
+[18LF25J10]
+device_id = 1C40h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 3400us
+
+[18LF44J10]
+device_id = 1D60h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 3400us
+
+[18LF45J10]
+device_id = 1C60h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 3400us
+
+[18F25J11]
+device_id = 4DA0h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F24J11]
+device_id = 4D80h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F26J11]
+device_id = 4DC0h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F45J11]
+device_id = 4E00h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F44J11]
+device_id = 4DE0h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F46J11]
+device_id = 4E20h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F24J50]
+device_id = 4Ch0h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F25J50]
+device_id = 4C20h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F26J50]
+device_id = 4C40h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F44J50]
+device_id = 4C60h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F45J50]
+device_id = 4C80h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F46J50]
+device_id = 4CA0h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF2450]
+device_id = 4CC0h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF25J50]
+device_id = 4CE0h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF26J50]
+device_id = 4D00h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF44J50]
+device_id = 4D20h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF45J50]
+device_id = 4D40h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF46J50]
+device_id = 4D60h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF24J11]
+device_id = 4E40h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF25J11]
+device_id = 4E60h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF26J11]
+device_id = 4E80h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF44J11]
+device_id = 4EA0h
+program_memory_size = 4000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF45J11]
+device_id = 4EC0h
+program_memory_size = 8000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18LF46J11]
+device_id = 4EE0h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 579ms
+block_write_timing = 1200us
+
+[18F26J13]
+device_id = 5920h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18F27J13]
+device_id = 5960h
+program_memory_size = 20000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18F46J13]
+device_id = 59A0h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18F47J13]
+device_id = 59E0h
+program_memory_size = 20000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18LF26J13]
+device_id = 5B20h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18LF27J13]
+device_id = 5B60h
+program_memory_size = 20000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18LF46J13]
+device_id = 5BA0h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18LF47J13]
+device_id = 5BE0h
+program_memory_size = 20000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18F26J53]
+device_id = 5820h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18F27J53]
+device_id = 5860h
+program_memory_size = 20000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18F46J53]
+device_id = 58A0h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18F47J53]
+device_id = 58E0h
+program_memory_size = 20000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18LF26J53]
+device_id = 5A20h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18LF27J53]
+device_id = 5A60h
+program_memory_size = 20000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18LF46J53]
+device_id = 5AA0h
+program_memory_size = 10000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us
+
+[18LF47J53]
+device_id = 5AE0h
+program_memory_size = 20000h
+write_block_size = 64
+chip_erase_sequence = 0180h
+bulk_erase_timing = 525ms
+block_write_timing = 1200us

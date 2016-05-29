@@ -1,3 +1,16 @@
+/* Copyright (C) 2016 G.P. Halkes
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 3, as
+   published by the Free Software Foundation.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #ifndef UTIL_H_
 #define UTIL_H_
 
@@ -45,9 +58,9 @@ enum Pins {
 };
 
 typedef uint64_t Duration;
-static inline Duration MilliSeconds(uint64_t x) { return x * 1000000; }
-static inline Duration MicroSeconds(uint64_t x) { return x * 1000; }
-static inline Duration NanoSeconds(uint64_t x) { return x; }
+static constexpr inline Duration MilliSeconds(uint64_t x) { return x * 1000000; }
+static constexpr inline Duration MicroSeconds(uint64_t x) { return x * 1000; }
+static constexpr inline Duration NanoSeconds(uint64_t x) { return x; }
 
 void Sleep(Duration duration);
 

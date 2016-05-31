@@ -161,7 +161,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
     if (ContainsKey(write_sections, FLASH) && section.first < device_info_.program_memory_size) {
       print_msg(1, "Writing flash data %06x-%06lx\n", section.first, section.first + section.second.size());
       RETURN_IF_ERROR(
-          controller_->Write(FLASH, section.first, section.second, device_info_.write_block_size));
+          controller_->Write(FLASH, section.first, section.second, device_info_));
       print_msg(1, "Verifying written flash data\n");
       RETURN_IF_ERROR(VerifyData(FLASH, section.second, section.first));
     } else if (ContainsKey(write_sections, USER_ID) &&
@@ -169,20 +169,20 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
                section.first < device_info_.user_id_offset + device_info_.user_id_size) {
       print_msg(1, "Writing user ID data %06x-%06lx\n", section.first, section.first + section.second.size());
       RETURN_IF_ERROR(
-          controller_->Write(USER_ID, section.first, section.second, device_info_.user_id_size));
+          controller_->Write(USER_ID, section.first, section.second, device_info_));
       print_msg(1, "Verifying written user ID data\n");
       RETURN_IF_ERROR(VerifyData(USER_ID, section.second, section.first));
     } else if (ContainsKey(write_sections, CONFIGURATION) &&
                section.first >= device_info_.config_offset &&
                section.first < device_info_.config_offset + device_info_.config_size) {
       print_msg(1, "Writing configuration data %06x-%06lx\n", section.first, section.first + section.second.size());
-      RETURN_IF_ERROR(controller_->Write(CONFIGURATION, section.first, section.second, 1));
+      RETURN_IF_ERROR(controller_->Write(CONFIGURATION, section.first, section.second, device_info_));
       print_msg(1, "Verifying written configuration data\n");
       RETURN_IF_ERROR(VerifyData(CONFIGURATION, section.second, section.first));
     } else if (ContainsKey(write_sections, EEPROM) && section.first >= device_info_.eeprom_offset &&
                section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
       print_msg(1, "Writing EEPROM data %06x-%06lx\n", section.first, section.first + section.second.size());
-      RETURN_IF_ERROR(controller_->Write(EEPROM, section.first, section.second, 1));
+      RETURN_IF_ERROR(controller_->Write(EEPROM, section.first, section.second, device_info_));
       print_msg(1, "Verifying written EEPROM data\n");
       RETURN_IF_ERROR(VerifyData(EEPROM, section.second, section.first));
     }

@@ -32,7 +32,7 @@ class Controller {
   virtual Status Read(Section section, uint32_t start_address, uint32_t end_address,
                       Datastring *result) = 0;
   virtual Status Write(Section section, uint32_t address, const Datastring &data,
-                       uint32_t block_size) = 0;
+                       const DeviceInfo &device_info) = 0;
   virtual Status ChipErase(const DeviceInfo &device_info) = 0;
   virtual Status SectionErase(Section section, const DeviceInfo &device_info) = 0;
 };
@@ -49,14 +49,15 @@ class Pic18Controller : public Controller {
   Status Read(Section section, uint32_t start_address, uint32_t end_address,
               Datastring *result) override;
   Status Write(Section section, uint32_t address, const Datastring &data,
-               uint32_t block_size) override;
+               const DeviceInfo &device_info) override;
   Status ChipErase(const DeviceInfo &device_info) override;
   Status SectionErase(Section section, const DeviceInfo &device_info) override;
 
  private:
   Status WriteCommand(Pic18Command command, uint16_t payload);
   Status ReadWithCommand(Pic18Command command, uint32_t count, Datastring *result);
-  Status WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type);
+  Status WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type,
+                            const DeviceInfo *device_info);
   Status LoadAddress(uint32_t address);
   Status LoadEepromAddress(uint32_t address);
   Status ExecuteBulkErase(const Datastring16 &sequence, const DeviceInfo &device_info);

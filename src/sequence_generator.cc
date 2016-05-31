@@ -35,13 +35,13 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
       break;
     case WRITE_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
-                                 device_info->block_write_timing});
+                       device_info ? device_info->block_write_timing : MilliSeconds(1)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
       result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
       break;
     case WRITE_CONFIG_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
-                                 MilliSeconds(5)});
+                       device_info ? device_info->config_write_timing : MilliSeconds(1)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
       result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
       break;

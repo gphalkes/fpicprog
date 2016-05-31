@@ -25,7 +25,7 @@ Status Pic18Controller::Open(bool lvp) {
     // enable programming.
     return driver_->WriteDatastring({nMCLR});
   }
-  return WriteTimedSequence(Pic18SequenceGenerator::INIT_SEQUENCE);
+  return WriteTimedSequence(Pic18SequenceGenerator::INIT_SEQUENCE, nullptr);
 }
 
 void Pic18Controller::Close() { driver_->Close(); }
@@ -70,11 +70,17 @@ Status Pic18Controller::Read(Section section, uint32_t start_address, uint32_t e
 }
 
 Status Pic18Controller::Write(Section section, uint32_t address, const Datastring &data,
-                              uint32_t block_size) {
+                              const DeviceInfo &device_info) {
+  uint32_t block_size = 1;
+  if (section == FLASH) {
+    block_size = device_info.write_block_size;
+  } else if (section == USER_ID) {
+    block_size = device_info.user_id_size;
+  }
   if (data.size() % block_size) {
     return Status(Code::INVALID_ARGUMENT,
                   strings::Cat("Data must be a multiple of the block size (", data.size(), " / ",
-                               block_size, ")"));
+                               device_info.write_block_size, ")"));
   }
   if (section == FLASH || section == USER_ID) {
     if (block_size % 2 != 0 || block_size < 2) {
@@ -99,7 +105,7 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
       RETURN_IF_ERROR(WriteCommand(
           TABLE_WRITE_post_inc2_start_pgm,
           (static_cast<uint16_t>(data[i + block_size - 1]) << 8) | data[i + block_size - 2]));
-      RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE));
+      RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE, &device_info));
     }
   } else if (section == CONFIGURATION) {
     for (const uint8_t byte : data) {
@@ -114,7 +120,7 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
       // is odd or even. The other byte is ignored.
       RETURN_IF_ERROR(
           WriteCommand(TABLE_WRITE_post_inc2_start_pgm, (static_cast<uint16_t>(byte) << 8) | byte));
-      RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE));
+      RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE, &device_info));
       ++address;
     }
   } else if (section == EEPROM) {
@@ -191,8 +197,8 @@ Status Pic18Controller::ReadWithCommand(Pic18Command command, uint32_t count, Da
   return Status::OK;
 }
 
-Status Pic18Controller::WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type) {
-  return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, nullptr));
+Status Pic18Controller::WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type, const DeviceInfo *device_info) {
+  return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, device_info));
 }
 
 Status Pic18Controller::LoadAddress(uint32_t address) {

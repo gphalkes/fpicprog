@@ -43,6 +43,7 @@ class Interval {
 
   const T &min() const { return min_; }
   const T &max() const { return max_; }
+  bool IsEmpty() const { return max_ <= min_; }
 
  private:
   T min_;
@@ -52,29 +53,31 @@ class Interval {
 template <class T>
 class IntervalSet {
  public:
-  void Add(const Interval<T> &interval) {
+  void Add(Interval<T> interval) {
+    if (interval.IsEmpty()) {
+      return;
+    }
     if (intervals_.empty()) {
       intervals_.emplace_back(interval);
       return;
     }
-    auto iter = std::upper_bound(intervals_.begin(), intervals_.end(), interval);
-    if (iter != intervals_.end() && (interval.Overlaps(*iter) || interval.Connects(*iter))) {
-      iter->Merge(interval);
-      if (iter != intervals_.begin()) {
-        auto prev = iter;
-        --prev;
-        if (prev->Overlaps(*iter) || prev->Connects(*iter)) {
-          prev->Merge(*iter);
-          intervals_.erase(iter);
-        }
-      }
-    }
-    if (iter != intervals_.begin()) {
-      --iter;
-      if (interval.Overlaps(*iter) || interval.Connects(*iter)) {
+    // FIXME: this can be sped up by finding the beginning using a binary search algorithm like
+    // std::lower_bound
+    for (auto iter = intervals_.begin(); iter != intervals_.end(); ) {
+      if (interval.max() < iter->min()) {
+        intervals_.emplace(iter, interval);
+        return;
+      } else if (interval.max() == iter->min()) {
         iter->Merge(interval);
+        return;
+      } else if (interval.min() <= iter->max()) {
+        interval.Merge(*iter);
+        iter = intervals_.erase(iter);
+      } else {
+        ++iter;
       }
     }
+    intervals_.emplace_back(interval);
   }
 
   bool Contains(const Interval<T> &interval) const {

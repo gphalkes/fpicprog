@@ -100,4 +100,8 @@ std::string AsciiToLower(const std::string &str) {
   return result;
 }
 
+bool StartsWith(const std::string &str, const std::string &with) {
+  return with.size() <= str.size() && with == str.substr(0, with.size());
+}
+
 }  // namespace strings

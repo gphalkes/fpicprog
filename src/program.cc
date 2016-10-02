@@ -268,11 +268,11 @@ Status MergeProgramBlocks(Program *program, const DeviceInfo &device_info) {
 }
 
 void RemoveMissingConfigBytes(Program *program, const DeviceInfo &device_info) {
-  for (auto missing_address :device_info.missing_locations) {
+  for (auto missing_address : device_info.missing_locations) {
     auto iter = std::upper_bound(program->begin(), program->end(), missing_address,
                                  [](uint32_t address, const auto &section) {
-      return address < section.first + section.second.size();
-    });
+                                   return address < section.first + section.second.size();
+                                 });
     if (iter == program->end() || iter->first > missing_address) {
       continue;
     }

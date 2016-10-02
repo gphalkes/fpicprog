@@ -26,11 +26,11 @@ class Controller {
  public:
   virtual ~Controller() = default;
 
-  virtual Status Open(bool lvp) = 0;
+  virtual Status Open() = 0;
   virtual void Close() = 0;
   virtual Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) = 0;
   virtual Status Read(Section section, uint32_t start_address, uint32_t end_address,
-                      Datastring *result) = 0;
+                      const DeviceInfo &device_info, Datastring *result) = 0;
   virtual Status Write(Section section, uint32_t address, const Datastring &data,
                        const DeviceInfo &device_info) = 0;
   virtual Status ChipErase(const DeviceInfo &device_info) = 0;
@@ -43,11 +43,11 @@ class Pic18Controller : public Controller {
                   std::unique_ptr<Pic18SequenceGenerator> sequence_generator)
       : driver_(std::move(driver)), sequence_generator_(std::move(sequence_generator)) {}
 
-  Status Open(bool lvp) override;
+  Status Open() override;
   void Close() override;
   Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) override;
   Status Read(Section section, uint32_t start_address, uint32_t end_address,
-              Datastring *result) override;
+              const DeviceInfo &device_info, Datastring *result) override;
   Status Write(Section section, uint32_t address, const Datastring &data,
                const DeviceInfo &device_info) override;
   Status ChipErase(const DeviceInfo &device_info) override;
@@ -64,6 +64,40 @@ class Pic18Controller : public Controller {
 
   std::unique_ptr<Driver> driver_;
   std::unique_ptr<Pic18SequenceGenerator> sequence_generator_;
+};
+
+class Pic16Controller : public Controller {
+ public:
+  Pic16Controller(std::unique_ptr<Driver> driver,
+                  std::unique_ptr<Pic16SequenceGenerator> sequence_generator,
+                  const std::string &device_name)
+      : driver_(std::move(driver)),
+        sequence_generator_(std::move(sequence_generator)),
+        device_name_(device_name) {}
+
+  Status Open() override;
+  void Close() override;
+  Status ReadDeviceId(uint16_t *device_id, uint16_t *revision) override;
+  Status Read(Section section, uint32_t start_address, uint32_t end_address,
+              const DeviceInfo &device_info, Datastring *result) override;
+  Status Write(Section section, uint32_t address, const Datastring &data,
+               const DeviceInfo &device_info) override;
+  Status ChipErase(const DeviceInfo &device_info) override;
+  Status SectionErase(Section section, const DeviceInfo &device_info) override;
+
+ private:
+  Status WriteCommand(Pic16Command command, uint16_t payload);
+  Status WriteCommand(Pic16Command command);
+  Status ReadWithCommand(Pic16Command command, uint16_t *data);
+  Status WriteTimedSequence(Pic16SequenceGenerator::TimedSequenceType type,
+                            const DeviceInfo *device_info);
+
+  Status ResetDevice();
+
+  std::unique_ptr<Driver> driver_;
+  std::unique_ptr<Pic16SequenceGenerator> sequence_generator_;
+  const std::string device_name_;
+  int32_t last_address_ = 0;
 };
 
 #endif

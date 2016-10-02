@@ -36,13 +36,17 @@ DEFINE_string(sections, "",
               "Comma separate list of sections to operate on. Possible values: either all "
               "or a combination of flash, user-id, config, eeprom.");
 DEFINE_string(family, "pic18", "Device family to use. One of pic18.");
+DEFINE_string(
+    device, "",
+    "Exact device name. Ignored for pic18 family, required for devices in the pic16 family which "
+    "don't provide a device ID. Devices which have a device ID should be detectable using the "
+    "identify action.");
 
 DEFINE_string(output, "", "File to write the Intel HEX data to.");
 DEFINE_string(input, "", "Intel HEX file to read and program.");
 DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, row, none.");
 DEFINE_string(device_db, "",
               "Device DB file to load. Defaults to " DEVICE_DB_PATH "/<family>.lst.");
-DEFINE_bool(lvp, true, "Use low-voltage programming (aka single-supply voltage programming).");
 
 static std::vector<Section> ParseSections() {
   std::vector<Section> sections;
@@ -100,9 +104,12 @@ int main(int argc, char **argv) {
 
   std::unique_ptr<Controller> controller;
   if (FLAGS_family == "pic18") {
-    std::unique_ptr<Pic18SequenceGenerator> sequence_generator;
-    sequence_generator.reset(new Pic18SequenceGenerator);
+    std::unique_ptr<Pic18SequenceGenerator> sequence_generator(new Pic18SequenceGenerator);
     controller.reset(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
+  } else if (FLAGS_family == "pic16") {
+    std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
+    controller.reset(
+        new Pic16Controller(std::move(driver), std::move(sequence_generator), FLAGS_device));
   } else {
     fatal("Unknown device family %s.\n", FLAGS_family.c_str());
   }
@@ -114,10 +121,10 @@ int main(int argc, char **argv) {
   }
   CHECK_OK(device_db->Load(filename));
 
-  HighLevelController high_level_controller(std::move(controller), std::move(device_db), FLAGS_lvp);
+  HighLevelController high_level_controller(std::move(controller), std::move(device_db));
 
   if (FLAGS_action.empty()) {
-	fatal("No action specified\n");
+    fatal("No action specified\n");
   } else if (FLAGS_action == "erase") {
     if (FLAGS_sections.empty()) {
       fatal("Erase requires setting --sections\n");

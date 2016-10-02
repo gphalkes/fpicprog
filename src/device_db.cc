@@ -258,7 +258,7 @@ Status DeviceInfo::Validate() const {
   }
 
   if (config_size > 0) {
-    Interval<uint32_t> config_interval(config_offset, config_offset + user_id_size);
+    Interval<uint32_t> config_interval(config_offset, config_offset + config_size);
     if (used_intervals.Overlaps(config_interval)) {
       return Status(PARSE_ERROR,
                     strings::Cat(name, ": Configuration overlaps with other segments"));
@@ -267,7 +267,7 @@ Status DeviceInfo::Validate() const {
   }
 
   if (eeprom_size > 0) {
-    Interval<uint32_t> eeprom_interval(user_id_offset, user_id_offset + user_id_size);
+    Interval<uint32_t> eeprom_interval(eeprom_offset, eeprom_offset + eeprom_size);
     if (used_intervals.Overlaps(eeprom_interval)) {
       return Status(PARSE_ERROR, strings::Cat(name, ": EERPOM overlaps with other segments"));
     }

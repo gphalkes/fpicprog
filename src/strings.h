@@ -438,6 +438,8 @@ std::string HexEscape(const std::string &view);
 std::string AsciiToUpper(const std::string &view);
 std::string AsciiToLower(const std::string &view);
 
+bool StartsWith(const std::string &str, const std::string &with);
+
 }  // namespace strings
 
 #endif

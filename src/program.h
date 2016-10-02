@@ -14,8 +14,8 @@
 #ifndef PROGRAM_H_
 #define PROGRAM_H_
 
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <map>
 
 #include "device_db.h"

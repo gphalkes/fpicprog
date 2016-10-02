@@ -63,7 +63,7 @@ class IntervalSet {
     }
     // FIXME: this can be sped up by finding the beginning using a binary search algorithm like
     // std::lower_bound
-    for (auto iter = intervals_.begin(); iter != intervals_.end(); ) {
+    for (auto iter = intervals_.begin(); iter != intervals_.end();) {
       if (interval.max() < iter->min()) {
         intervals_.emplace(iter, interval);
         return;

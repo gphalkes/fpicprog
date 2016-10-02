@@ -18,13 +18,8 @@
 #include "strings.h"
 #include "util.h"
 
-Status Pic18Controller::Open(bool lvp) {
+Status Pic18Controller::Open() {
   RETURN_IF_ERROR(driver_->Open());
-  if (!lvp) {
-    // Set the nMCLR pin high. If connected to something that is driving a high voltage, this will
-    // enable programming.
-    return driver_->WriteDatastring({nMCLR});
-  }
   return WriteTimedSequence(Pic18SequenceGenerator::INIT_SEQUENCE, nullptr);
 }
 
@@ -34,6 +29,7 @@ Status Pic18Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
   RETURN_IF_ERROR(LoadAddress(0x3ffffe));
   Datastring bytes;
   RETURN_IF_ERROR(ReadWithCommand(TABLE_READ_post_inc, 2, &bytes));
+
   *device_id = bytes[0] | static_cast<uint16_t>(bytes[1]) << 8;
   *revision = *device_id & 0x1f;
   *device_id &= 0xffe0;
@@ -41,7 +37,7 @@ Status Pic18Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
 }
 
 Status Pic18Controller::Read(Section section, uint32_t start_address, uint32_t end_address,
-                             Datastring *result) {
+                             const DeviceInfo &, Datastring *result) {
   if (section != EEPROM) {
     RETURN_IF_ERROR(LoadAddress(start_address));
     return ReadWithCommand(TABLE_READ_post_inc, end_address - start_address, result);
@@ -86,7 +82,10 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
     if (block_size % 2 != 0 || block_size < 2) {
       return Status(Code::INVALID_ARGUMENT, "Block size for writing must be a multiple of 2");
     }
-    AutoClosureRunner reset_line([]{ fprintf(stderr, "\r"); fflush(stderr); });
+    AutoClosureRunner reset_line([] {
+      fprintf(stderr, "\r");
+      fflush(stderr);
+    });
     for (size_t i = 0; i < data.size(); i += block_size) {
       print_msg(1, "\r%.0f%%", 100.0 * i / data.size());
       fflush(stderr);
@@ -197,7 +196,8 @@ Status Pic18Controller::ReadWithCommand(Pic18Command command, uint32_t count, Da
   return Status::OK;
 }
 
-Status Pic18Controller::WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type, const DeviceInfo *device_info) {
+Status Pic18Controller::WriteTimedSequence(Pic18SequenceGenerator::TimedSequenceType type,
+                                           const DeviceInfo *device_info) {
   return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, device_info));
 }
 
@@ -247,5 +247,109 @@ Status Pic18Controller::ExecuteBulkErase(const Datastring16 &sequence,
     // 0000 00 00 Hold PGD low until erase completes.
     RETURN_IF_ERROR(driver_->WriteTimedSequence(timed_sequence));
   }
+  return Status::OK;
+}
+
+Status Pic16Controller::Open() {
+  RETURN_IF_ERROR(driver_->Open());
+  return WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr);
+}
+
+void Pic16Controller::Close() { driver_->Close(); }
+
+Status Pic16Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
+  RETURN_IF_ERROR(WriteCommand(LOAD_CONFIGURATION, 0));
+
+  for (int i = 0; i < 5; ++i) {
+    RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  }
+  // The PIC16 family has two different formats for device and revision ID. The first format stores
+  // all information in configuration word 6, the second uses configuration word 5 for the revision
+  // ID and word 6 for the device ID. The revision ID then starts with 10b, the device ID with 11b.
+  uint16_t location5_data, location6_data;
+  RETURN_IF_ERROR(ReadWithCommand(READ_PROG_MEMORY, &location5_data));
+  RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  RETURN_IF_ERROR(ReadWithCommand(READ_PROG_MEMORY, &location6_data));
+  if ((location5_data & 0x3000) == 0x3000) {
+    *device_id = location6_data >> 5;
+    *revision = location6_data & 0x1f;
+  } else {
+    *device_id = location6_data;
+    *revision = location5_data;
+  }
+  last_address_ = INT32_MAX;
+  return Status::OK;
+}
+
+Status Pic16Controller::Read(Section section, uint32_t start_address, uint32_t end_address,
+                             const DeviceInfo &device_info, Datastring *result) {
+  if (section == CONFIGURATION || section == USER_ID) {
+    if (start_address < last_address_ || last_address_ < device_info.user_id_offset) {
+      RETURN_IF_ERROR(WriteCommand(LOAD_CONFIGURATION, 0));
+      last_address_ = device_info.user_id_offset;
+    }
+  } else if (section == FLASH) {
+    if (start_address < last_address_) {
+      RETURN_IF_ERROR(ResetDevice());
+    }
+  } else if (section == EEPROM) {
+    start_address -= device_info.eeprom_offset;
+    end_address -= device_info.eeprom_offset;
+    if (start_address < last_address_) {
+      RETURN_IF_ERROR(ResetDevice());
+    }
+  }
+
+  if (last_address_ > start_address) {
+    fatal("INTERNAL ERROR: last_address_ (%04x) should be <= start_address (%04x)\n", last_address_,
+          start_address);
+  }
+  for (; last_address_ < start_address; ++last_address_) {
+    RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  }
+  for (; last_address_ < end_address; ++last_address_) {
+    uint16_t data;
+    RETURN_IF_ERROR(
+        ReadWithCommand(section == EEPROM ? READ_DATA_MEMORY : READ_PROG_MEMORY, &data));
+    RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+    result->push_back((data >> 8) & 0x3f);
+    result->push_back(data & 0xff);
+  }
+
+  return Status::OK;
+}
+Status Pic16Controller::Write(Section section, uint32_t address, const Datastring &data,
+                              const DeviceInfo &device_info) {
+  return Status::OK;
+}
+Status Pic16Controller::ChipErase(const DeviceInfo &device_info) { return Status::OK; }
+Status Pic16Controller::SectionErase(Section section, const DeviceInfo &device_info) {
+  return Status::OK;
+}
+
+Status Pic16Controller::WriteCommand(Pic16Command command, uint16_t payload) {
+  return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command, payload));
+}
+
+Status Pic16Controller::WriteCommand(Pic16Command command) {
+  return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command));
+}
+
+Status Pic16Controller::ReadWithCommand(Pic16Command command, uint16_t *result) {
+  Datastring16 data;
+  RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 7,
+                                            14, 1, &data));
+  *result = data[0];
+  return Status::OK;
+}
+
+Status Pic16Controller::WriteTimedSequence(Pic16SequenceGenerator::TimedSequenceType type,
+                                           const DeviceInfo *device_info) {
+  return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, device_info));
+}
+
+Status Pic16Controller::ResetDevice() {
+  RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr));
+  last_address_ = 0;
   return Status::OK;
 }

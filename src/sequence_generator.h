@@ -27,7 +27,16 @@ struct TimedStep {
 
 typedef std::vector<TimedStep> TimedSequence;
 
-class Pic18SequenceGenerator {
+class PicSequenceGenerator {
+ public:
+  virtual ~PicSequenceGenerator() = default;
+
+ protected:
+  std::vector<TimedStep> GenerateInitSequence() const;
+  Datastring GenerateBitSequence(uint32_t data, int bits) const;
+};
+
+class Pic18SequenceGenerator : public PicSequenceGenerator {
  public:
   enum TimedSequenceType {
     INIT_SEQUENCE,
@@ -37,12 +46,20 @@ class Pic18SequenceGenerator {
   };
 
   Datastring GetCommandSequence(Pic18Command command, uint16_t payload) const;
-  virtual std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
-                                                  const DeviceInfo *device_info) const;
-  virtual ~Pic18SequenceGenerator() = default;
+  std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
+                                          const DeviceInfo *device_info) const;
+};
 
- private:
-  Datastring GenerateBitSequence(uint32_t data, int bits) const;
+class Pic16SequenceGenerator : public PicSequenceGenerator {
+ public:
+  enum TimedSequenceType {
+    INIT_SEQUENCE,
+  };
+
+  Datastring GetCommandSequence(Pic16Command command, uint16_t payload) const;
+  Datastring GetCommandSequence(Pic16Command command) const;
+  std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
+                                          const DeviceInfo *device_info) const;
 };
 
 #endif

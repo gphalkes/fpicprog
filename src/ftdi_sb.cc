@@ -67,7 +67,7 @@ Status FtdiSbDriver::Open() {
       }
     }
   }
-  if (ftdi_set_bitmode(&ftdic_, translate_pins_[nMCLR | PGC | PGD], BITMODE_SYNCBB) < 0) {
+  if (ftdi_set_bitmode(&ftdic_, translate_pins_[nMCLR | PGC | PGD | PGM], BITMODE_SYNCBB) < 0) {
     AutoClosureRunner deinit([this] { ftdi_deinit(&ftdic_); });
     return Status(INIT_FAILED,
                   strings::Cat("Couldn't set bitbang mode: ", ftdi_get_error_string(&ftdic_)));

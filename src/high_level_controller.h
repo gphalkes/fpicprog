@@ -19,9 +19,8 @@
 
 class HighLevelController {
  public:
-  HighLevelController(std::unique_ptr<Controller> controller, std::unique_ptr<DeviceDb> device_db,
-                      bool lvp)
-      : controller_(std::move(controller)), device_db_(std::move(device_db)), lvp_(lvp) {}
+  HighLevelController(std::unique_ptr<Controller> controller, std::unique_ptr<DeviceDb> device_db)
+      : controller_(std::move(controller)), device_db_(std::move(device_db)) {}
 
   Status ReadProgram(const std::vector<Section> &sections, Program *program);
   Status WriteProgram(const std::vector<Section> &sections, const Program &program,
@@ -46,10 +45,9 @@ class HighLevelController {
 
   bool device_open_ = false;
   DeviceInfo device_info_;
-  uint16_t revision_;
+  uint16_t revision_ = 0;
   std::unique_ptr<Controller> controller_;
   std::unique_ptr<DeviceDb> device_db_;
-  bool lvp_;
 };
 
 #endif

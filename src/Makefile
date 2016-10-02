@@ -14,3 +14,4 @@ include ../../makesys/rules.mk
 CXXFLAGS += -std=c++14
 CXXFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
 CXXFLAGS += -DDEVICE_DB_PATH=\"$(CURDIR)/../device_db\"
+LDFLAGS += -std=c++14

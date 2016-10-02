@@ -304,10 +304,10 @@ Status Pic16Controller::Read(Section section, uint32_t start_address, uint32_t e
     fatal("INTERNAL ERROR: last_address_ (%04x) should be <= start_address (%04x)\n", last_address_,
           start_address);
   }
-  for (; last_address_ < start_address; ++last_address_) {
+  for (; last_address_ < start_address; last_address_ += 2) {
     RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
   }
-  for (; last_address_ < end_address; ++last_address_) {
+  for (; last_address_ < end_address; last_address_ += 2) {
     uint16_t data;
     RETURN_IF_ERROR(
         ReadWithCommand(section == EEPROM ? READ_DATA_MEMORY : READ_PROG_MEMORY, &data));
@@ -322,7 +322,16 @@ Status Pic16Controller::Write(Section section, uint32_t address, const Datastrin
                               const DeviceInfo &device_info) {
   return Status::OK;
 }
-Status Pic16Controller::ChipErase(const DeviceInfo &device_info) { return Status::OK; }
+
+Status Pic16Controller::ChipErase(const DeviceInfo &device_info) {
+  RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::BULK_ERASE_PROGRAM, &device_info));
+
+  if (device_info.eeprom_size > 0) {
+    RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::BULK_ERASE_DATA, &device_info));
+  }
+  return Status::OK;
+}
+
 Status Pic16Controller::SectionErase(Section section, const DeviceInfo &device_info) {
   return Status::OK;
 }

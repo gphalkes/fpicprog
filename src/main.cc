@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
   if (filename.empty()) {
     filename = strings::Cat(DEVICE_DB_PATH, "/", FLAGS_family, ".lst");
   }
-  CHECK_OK(device_db->Load(filename));
+  CHECK_OK(device_db->Load(filename, FLAGS_family == "pic18" ? 1 : 2));
 
   HighLevelController high_level_controller(std::move(controller), std::move(device_db));
 

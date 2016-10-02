@@ -45,6 +45,7 @@ Status HighLevelController::ReadProgram(const std::vector<Section> &sections, Pr
 
 Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
                                          const Program &program, EraseMode erase_mode) {
+  //FIXME: perform row erase!
   std::set<Section> write_sections(sections.begin(), sections.end());
   DeviceCloser closer(this);
   RETURN_IF_ERROR(InitDevice());

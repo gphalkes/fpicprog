@@ -47,7 +47,7 @@ struct DeviceInfo {
 
 class DeviceDb {
  public:
-  Status Load(const std::string &name);
+  Status Load(const std::string &name, uint32_t unit_factor);
 
   Status GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info);
 

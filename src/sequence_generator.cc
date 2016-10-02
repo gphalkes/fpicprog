@@ -61,6 +61,9 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
   constexpr int base = nMCLR | PGM;
 
   switch (type) {
+    case INIT_SEQUENCE:
+      result = GenerateInitSequence();
+      break;
     case BULK_ERASE_SEQUENCE:
       result.push_back(
           TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC, base},
@@ -78,9 +81,6 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
                                  device_info ? device_info->config_write_timing : MilliSeconds(1)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
       result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
-      break;
-    case INIT_SEQUENCE:
-      result = GenerateInitSequence();
       break;
     default:
       FATAL("Requested unimplemented sequence %d\n", type);
@@ -112,6 +112,12 @@ std::vector<TimedStep> Pic16SequenceGenerator::GetTimedSequence(
   switch (type) {
     case INIT_SEQUENCE:
       result = GenerateInitSequence();
+      break;
+    case BULK_ERASE_PROGRAM:
+      result.push_back(TimedStep{GetCommandSequence(::BULK_ERASE_PROGRAM), device_info->bulk_erase_timing});
+      break;
+    case BULK_ERASE_DATA:
+      result.push_back(TimedStep{GetCommandSequence(::BULK_ERASE_DATA), device_info->bulk_erase_timing});
       break;
     default:
       FATAL("Requested unimplemented sequence %d\n", type);

@@ -54,6 +54,8 @@ class Pic16SequenceGenerator : public PicSequenceGenerator {
  public:
   enum TimedSequenceType {
     INIT_SEQUENCE,
+    BULK_ERASE_PROGRAM,
+    BULK_ERASE_DATA,
   };
 
   Datastring GetCommandSequence(Pic16Command command, uint16_t payload) const;

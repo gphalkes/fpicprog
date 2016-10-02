@@ -309,8 +309,12 @@ Status Pic16Controller::Read(Section section, uint32_t start_address, uint32_t e
   }
   for (; last_address_ < end_address; last_address_ += 2) {
     uint16_t data;
-    RETURN_IF_ERROR(
-        ReadWithCommand(section == EEPROM ? READ_DATA_MEMORY : READ_PROG_MEMORY, &data));
+    Status status(SYNC_LOST, "FAKE STATUS");
+    for (int i = 0; i < 3 && status.code() == SYNC_LOST; ++i) {
+      status =
+          ReadWithCommand(section == EEPROM ? READ_DATA_MEMORY : READ_PROG_MEMORY, &data);
+    }
+    RETURN_IF_ERROR(status);
     RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
     result->push_back((data >> 8) & 0x3f);
     result->push_back(data & 0xff);

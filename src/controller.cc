@@ -283,34 +283,16 @@ Status Pic16Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
 
 Status Pic16Controller::Read(Section section, uint32_t start_address, uint32_t end_address,
                              const DeviceInfo &device_info, Datastring *result) {
-  if (section == CONFIGURATION || section == USER_ID) {
-    if (start_address < last_address_ || last_address_ < device_info.user_id_offset) {
-      RETURN_IF_ERROR(WriteCommand(LOAD_CONFIGURATION, 0));
-      last_address_ = device_info.user_id_offset;
-    }
-  } else if (section == FLASH) {
-    if (start_address < last_address_) {
-      RETURN_IF_ERROR(ResetDevice());
-    }
-  } else if (section == EEPROM) {
-    start_address -= device_info.eeprom_offset;
-    end_address -= device_info.eeprom_offset;
-    if (start_address < last_address_) {
-      RETURN_IF_ERROR(ResetDevice());
-    }
-  }
+  RETURN_IF_ERROR(LoadAddress(section, start_address, device_info));
 
-  if (last_address_ > start_address) {
-    fatal("INTERNAL ERROR: last_address_ (%04x) should be <= start_address (%04x)\n", last_address_,
-          start_address);
-  }
-  for (; last_address_ < start_address; last_address_ += 2) {
-    RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
-  }
-  for (; last_address_ < end_address; last_address_ += 2) {
+  // This could use a different read mode, which reads more than a single word at a time. However,
+  // when sync is lost then, we can't retry immediately because the PC has already been advanced
+  // beyond the point where we last read. Hence it can be slower, especially for larger flash
+  // memories.
+  for (int i = end_address - start_address; i > 0; i -= 2, last_address_ += 2) {
     uint16_t data;
     Status status(SYNC_LOST, "FAKE STATUS");
-    for (int i = 0; i < 3 && status.code() == SYNC_LOST; ++i) {
+    for (int j = 0; j < 3 && status.code() == SYNC_LOST; ++j) {
       status =
           ReadWithCommand(section == EEPROM ? READ_DATA_MEMORY : READ_PROG_MEMORY, &data);
     }
@@ -322,8 +304,45 @@ Status Pic16Controller::Read(Section section, uint32_t start_address, uint32_t e
 
   return Status::OK;
 }
+
 Status Pic16Controller::Write(Section section, uint32_t address, const Datastring &data,
                               const DeviceInfo &device_info) {
+  RETURN_IF_ERROR(LoadAddress(section, address, device_info));
+
+  if (section == FLASH) {
+    uint32_t block_size = device_info.write_block_size;
+    if (address % block_size != 0) {
+      return Status(INVALID_ARGUMENT, "Address is not a multiple of the write_block_size");
+    }
+    if (data.size() % block_size != 0) {
+      return Status(INVALID_ARGUMENT, "Data size is not a multiple of the write_block_size");
+    }
+    for (size_t base = 0; base < data.size(); base += block_size) {
+      for (uint32_t i = 0; i < block_size; i += 2) {
+        uint16_t datum = data[base + i];
+        datum <<= 8;
+        datum |= static_cast<uint8_t>(data[base + i + 1]);
+        RETURN_IF_ERROR(WriteCommand(LOAD_PROG_MEMORY, datum));
+        if (i != block_size - 1) {
+          RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+          last_address_ += 2;
+        }
+      }
+      RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::WRITE_DATA, &device_info));
+      RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+      last_address_ += 2;
+    }
+  } else {
+    for (size_t i = 0; i < data.size(); i += 2) {
+      uint16_t datum = data[i];
+      datum <<= 8;
+      datum |= static_cast<uint8_t>(data[i + 1]);
+      RETURN_IF_ERROR(WriteCommand(LOAD_PROG_MEMORY, datum));
+      RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::WRITE_DATA, &device_info));
+      RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+      last_address_ += 2;
+    }
+  }
   return Status::OK;
 }
 
@@ -359,6 +378,33 @@ Status Pic16Controller::ReadWithCommand(Pic16Command command, uint16_t *result) 
 Status Pic16Controller::WriteTimedSequence(Pic16SequenceGenerator::TimedSequenceType type,
                                            const DeviceInfo *device_info) {
   return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, device_info));
+}
+
+Status Pic16Controller::LoadAddress(Section section, uint32_t address, const DeviceInfo &device_info) {
+  if (section == CONFIGURATION || section == USER_ID) {
+    if (address < last_address_ || last_address_ < device_info.user_id_offset) {
+      RETURN_IF_ERROR(WriteCommand(LOAD_CONFIGURATION, 0));
+      last_address_ = device_info.user_id_offset;
+    }
+  } else if (section == FLASH) {
+    if (address < last_address_) {
+      RETURN_IF_ERROR(ResetDevice());
+    }
+  } else if (section == EEPROM) {
+    address -= device_info.eeprom_offset;
+    if (address < last_address_) {
+      RETURN_IF_ERROR(ResetDevice());
+    }
+  }
+
+  if (last_address_ > address) {
+    fatal("INTERNAL ERROR: last_address_ (%04x) should be <= start_address (%04x)\n", last_address_,
+          address);
+  }
+  for (; last_address_ < address; last_address_ += 2) {
+    RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  }
+  return Status::OK;
 }
 
 Status Pic16Controller::ResetDevice() {

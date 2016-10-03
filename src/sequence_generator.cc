@@ -119,6 +119,11 @@ std::vector<TimedStep> Pic16SequenceGenerator::GetTimedSequence(
     case BULK_ERASE_DATA:
       result.push_back(TimedStep{GetCommandSequence(::BULK_ERASE_DATA), device_info->bulk_erase_timing});
       break;
+    case WRITE_DATA:
+      //FIXME: make this generic!
+#warning FIX THIS!
+      result.push_back(TimedStep{GetCommandSequence(::BEGIN_PROGRAMMING_INT), MilliSeconds(6)});
+      break;
     default:
       FATAL("Requested unimplemented sequence %d\n", type);
   }

@@ -80,7 +80,6 @@ static void MultiplyUnits(DeviceInfo *info, uint32_t unit_factor) {
   info->eeprom_size *= unit_factor;
   info->eeprom_offset *= unit_factor;
   info->write_block_size *= unit_factor;
-  info->write_block_size *= unit_factor;
 }
 
 Status DeviceDb::Load(const std::string &name, uint32_t unit_factor) {

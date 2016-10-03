@@ -56,6 +56,7 @@ class Pic16SequenceGenerator : public PicSequenceGenerator {
     INIT_SEQUENCE,
     BULK_ERASE_PROGRAM,
     BULK_ERASE_DATA,
+    WRITE_DATA,
   };
 
   Datastring GetCommandSequence(Pic16Command command, uint16_t payload) const;

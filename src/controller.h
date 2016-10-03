@@ -91,13 +91,13 @@ class Pic16Controller : public Controller {
   Status ReadWithCommand(Pic16Command command, uint16_t *data);
   Status WriteTimedSequence(Pic16SequenceGenerator::TimedSequenceType type,
                             const DeviceInfo *device_info);
-
+  Status LoadAddress(Section section, uint32_t address, const DeviceInfo &device_info);
   Status ResetDevice();
 
   std::unique_ptr<Driver> driver_;
   std::unique_ptr<Pic16SequenceGenerator> sequence_generator_;
   const std::string device_name_;
-  int32_t last_address_ = 0;
+  uint32_t last_address_ = 0;
 };
 
 #endif

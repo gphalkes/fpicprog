@@ -1,10 +1,10 @@
 [16F887]
 device_id = 0104h
 program_memory_size = 2000h
-user_id_size = 4
-user_id_offset = 2000h
-config_size = 2
-config_offset = 2007h
+config_size = 9
+config_offset = 2000h
 eeprom_size = 256
 eeprom_offset = 2100h
 bulk_erase_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 1

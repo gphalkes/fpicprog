@@ -54,7 +54,7 @@ class Pic16SequenceGenerator : public PicSequenceGenerator {
  public:
   enum TimedSequenceType {
     INIT_SEQUENCE,
-    BULK_ERASE_PROGRAM,
+    CHIP_ERASE,
     BULK_ERASE_DATA,
     WRITE_DATA,
   };

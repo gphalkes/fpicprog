@@ -107,20 +107,25 @@ Datastring Pic16SequenceGenerator::GetCommandSequence(Pic16Command command) cons
 std::vector<TimedStep> Pic16SequenceGenerator::GetTimedSequence(
     TimedSequenceType type, const DeviceInfo *device_info) const {
   std::vector<TimedStep> result;
-  constexpr int base = nMCLR | PGM;
 
   switch (type) {
     case INIT_SEQUENCE:
       result = GenerateInitSequence();
       break;
-    case BULK_ERASE_PROGRAM:
-      result.push_back(TimedStep{GetCommandSequence(::BULK_ERASE_PROGRAM), device_info->bulk_erase_timing});
+    case CHIP_ERASE:
+      // FIXME: make this generic!
+      #warning FIX THIS!
+      result.push_back(
+          TimedStep{GetCommandSequence(::BULK_ERASE_PROGRAM), device_info->bulk_erase_timing});
+      result.push_back(
+          TimedStep{GetCommandSequence(::BULK_ERASE_DATA), device_info->bulk_erase_timing});
       break;
     case BULK_ERASE_DATA:
-      result.push_back(TimedStep{GetCommandSequence(::BULK_ERASE_DATA), device_info->bulk_erase_timing});
+      result.push_back(
+          TimedStep{GetCommandSequence(::BULK_ERASE_DATA), device_info->bulk_erase_timing});
       break;
     case WRITE_DATA:
-      //FIXME: make this generic!
+// FIXME: make this generic!
 #warning FIX THIS!
       result.push_back(TimedStep{GetCommandSequence(::BEGIN_PROGRAMMING_INT), MilliSeconds(6)});
       break;

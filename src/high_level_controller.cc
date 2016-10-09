@@ -34,6 +34,7 @@ Status HighLevelController::ReadProgram(const std::vector<Section> &sections, Pr
     print_msg(1, "Reading configuration data\n");
     RETURN_IF_ERROR(ReadData(CONFIGURATION, &(*program)[device_info_.config_offset],
                              device_info_.config_offset, device_info_.config_size));
+    RemoveMissingConfigBytes(program, device_info_);
   }
   if (ContainsKey(sections_set, EEPROM) && device_info_.eeprom_size > 0) {
     print_msg(1, "Reading EEPROM data\n");
@@ -45,7 +46,7 @@ Status HighLevelController::ReadProgram(const std::vector<Section> &sections, Pr
 
 Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
                                          const Program &program, EraseMode erase_mode) {
-  //FIXME: perform row erase, or drop support for row-erase entirely
+  // FIXME: perform row erase, or drop support for row-erase entirely
   std::set<Section> write_sections(sections.begin(), sections.end());
   DeviceCloser closer(this);
   RETURN_IF_ERROR(InitDevice());
@@ -139,6 +140,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
       erase_sections.erase(EEPROM);
     // FALLTHROUGH
     case SECTION_ERASE:
+#warning FIXME: this should pass the sections to the controller to determine if it is possible to erase this combination.
       if (ContainsKey(erase_sections, FLASH)) {
         print_msg(1, "Starting flash erase\n");
         RETURN_IF_ERROR(controller_->SectionErase(FLASH, device_info_));

@@ -94,6 +94,8 @@ class Pic16Controller : public Controller {
   Status LoadAddress(Section section, uint32_t address, const DeviceInfo &device_info);
   Status ResetDevice();
 
+  Status IncrementPc(const DeviceInfo &device_info);
+
   std::unique_ptr<Driver> driver_;
   std::unique_ptr<Pic16SequenceGenerator> sequence_generator_;
   const std::string device_name_;

@@ -289,17 +289,16 @@ Status Pic16Controller::Read(Section section, uint32_t start_address, uint32_t e
   // when sync is lost then, we can't retry immediately because the PC has already been advanced
   // beyond the point where we last read. Hence it can be slower, especially for larger flash
   // memories.
-  for (int i = end_address - start_address; i > 0; i -= 2, last_address_ += 2) {
+  for (int i = end_address - start_address; i > 0; i -= 2) {
     uint16_t data;
     Status status(SYNC_LOST, "FAKE STATUS");
     for (int j = 0; j < 3 && status.code() == SYNC_LOST; ++j) {
-      status =
-          ReadWithCommand(section == EEPROM ? READ_DATA_MEMORY : READ_PROG_MEMORY, &data);
+      status = ReadWithCommand(section == EEPROM ? READ_DATA_MEMORY : READ_PROG_MEMORY, &data);
     }
     RETURN_IF_ERROR(status);
-    RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
-    result->push_back((data >> 8) & 0x3f);
+    RETURN_IF_ERROR(IncrementPc(device_info));
     result->push_back(data & 0xff);
+    result->push_back((data >> 8) & 0x3f);
   }
 
   return Status::OK;
@@ -319,18 +318,16 @@ Status Pic16Controller::Write(Section section, uint32_t address, const Datastrin
     }
     for (size_t base = 0; base < data.size(); base += block_size) {
       for (uint32_t i = 0; i < block_size; i += 2) {
-        uint16_t datum = data[base + i];
+        uint16_t datum = data[base + i + 1];
         datum <<= 8;
-        datum |= static_cast<uint8_t>(data[base + i + 1]);
+        datum |= static_cast<uint8_t>(data[base + i]);
         RETURN_IF_ERROR(WriteCommand(LOAD_PROG_MEMORY, datum));
-        if (i != block_size - 1) {
-          RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
-          last_address_ += 2;
+        if (i != block_size - 2) {
+          RETURN_IF_ERROR(IncrementPc(device_info));
         }
       }
       RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::WRITE_DATA, &device_info));
-      RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
-      last_address_ += 2;
+      RETURN_IF_ERROR(IncrementPc(device_info));
     }
   } else {
     for (size_t i = 0; i < data.size(); i += 2) {
@@ -339,19 +336,14 @@ Status Pic16Controller::Write(Section section, uint32_t address, const Datastrin
       datum |= static_cast<uint8_t>(data[i + 1]);
       RETURN_IF_ERROR(WriteCommand(LOAD_PROG_MEMORY, datum));
       RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::WRITE_DATA, &device_info));
-      RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
-      last_address_ += 2;
+      RETURN_IF_ERROR(IncrementPc(device_info));
     }
   }
   return Status::OK;
 }
 
 Status Pic16Controller::ChipErase(const DeviceInfo &device_info) {
-  RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::BULK_ERASE_PROGRAM, &device_info));
-
-  if (device_info.eeprom_size > 0) {
-    RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::BULK_ERASE_DATA, &device_info));
-  }
+  RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::CHIP_ERASE, &device_info));
   return Status::OK;
 }
 
@@ -380,11 +372,13 @@ Status Pic16Controller::WriteTimedSequence(Pic16SequenceGenerator::TimedSequence
   return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, device_info));
 }
 
-Status Pic16Controller::LoadAddress(Section section, uint32_t address, const DeviceInfo &device_info) {
-  if (section == CONFIGURATION || section == USER_ID) {
-    if (address < last_address_ || last_address_ < device_info.user_id_offset) {
+#warning FIXME: implement a different address handling for the chips that lack LOAD_CONFIGURATION
+Status Pic16Controller::LoadAddress(Section section, uint32_t address,
+                                    const DeviceInfo &device_info) {
+  if (section == CONFIGURATION) {
+    if (address < last_address_ || last_address_ < device_info.config_offset) {
       RETURN_IF_ERROR(WriteCommand(LOAD_CONFIGURATION, 0));
-      last_address_ = device_info.user_id_offset;
+      last_address_ = device_info.config_offset;
     }
   } else if (section == FLASH) {
     if (address < last_address_) {
@@ -410,5 +404,18 @@ Status Pic16Controller::LoadAddress(Section section, uint32_t address, const Dev
 Status Pic16Controller::ResetDevice() {
   RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr));
   last_address_ = 0;
+  return Status::OK;
+}
+
+Status Pic16Controller::IncrementPc(const DeviceInfo &device_info) {
+  RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  bool was_config = false;
+  if (last_address_ >= device_info.config_offset) {
+    was_config = true;
+  }
+  last_address_ += 2;
+  if (last_address_ >= device_info.config_offset && !was_config) {
+    last_address_ = 0;
+  }
   return Status::OK;
 }

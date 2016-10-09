@@ -113,13 +113,18 @@ int main(int argc, char **argv) {
   } else {
     fatal("Unknown device family %s.\n", FLAGS_family.c_str());
   }
-  auto device_db = std::make_unique<DeviceDb>();
+  std::unique_ptr<DeviceDb> device_db;
+  if (FLAGS_family == "pic18") {
+    device_db = std::make_unique<DeviceDb>(1, Datastring{0xff});
+  } else if (FLAGS_family == "pic16") {
+    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f});
+  }
 
   std::string filename = FLAGS_device_db;
   if (filename.empty()) {
     filename = strings::Cat(DEVICE_DB_PATH, "/", FLAGS_family, ".lst");
   }
-  CHECK_OK(device_db->Load(filename, FLAGS_family == "pic18" ? 1 : 2));
+  CHECK_OK(device_db->Load(filename));
 
   HighLevelController high_level_controller(std::move(controller), std::move(device_db));
 

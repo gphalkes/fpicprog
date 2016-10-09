@@ -88,7 +88,7 @@ static void MultiplyUnits(DeviceInfo *info, uint32_t unit_factor) {
   }
 }
 
-Status DeviceDb::Load(const std::string &name, uint32_t unit_factor) {
+Status DeviceDb::Load(const std::string &name) {
   FILE *in;
   if ((in = fopen(name.c_str(), "r")) == nullptr) {
     return Status(FILE_NOT_FOUND,
@@ -131,7 +131,7 @@ Status DeviceDb::Load(const std::string &name, uint32_t unit_factor) {
               strings::Cat("Duplicate device ID ", HexUint16(last_info.device_id), " (",
                            last_info.name, ", ", device_db_[last_info.device_id].name, ")"));
         }
-        MultiplyUnits(&last_info, unit_factor);
+        MultiplyUnits(&last_info, unit_factor_);
         device_db_[last_info.device_id] = last_info;
       }
       last_info = DeviceInfo();
@@ -208,7 +208,7 @@ Status DeviceDb::Load(const std::string &name, uint32_t unit_factor) {
                     strings::Cat("Duplicate device ID ", HexUint16(last_info.device_id), " (",
                                  last_info.name, ", ", device_db_[last_info.device_id].name, ")"));
     }
-    MultiplyUnits(&last_info, unit_factor);
+    MultiplyUnits(&last_info, unit_factor_);
     device_db_[last_info.device_id] = last_info;
   }
 

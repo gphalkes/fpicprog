@@ -47,12 +47,17 @@ struct DeviceInfo {
 
 class DeviceDb {
  public:
-  Status Load(const std::string &name, uint32_t unit_factor);
+  DeviceDb(uint32_t unit_factor, const Datastring &block_filler) : unit_factor_(unit_factor), block_filler_(block_filler) {}
+  Status Load(const std::string &name);
 
   Status GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info);
+  uint32_t GetBlockSizeMultiple() const { return unit_factor_; }
+  const Datastring &GetBlockFillter() const { return block_filler_; }
 
  private:
   std::map<uint16_t, DeviceInfo> device_db_;
+  const uint32_t unit_factor_;
+  const Datastring block_filler_;
 };
 
 #endif

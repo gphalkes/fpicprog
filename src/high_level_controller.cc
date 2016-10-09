@@ -101,7 +101,10 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
         RETURN_IF_ERROR(ReadData(FLASH, &data, range.first, range.second - range.first));
         block_aligned_program[range.first] = data;
       } else {
-        block_aligned_program[range.first].assign(range.second - range.first, 0xff);
+        const Datastring &filler = device_db_->GetBlockFillter();
+        for (size_t i = 0; i < range.second - range.first; ++i) {
+          block_aligned_program[range.first].push_back(filler[i % filler.size()]);
+        }
       }
     }
   }

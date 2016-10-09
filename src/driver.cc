@@ -24,6 +24,7 @@ Status Driver::WriteTimedSequence(const TimedSequence &sequence) {
   for (const auto &step : sequence) {
     RETURN_IF_ERROR(WriteDatastring(step.data));
     RETURN_IF_ERROR(FlushOutput());
+    Sleep(step.sleep);
   }
   return Status::OK;
 }

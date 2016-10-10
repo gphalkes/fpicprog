@@ -331,9 +331,9 @@ Status Pic16Controller::Write(Section section, uint32_t address, const Datastrin
     }
   } else {
     for (size_t i = 0; i < data.size(); i += 2) {
-      uint16_t datum = data[i];
+      uint16_t datum = data[i + 1];
       datum <<= 8;
-      datum |= static_cast<uint8_t>(data[i + 1]);
+      datum |= static_cast<uint8_t>(data[i]);
       RETURN_IF_ERROR(WriteCommand(LOAD_PROG_MEMORY, datum));
       RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::WRITE_DATA, &device_info));
       RETURN_IF_ERROR(IncrementPc(device_info));
@@ -395,8 +395,8 @@ Status Pic16Controller::LoadAddress(Section section, uint32_t address,
     fatal("INTERNAL ERROR: last_address_ (%04x) should be <= start_address (%04x)\n", last_address_,
           address);
   }
-  for (; last_address_ < address; last_address_ += 2) {
-    RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  while (last_address_ < address) {
+    RETURN_IF_ERROR(IncrementPc(device_info));
   }
   return Status::OK;
 }

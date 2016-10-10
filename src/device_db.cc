@@ -86,6 +86,7 @@ static void MultiplyUnits(DeviceInfo *info, uint32_t unit_factor) {
       missing_locations.push_back(location * unit_factor + i);
     }
   }
+  info->missing_locations = missing_locations;
 }
 
 Status DeviceDb::Load(const std::string &name) {

@@ -119,7 +119,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
 
   print_msg(2, "Program section addresses + sizes dump\n");
   for (const auto &section : block_aligned_program) {
-    print_msg(2, "Section: %06x-%06zx\n", section.first, section.first + section.second.size());
+    print_msg(2, "Section: %06X-%06zX\n", section.first, section.first + section.second.size());
   }
 
   std::set<Section> erase_sections;
@@ -175,7 +175,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
 
   for (const auto &section : block_aligned_program) {
     if (ContainsKey(write_sections, FLASH) && section.first < device_info_.program_memory_size) {
-      print_msg(1, "Writing flash data %06x-%06lx\n", section.first,
+      print_msg(1, "Writing flash data %06X-%06lX\n", section.first,
                 section.first + section.second.size());
       RETURN_IF_ERROR(controller_->Write(FLASH, section.first, section.second, device_info_));
       print_msg(1, "Verifying written flash data\n");
@@ -183,7 +183,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
     } else if (ContainsKey(write_sections, USER_ID) &&
                section.first >= device_info_.user_id_offset &&
                section.first < device_info_.user_id_offset + device_info_.user_id_size) {
-      print_msg(1, "Writing user ID data %06x-%06lx\n", section.first,
+      print_msg(1, "Writing user ID data %06X-%06lX\n", section.first,
                 section.first + section.second.size());
       RETURN_IF_ERROR(controller_->Write(USER_ID, section.first, section.second, device_info_));
       print_msg(1, "Verifying written user ID data\n");
@@ -191,7 +191,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
     } else if (ContainsKey(write_sections, CONFIGURATION) &&
                section.first >= device_info_.config_offset &&
                section.first < device_info_.config_offset + device_info_.config_size) {
-      print_msg(1, "Writing configuration data %06x-%06lx\n", section.first,
+      print_msg(1, "Writing configuration data %06X-%06lX\n", section.first,
                 section.first + section.second.size());
       RETURN_IF_ERROR(
           controller_->Write(CONFIGURATION, section.first, section.second, device_info_));
@@ -199,7 +199,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
       RETURN_IF_ERROR(VerifyData(CONFIGURATION, section.second, section.first));
     } else if (ContainsKey(write_sections, EEPROM) && section.first >= device_info_.eeprom_offset &&
                section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
-      print_msg(1, "Writing EEPROM data %06x-%06lx\n", section.first,
+      print_msg(1, "Writing EEPROM data %06X-%06lX\n", section.first,
                 section.first + section.second.size());
       RETURN_IF_ERROR(controller_->Write(EEPROM, section.first, section.second, device_info_));
       print_msg(1, "Verifying written EEPROM data\n");
@@ -314,9 +314,10 @@ Status HighLevelController::ReadData(Section section, Datastring *data, uint32_t
   return Status::OK;
 }
 
-Status HighLevelController::VerifyData(Section, const Datastring &data, uint32_t base_address) {
+Status HighLevelController::VerifyData(Section section, const Datastring &data,
+                                       uint32_t base_address) {
   Datastring written_data;
-  RETURN_IF_ERROR(ReadData(FLASH, &written_data, base_address, data.size()));
+  RETURN_IF_ERROR(ReadData(section, &written_data, base_address, data.size()));
   if (written_data != data) {
     std::string data_as_bytes;
     for (const uint8_t byte : data) {

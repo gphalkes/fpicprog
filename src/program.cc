@@ -186,10 +186,10 @@ Status ReadIhex(Program *program, FILE *in) {
 void WriteIhex(const Program &program, FILE *out) {
   int bytes_per_line = std::max(1, std::min<int>(FLAGS_ihex_bytes_per_line, 255));
 
+  uint32_t last_address = 0;
   for (const auto &section : program) {
     size_t section_size = section.second.size();
     uint32_t section_offset = section.first;
-    uint32_t last_address = std::numeric_limits<uint32_t>::max();
     for (size_t idx = 0; idx < section_size;) {
       uint32_t next_offset = section_offset + idx;
       if ((next_offset >> 16) != (last_address >> 16)) {
@@ -280,7 +280,7 @@ void RemoveMissingConfigBytes(Program *program, const DeviceInfo &device_info) {
       Datastring first = iter->second.substr(0, missing_address - iter->first);
       Datastring second = iter->second.substr(missing_address + 1 - iter->first, Datastring::npos);
       if (!second.empty()) {
-        (*program)[iter->first + missing_address + 1] = second;
+        (*program)[missing_address + 1] = second;
       }
       if (first.empty()) {
         program->erase(iter);

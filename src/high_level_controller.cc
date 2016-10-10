@@ -213,6 +213,7 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
 Status HighLevelController::ChipErase() {
   DeviceCloser closer(this);
   RETURN_IF_ERROR(InitDevice());
+  print_msg(1, "Initialized device [%s]\n", device_info_.name.c_str());
 
   return controller_->ChipErase(device_info_);
 }

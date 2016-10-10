@@ -31,6 +31,7 @@ struct DeviceInfo {
   uint32_t eeprom_size = 0;
   uint32_t eeprom_offset = 0;
   uint16_t write_block_size = 0;
+  Datastring16 block_write_sequence;
   Datastring16 chip_erase_sequence;
   Datastring16 flash_erase_sequence;
   Datastring16 user_id_erase_sequence;
@@ -40,6 +41,7 @@ struct DeviceInfo {
   Duration block_write_timing = MilliSeconds(1);
   Duration config_write_timing = MilliSeconds(5);
   std::vector<uint32_t> missing_locations;
+  std::vector<std::string> flags;
 
   void Dump() const;
   Status Validate() const;
@@ -47,8 +49,14 @@ struct DeviceInfo {
 
 class DeviceDb {
  public:
-  DeviceDb(uint32_t unit_factor, const Datastring &block_filler)
-      : unit_factor_(unit_factor), block_filler_(block_filler) {}
+  using SequenceValidator = std::function<Status(const Datastring16 &)>;
+
+  DeviceDb(uint32_t unit_factor, const Datastring &block_filler,
+           const std::vector<std::string> &accepted_flags, SequenceValidator sequence_validator)
+      : unit_factor_(unit_factor),
+        block_filler_(block_filler),
+        accepted_flags_(accepted_flags),
+        sequence_validator_(sequence_validator) {}
   Status Load(const std::string &name);
 
   Status GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info);
@@ -59,6 +67,8 @@ class DeviceDb {
   std::map<uint16_t, DeviceInfo> device_db_;
   const uint32_t unit_factor_;
   const Datastring block_filler_;
+  const std::vector<std::string> accepted_flags_;
+  SequenceValidator sequence_validator_;
 };
 
 #endif

@@ -54,15 +54,21 @@ class Pic16SequenceGenerator : public PicSequenceGenerator {
  public:
   enum TimedSequenceType {
     INIT_SEQUENCE,
-    CHIP_ERASE,
-    BULK_ERASE_DATA,
-    WRITE_DATA,
+    CHIP_ERASE_SEQUENCE,
+    ERASE_DATA_SEQUENCE,
+    WRITE_DATA_SEQUENCE,
   };
 
   Datastring GetCommandSequence(Pic16Command command, uint16_t payload) const;
   Datastring GetCommandSequence(Pic16Command command) const;
   std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
                                           const DeviceInfo *device_info) const;
+
+  static Status ValidateSequence(const Datastring16 &sequence);
+
+ private:
+  std::vector<TimedStep> TimedSequenceFromDatastring16(const Datastring16 &sequence,
+                                                       const DeviceInfo &device_info) const;
 };
 
 #endif

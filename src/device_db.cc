@@ -44,14 +44,15 @@ static Status NumericalValue(const std::string &str, T *result) {
   return Status::OK;
 }
 
-static Status SequenceValue(const std::string &str, Datastring16 *result) {
+static Status SequenceValue(const std::string &str, Datastring16 *result,
+                            DeviceDb::SequenceValidator sequence_validator) {
   std::vector<std::string> sequence = strings::Split<std::string>(str, ' ', false);
   for (const auto &value : sequence) {
     uint16_t parsed_value;
     RETURN_IF_ERROR(NumericalValue(value, &parsed_value));
     result->push_back(parsed_value);
   }
-  return Status::OK;
+  return sequence_validator(*result);
 }
 
 static Status DurationValue(const std::string &str, Duration *result) {
@@ -89,6 +90,7 @@ static void MultiplyUnits(DeviceInfo *info, uint32_t unit_factor) {
   info->missing_locations = missing_locations;
 }
 
+// FIXME: add some way to disallow certain fields
 Status DeviceDb::Load(const std::string &name) {
   FILE *in;
   if ((in = fopen(name.c_str(), "r")) == nullptr) {
@@ -167,21 +169,30 @@ Status DeviceDb::Load(const std::string &name) {
       } else if (key == "write_block_size") {
         RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.write_block_size),
                                     strings::Cat(" in device database at line ", i + 1));
+      } else if (key == "block_write_sequence") {
+        RETURN_IF_ERROR_WITH_APPEND(
+            SequenceValue(value, &last_info.block_write_sequence, sequence_validator_),
+            strings::Cat(" in device database at line ", i + 1));
       } else if (key == "chip_erase_sequence") {
-        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.chip_erase_sequence),
-                                    strings::Cat(" in device database at line ", i + 1));
+        RETURN_IF_ERROR_WITH_APPEND(
+            SequenceValue(value, &last_info.chip_erase_sequence, sequence_validator_),
+            strings::Cat(" in device database at line ", i + 1));
       } else if (key == "flash_erase_sequence") {
-        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.flash_erase_sequence),
-                                    strings::Cat(" in device database at line ", i + 1));
+        RETURN_IF_ERROR_WITH_APPEND(
+            SequenceValue(value, &last_info.flash_erase_sequence, sequence_validator_),
+            strings::Cat(" in device database at line ", i + 1));
       } else if (key == "user_id_erase_sequence") {
-        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.user_id_erase_sequence),
-                                    strings::Cat(" in device database at line ", i + 1));
+        RETURN_IF_ERROR_WITH_APPEND(
+            SequenceValue(value, &last_info.user_id_erase_sequence, sequence_validator_),
+            strings::Cat(" in device database at line ", i + 1));
       } else if (key == "config_erase_sequence") {
-        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.config_erase_sequence),
-                                    strings::Cat(" in device database at line ", i + 1));
+        RETURN_IF_ERROR_WITH_APPEND(
+            SequenceValue(value, &last_info.config_erase_sequence, sequence_validator_),
+            strings::Cat(" in device database at line ", i + 1));
       } else if (key == "eeprom_erase_sequence") {
-        RETURN_IF_ERROR_WITH_APPEND(SequenceValue(value, &last_info.eeprom_erase_sequence),
-                                    strings::Cat(" in device database at line ", i + 1));
+        RETURN_IF_ERROR_WITH_APPEND(
+            SequenceValue(value, &last_info.eeprom_erase_sequence, sequence_validator_),
+            strings::Cat(" in device database at line ", i + 1));
       } else if (key == "bulk_erase_timing") {
         RETURN_IF_ERROR_WITH_APPEND(DurationValue(value, &last_info.bulk_erase_timing),
                                     strings::Cat(" in device database at line ", i + 1));
@@ -195,6 +206,16 @@ Status DeviceDb::Load(const std::string &name) {
           RETURN_IF_ERROR(NumericalValue(single_value, &parsed_value));
           last_info.missing_locations.push_back(parsed_value);
         }
+      } else if (key == "flags") {
+        std::vector<std::string> flags = strings::Split<std::string>(value, ' ', false);
+        for (const auto &flag : flags) {
+          if (std::find(accepted_flags_.begin(), accepted_flags_.end(), flag) ==
+              accepted_flags_.end()) {
+            return Status(PARSE_ERROR, strings::Cat("Unknown flag ", flag,
+                                                    " in device database at line ", i + 1));
+          }
+        }
+        last_info.flags = flags;
       } else {
         return Status(PARSE_ERROR, strings::Cat("Device database has unknown key on line ", i + 1));
       }

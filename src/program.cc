@@ -186,7 +186,7 @@ Status ReadIhex(Program *program, FILE *in) {
 void WriteIhex(const Program &program, FILE *out) {
   int bytes_per_line = std::max(1, std::min<int>(FLAGS_ihex_bytes_per_line, 255));
 
-  uint32_t last_address = 0;
+  uint32_t last_address = std::numeric_limits<uint32_t>::max();
   for (const auto &section : program) {
     size_t section_size = section.second.size();
     uint32_t section_offset = section.first;

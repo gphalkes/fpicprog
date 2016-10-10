@@ -113,8 +113,8 @@ std::vector<TimedStep> Pic16SequenceGenerator::GetTimedSequence(
       result = GenerateInitSequence();
       break;
     case CHIP_ERASE:
-      // FIXME: make this generic!
-      #warning FIX THIS!
+// FIXME: make this generic!
+#warning FIX THIS!
       result.push_back(
           TimedStep{GetCommandSequence(::BULK_ERASE_PROGRAM), device_info->bulk_erase_timing});
       result.push_back(

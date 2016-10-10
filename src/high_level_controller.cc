@@ -15,6 +15,12 @@
 
 #include "status.h"
 
+static void AddFillerBytes(const Datastring filler, uint32_t size, Datastring *bytes) {
+  for (uint32_t i = 0; i < size; ++i) {
+    bytes->push_back(filler[i % filler.size()]);
+  }
+}
+
 Status HighLevelController::ReadProgram(const std::vector<Section> &sections, Program *program) {
   DeviceCloser closer(this);
   RETURN_IF_ERROR(InitDevice());
@@ -89,10 +95,12 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
         }
       } else {
         if (range.first != lower) {
-          block_aligned_program[range.first].assign(lower - range.first, 0xff);
+          AddFillerBytes(device_db_->GetBlockFillter(), lower - range.first,
+                         &block_aligned_program[range.first]);
         }
         if (range.second != higher) {
-          block_aligned_program[higher].assign(range.second - higher, 0xff);
+          AddFillerBytes(device_db_->GetBlockFillter(), range.second - higher,
+                         &block_aligned_program[higher]);
         }
       }
     } else {
@@ -101,10 +109,8 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
         RETURN_IF_ERROR(ReadData(FLASH, &data, range.first, range.second - range.first));
         block_aligned_program[range.first] = data;
       } else {
-        const Datastring &filler = device_db_->GetBlockFillter();
-        for (size_t i = 0; i < range.second - range.first; ++i) {
-          block_aligned_program[range.first].push_back(filler[i % filler.size()]);
-        }
+        AddFillerBytes(device_db_->GetBlockFillter(), range.second - range.first,
+                       &block_aligned_program[range.first]);
       }
     }
   }

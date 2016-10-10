@@ -47,7 +47,8 @@ struct DeviceInfo {
 
 class DeviceDb {
  public:
-  DeviceDb(uint32_t unit_factor, const Datastring &block_filler) : unit_factor_(unit_factor), block_filler_(block_filler) {}
+  DeviceDb(uint32_t unit_factor, const Datastring &block_filler)
+      : unit_factor_(unit_factor), block_filler_(block_filler) {}
   Status Load(const std::string &name);
 
   Status GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info);

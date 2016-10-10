@@ -7,4 +7,4 @@ eeprom_size = 256
 eeprom_offset = 2100h
 bulk_erase_timing = 6ms
 missing_locations = 2004h 2005h 2006h
-write_block_size = 1
+write_block_size = 2

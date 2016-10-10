@@ -118,6 +118,8 @@ int main(int argc, char **argv) {
     device_db = std::make_unique<DeviceDb>(1, Datastring{0xff});
   } else if (FLAGS_family == "pic16") {
     device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f});
+  } else {
+    fatal("Family %s not recognized\n", FLAGS_family.c_str());
   }
 
   std::string filename = FLAGS_device_db;

@@ -250,14 +250,16 @@ Status Pic18Controller::ExecuteBulkErase(const Datastring16 &sequence,
   return Status::OK;
 }
 
-Status Pic16Controller::Open() {
+//==================================================================================================
+
+Status Pic16ControllerBase::Open() {
   RETURN_IF_ERROR(driver_->Open());
-  return WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr);
+  return ResetDevice();
 }
 
-void Pic16Controller::Close() { driver_->Close(); }
+void Pic16ControllerBase::Close() { driver_->Close(); }
 
-Status Pic16Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
+Status Pic16ControllerBase::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
   RETURN_IF_ERROR(WriteCommand(LOAD_CONFIGURATION, 0));
 
   for (int i = 0; i < 5; ++i) {
@@ -277,11 +279,10 @@ Status Pic16Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
     *device_id = location6_data;
     *revision = location5_data;
   }
-  last_address_ = INT32_MAX;
-  return Status::OK;
+  return ResetDevice();
 }
 
-Status Pic16Controller::Read(Section section, uint32_t start_address, uint32_t end_address,
+Status Pic16ControllerBase::Read(Section section, uint32_t start_address, uint32_t end_address,
                              const DeviceInfo &device_info, Datastring *result) {
   RETURN_IF_ERROR(LoadAddress(section, start_address, device_info));
 
@@ -304,7 +305,7 @@ Status Pic16Controller::Read(Section section, uint32_t start_address, uint32_t e
   return Status::OK;
 }
 
-Status Pic16Controller::Write(Section section, uint32_t address, const Datastring &data,
+Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datastring &data,
                               const DeviceInfo &device_info) {
   RETURN_IF_ERROR(LoadAddress(section, address, device_info));
 
@@ -344,24 +345,24 @@ Status Pic16Controller::Write(Section section, uint32_t address, const Datastrin
   return Status::OK;
 }
 
-Status Pic16Controller::ChipErase(const DeviceInfo &device_info) {
+Status Pic16ControllerBase::ChipErase(const DeviceInfo &device_info) {
   RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::CHIP_ERASE_SEQUENCE, &device_info));
   return Status::OK;
 }
 
-Status Pic16Controller::SectionErase(Section section, const DeviceInfo &device_info) {
+Status Pic16ControllerBase::SectionErase(Section section, const DeviceInfo &device_info) {
   return Status::OK;
 }
 
-Status Pic16Controller::WriteCommand(Pic16Command command, uint16_t payload) {
+Status Pic16ControllerBase::WriteCommand(Pic16Command command, uint16_t payload) {
   return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command, payload));
 }
 
-Status Pic16Controller::WriteCommand(Pic16Command command) {
+Status Pic16ControllerBase::WriteCommand(Pic16Command command) {
   return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command));
 }
 
-Status Pic16Controller::ReadWithCommand(Pic16Command command, uint16_t *result) {
+Status Pic16ControllerBase::ReadWithCommand(Pic16Command command, uint16_t *result) {
   Datastring16 data;
   RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 7,
                                             14, 1, &data));
@@ -369,12 +370,13 @@ Status Pic16Controller::ReadWithCommand(Pic16Command command, uint16_t *result) 
   return Status::OK;
 }
 
-Status Pic16Controller::WriteTimedSequence(Pic16SequenceGenerator::TimedSequenceType type,
+Status Pic16ControllerBase::WriteTimedSequence(Pic16SequenceGenerator::TimedSequenceType type,
                                            const DeviceInfo *device_info) {
   return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, device_info));
 }
 
-#warning FIXME: implement a different address handling for the chips that lack LOAD_CONFIGURATION
+//==================================================================================================
+
 Status Pic16Controller::LoadAddress(Section section, uint32_t address,
                                     const DeviceInfo &device_info) {
   if (section == CONFIGURATION) {
@@ -403,12 +405,6 @@ Status Pic16Controller::LoadAddress(Section section, uint32_t address,
   return Status::OK;
 }
 
-Status Pic16Controller::ResetDevice() {
-  RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr));
-  last_address_ = 0;
-  return Status::OK;
-}
-
 Status Pic16Controller::IncrementPc(const DeviceInfo &device_info) {
   RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
   bool was_config = false;
@@ -417,7 +413,56 @@ Status Pic16Controller::IncrementPc(const DeviceInfo &device_info) {
   }
   last_address_ += 2;
   if (last_address_ >= device_info.config_offset && !was_config) {
-    last_address_ = 0;
+    // Force a reset of the PC if an overflow into the config area was detected.
+    last_address_ = std::numeric_limits<uint32_t>::max();
   }
   return Status::OK;
 }
+
+Status Pic16Controller::ResetDevice() {
+  RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr));
+  last_address_ = 0;
+  return Status::OK;
+}
+
+//==================================================================================================
+
+Status Pic16SmallController::LoadAddress(Section section, uint32_t address,
+                                    const DeviceInfo &device_info) {
+  if (section == CONFIGURATION) {
+    if (last_address_ != kConfigurationAddress) {
+      RETURN_IF_ERROR(ResetDevice());
+      last_address_ = kConfigurationAddress;
+      return Status::OK;
+    }
+  } else if (section == FLASH || section == USER_ID) {
+    if (address < last_address_) {
+      RETURN_IF_ERROR(ResetDevice());
+      RETURN_IF_ERROR(IncrementPc(device_info));
+    }
+  }
+
+  if (last_address_ > address) {
+    fatal("INTERNAL ERROR: last_address_ (%04x) should be <= start_address (%04x)\n", last_address_,
+          address);
+  }
+  while (last_address_ < address) {
+    RETURN_IF_ERROR(IncrementPc(device_info));
+  }
+  return Status::OK;
+}
+
+Status Pic16SmallController::IncrementPc(const DeviceInfo &) {
+  RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  // This will wrap around to 0 if the address is the configuration location.
+  last_address_ += 2;
+  return Status::OK;
+}
+
+Status Pic16SmallController::ResetDevice() {
+  RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr));
+  last_address_ = kConfigurationAddress;
+  return Status::OK;
+}
+
+

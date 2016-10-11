@@ -41,7 +41,6 @@ struct DeviceInfo {
   Duration block_write_timing = MilliSeconds(1);
   Duration config_write_timing = MilliSeconds(5);
   std::vector<uint32_t> missing_locations;
-  std::vector<std::string> flags;
 
   void Dump() const;
   Status Validate() const;
@@ -52,14 +51,14 @@ class DeviceDb {
   using SequenceValidator = std::function<Status(const Datastring16 &)>;
 
   DeviceDb(uint32_t unit_factor, const Datastring &block_filler,
-           const std::vector<std::string> &accepted_flags, SequenceValidator sequence_validator)
+           SequenceValidator sequence_validator)
       : unit_factor_(unit_factor),
         block_filler_(block_filler),
-        accepted_flags_(accepted_flags),
         sequence_validator_(sequence_validator) {}
   Status Load(const std::string &name);
 
   Status GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info);
+  Status GetDeviceInfo(const std::string &device_name, DeviceInfo *device_info);
   uint32_t GetBlockSizeMultiple() const { return unit_factor_; }
   const Datastring &GetBlockFillter() const { return block_filler_; }
 
@@ -67,7 +66,6 @@ class DeviceDb {
   std::map<uint16_t, DeviceInfo> device_db_;
   const uint32_t unit_factor_;
   const Datastring block_filler_;
-  const std::vector<std::string> accepted_flags_;
   SequenceValidator sequence_validator_;
 };
 

@@ -22,6 +22,8 @@ class HighLevelController {
   HighLevelController(std::unique_ptr<Controller> controller, std::unique_ptr<DeviceDb> device_db)
       : controller_(std::move(controller)), device_db_(std::move(device_db)) {}
 
+  void SetDevice(const std::string &device_name) { device_name_ = device_name; }
+
   Status ReadProgram(const std::vector<Section> &sections, Program *program);
   Status WriteProgram(const std::vector<Section> &sections, const Program &program,
                       EraseMode erase_mode);
@@ -48,6 +50,7 @@ class HighLevelController {
   uint16_t revision_ = 0;
   std::unique_ptr<Controller> controller_;
   std::unique_ptr<DeviceDb> device_db_;
+  std::string device_name_;
 };
 
 #endif

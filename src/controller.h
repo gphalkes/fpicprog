@@ -66,14 +66,12 @@ class Pic18Controller : public Controller {
   std::unique_ptr<Pic18SequenceGenerator> sequence_generator_;
 };
 
-class Pic16Controller : public Controller {
+class Pic16ControllerBase : public Controller {
  public:
-  Pic16Controller(std::unique_ptr<Driver> driver,
-                  std::unique_ptr<Pic16SequenceGenerator> sequence_generator,
-                  const std::string &device_name)
+  Pic16ControllerBase(std::unique_ptr<Driver> driver,
+                  std::unique_ptr<Pic16SequenceGenerator> sequence_generator)
       : driver_(std::move(driver)),
-        sequence_generator_(std::move(sequence_generator)),
-        device_name_(device_name) {}
+        sequence_generator_(std::move(sequence_generator)) {}
 
   Status Open() override;
   void Close() override;
@@ -85,21 +83,44 @@ class Pic16Controller : public Controller {
   Status ChipErase(const DeviceInfo &device_info) override;
   Status SectionErase(Section section, const DeviceInfo &device_info) override;
 
- private:
+ protected:
+  virtual Status LoadAddress(Section section, uint32_t address, const DeviceInfo &device_info) = 0;
+  virtual Status ResetDevice() = 0;
+  virtual Status IncrementPc(const DeviceInfo &device_info) = 0;
+
   Status WriteCommand(Pic16Command command, uint16_t payload);
   Status WriteCommand(Pic16Command command);
   Status ReadWithCommand(Pic16Command command, uint16_t *data);
   Status WriteTimedSequence(Pic16SequenceGenerator::TimedSequenceType type,
                             const DeviceInfo *device_info);
-  Status LoadAddress(Section section, uint32_t address, const DeviceInfo &device_info);
-  Status ResetDevice();
 
-  Status IncrementPc(const DeviceInfo &device_info);
-
+ private:
   std::unique_ptr<Driver> driver_;
   std::unique_ptr<Pic16SequenceGenerator> sequence_generator_;
-  const std::string device_name_;
+};
+
+class Pic16Controller : public Pic16ControllerBase {
+ protected:
+  using Pic16ControllerBase::Pic16ControllerBase;
+
+  Status LoadAddress(Section section, uint32_t address, const DeviceInfo &device_info) override;
+  Status IncrementPc(const DeviceInfo &device_info) override;
+  Status ResetDevice() override;
+
   uint32_t last_address_ = 0;
+};
+
+class Pic16SmallController : public Pic16ControllerBase {
+ protected:
+  using Pic16ControllerBase::Pic16ControllerBase;
+
+  Status LoadAddress(Section section, uint32_t address, const DeviceInfo &device_info) override;
+  Status IncrementPc(const DeviceInfo &device_info) override;
+  Status ResetDevice() override;
+
+  static constexpr uint32_t kConfigurationAddress = std::numeric_limits<uint32_t>::max() - 1;
+
+  uint32_t last_address_ = kConfigurationAddress;
 };
 
 #endif

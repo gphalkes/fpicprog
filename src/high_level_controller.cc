@@ -14,6 +14,7 @@
 #include "high_level_controller.h"
 
 #include "status.h"
+#include "strings.h"
 
 static void AddFillerBytes(const Datastring filler, uint32_t size, Datastring *bytes) {
   for (uint32_t i = 0; i < size; ++i) {
@@ -239,6 +240,11 @@ Status HighLevelController::InitDevice() {
   if (device_open_) {
     return Status::OK;
   }
+
+  if (!device_name_.empty()) {
+    RETURN_IF_ERROR(device_db_->GetDeviceInfo(device_name_, &device_info_));
+  }
+
   Status status;
   uint16_t device_id;
   for (int attempts = 0; attempts < 10; ++attempts) {
@@ -247,11 +253,28 @@ Status HighLevelController::InitDevice() {
       controller_->Close();
       continue;
     }
+
+    if (!device_name_.empty() && device_info_.device_id == 0) {
+      device_open_ = true;
+      return Status::OK;
+    }
+
     status = controller_->ReadDeviceId(&device_id, &revision_);
     if (!status.ok() || device_id == 0) {
       controller_->Close();
       continue;
     }
+
+    if (!device_name_.empty()) {
+      if (device_info_.device_id != device_id) {
+        return Status(VERIFICATION_ERROR,
+                      strings::Cat("Device reports different ID (", HexUint16(device_id),
+                                   ") than selected device (", HexUint16(device_info_.device_id)));
+      }
+      device_open_ = true;
+      return Status::OK;
+    }
+
     status = device_db_->GetDeviceInfo(device_id, &device_info_);
     if (status.ok()) {
       device_open_ = true;

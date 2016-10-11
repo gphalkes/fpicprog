@@ -26,6 +26,8 @@
 #include "status.h"
 #include "strings.h"
 
+#error TODO: PIC16 reset before erase; PIC16 specify data for commands and where delays should be inserted
+
 DEFINE_string(
     action, "",
     "Action to perform. One of erase, dump-program, write-program, identify, list-programmers. "
@@ -103,28 +105,32 @@ int main(int argc, char **argv) {
   }
 
   std::unique_ptr<Controller> controller;
+  std::unique_ptr<DeviceDb> device_db;
   if (FLAGS_family == "pic18") {
     std::unique_ptr<Pic18SequenceGenerator> sequence_generator(new Pic18SequenceGenerator);
     controller.reset(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
+    device_db = std::make_unique<DeviceDb>(1, Datastring{0xff},
+                                           [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic16") {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
     controller.reset(
-        new Pic16Controller(std::move(driver), std::move(sequence_generator), FLAGS_device));
+        new Pic16Controller(std::move(driver), std::move(sequence_generator)));
+    device_db =
+        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+                                   [](const Datastring16 &sequence) {
+                                     return Pic16SequenceGenerator::ValidateSequence(sequence);
+                                   });
+  } else if (FLAGS_family == "pic16-small") {
+    std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
+    controller.reset(
+        new Pic16SmallController(std::move(driver), std::move(sequence_generator)));
+    device_db =
+        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+                                   [](const Datastring16 &sequence) {
+                                     return Pic16SequenceGenerator::ValidateSequence(sequence);
+                                   });
   } else {
     fatal("Unknown device family %s.\n", FLAGS_family.c_str());
-  }
-  std::unique_ptr<DeviceDb> device_db;
-  if (FLAGS_family == "pic18") {
-    device_db = std::make_unique<DeviceDb>(1, Datastring{0xff}, std::vector<std::string>{},
-                                           [](const Datastring16 &) { return Status::OK; });
-  } else if (FLAGS_family == "pic16") {
-    device_db = std::make_unique<DeviceDb>(
-        2, Datastring{0xff, 0x3f}, std::vector<std::string>{"no-id", "no-load-config"},
-        [](const Datastring16 &sequence) {
-          return Pic16SequenceGenerator::ValidateSequence(sequence);
-        });
-  } else {
-    fatal("Family %s not recognized\n", FLAGS_family.c_str());
   }
 
   std::string filename = FLAGS_device_db;
@@ -134,6 +140,9 @@ int main(int argc, char **argv) {
   CHECK_OK(device_db->Load(filename));
 
   HighLevelController high_level_controller(std::move(controller), std::move(device_db));
+  if (!FLAGS_device.empty()) {
+    high_level_controller.SetDevice(FLAGS_device);
+  }
 
   if (FLAGS_action.empty()) {
     fatal("No action specified\n");

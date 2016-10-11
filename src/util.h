@@ -36,6 +36,8 @@ enum Pic18Command {
   TABLE_WRITE_start_pgm = 15,
 };
 
+// PIC16 command definitions. Commands up to and including INCREMENT_ADDRESS are the same across
+// devices (if the command is supported). Other commands have varying semantics and codes.
 enum Pic16Command {
   LOAD_CONFIGURATION = 0,
   LOAD_PROG_MEMORY = 2,
@@ -43,13 +45,17 @@ enum Pic16Command {
   READ_PROG_MEMORY = 4,
   READ_DATA_MEMORY = 5,
   INCREMENT_ADDRESS = 6,
-  BEGIN_PROGRAMMING_INT = 8,
-  BEGIN_PROGRAMMING_EXT = 24,
-  END_PROGRAMMING_NEW = 10,
-  END_PROGRAMMING_OLD = 14,
+
+  BEGIN_PROGRAMMING_08 = 8,
+  BEGIN_PROGRAMMING_18 = 24,
+  END_PROGRAMMING_0A = 10,
+  END_PROGRAMMING_0E = 14,
   BULK_ERASE_PROGRAM = 9,
   BULK_ERASE_DATA = 11,
+  BULK_ERASE_SETUP_01 = 1,
+  BULK_ERASE_SETUP_07 = 7,
   ROW_ERASE_PROGRAM = 17,
+  CHIP_ERASE = 31,
 };
 
 enum Section {

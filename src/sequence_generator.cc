@@ -127,10 +127,10 @@ Status Pic16SequenceGenerator::ValidateSequence(const Datastring16 &sequence) {
       // clang-format off
       LOAD_CONFIGURATION,
       INCREMENT_ADDRESS,
-      BEGIN_PROGRAMMING_INT,
-      BEGIN_PROGRAMMING_EXT,
-      END_PROGRAMMING_NEW,
-      END_PROGRAMMING_OLD,
+      BEGIN_PROGRAMMING_08,
+      BEGIN_PROGRAMMING_18,
+      END_PROGRAMMING_0A,
+      END_PROGRAMMING_0E,
       BULK_ERASE_PROGRAM,
       BULK_ERASE_DATA,
       // clang-format on
@@ -155,7 +155,7 @@ std::vector<TimedStep> Pic16SequenceGenerator::TimedSequenceFromDatastring16(
       step_string += GetCommandSequence(step);
       result.push_back(TimedStep{step_string, device_info.bulk_erase_timing});
       step_string.clear();
-    } else if (step == BEGIN_PROGRAMMING_INT || step == BEGIN_PROGRAMMING_EXT) {
+    } else if (step == BEGIN_PROGRAMMING_08 || step == BEGIN_PROGRAMMING_18) {
       step_string += GetCommandSequence(step);
       result.push_back(TimedStep{step_string, device_info.block_write_timing});
       step_string.clear();

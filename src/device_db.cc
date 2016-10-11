@@ -128,7 +128,7 @@ Status DeviceDb::Load(const std::string &name) {
     } else if (std::regex_match(lines[i], match_results, section_regex)) {
       if (!last_info.name.empty()) {
         RETURN_IF_ERROR(last_info.Validate());
-        if (ContainsKey(device_db_, last_info.device_id)) {
+        if (last_info.device_id != 0 && ContainsKey(device_db_, last_info.device_id)) {
           return Status(
               PARSE_ERROR,
               strings::Cat("Duplicate device ID ", HexUint16(last_info.device_id), " (",
@@ -206,16 +206,6 @@ Status DeviceDb::Load(const std::string &name) {
           RETURN_IF_ERROR(NumericalValue(single_value, &parsed_value));
           last_info.missing_locations.push_back(parsed_value);
         }
-      } else if (key == "flags") {
-        std::vector<std::string> flags = strings::Split<std::string>(value, ' ', false);
-        for (const auto &flag : flags) {
-          if (std::find(accepted_flags_.begin(), accepted_flags_.end(), flag) ==
-              accepted_flags_.end()) {
-            return Status(PARSE_ERROR, strings::Cat("Unknown flag ", flag,
-                                                    " in device database at line ", i + 1));
-          }
-        }
-        last_info.flags = flags;
       } else {
         return Status(PARSE_ERROR, strings::Cat("Device database has unknown key on line ", i + 1));
       }
@@ -244,6 +234,16 @@ Status DeviceDb::GetDeviceInfo(uint16_t device_id, DeviceInfo *device_info) {
   }
   *device_info = device_db_.at(device_id);
   return Status::OK;
+}
+
+Status DeviceDb::GetDeviceInfo(const std::string &device_name, DeviceInfo *device_info) {
+  for (const auto &device_registration : device_db_) {
+    if (device_registration.second.name == device_name) {
+      *device_info = device_registration.second;
+      return Status::OK;
+    }
+  }
+  return Status(DEVICE_NOT_FOUND, strings::Cat("Device with name ", device_name, " not found"));
 }
 
 static void DumpSequence(const char *name, const Datastring16 &sequence) {
@@ -281,9 +281,6 @@ void DeviceInfo::Dump() const {
 }
 
 Status DeviceInfo::Validate() const {
-  if (device_id == 0) {
-    return Status(PARSE_ERROR, strings::Cat(name, ": Device ID can not be 0"));
-  }
   if (program_memory_size == 0) {
     return Status(PARSE_ERROR, strings::Cat(name, ": Program memory must be larger than 0"));
   }

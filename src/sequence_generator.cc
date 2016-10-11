@@ -100,7 +100,7 @@ Datastring Pic16SequenceGenerator::GetCommandSequence(Pic16Command command,
   return result;
 }
 
-Datastring Pic16SequenceGenerator::GetCommandSequence(Pic16Command command) const {
+Datastring Pic16SequenceGenerator::GetCommandSequence(uint8_t command) const {
   Datastring result;
   result += GenerateBitSequence(command, 6);
   return result;
@@ -112,55 +112,50 @@ std::vector<TimedStep> Pic16SequenceGenerator::GetTimedSequence(
     case INIT_SEQUENCE:
       return GenerateInitSequence();
     case CHIP_ERASE_SEQUENCE:
-      return TimedSequenceFromDatastring16(device_info->chip_erase_sequence, *device_info);
+      return TimedSequenceFromDatastring16(device_info->chip_erase_sequence,
+                                           device_info->bulk_erase_timing);
     case ERASE_DATA_SEQUENCE:
-      return TimedSequenceFromDatastring16(device_info->eeprom_erase_sequence, *device_info);
+      return TimedSequenceFromDatastring16(device_info->eeprom_erase_sequence,
+                                           device_info->bulk_erase_timing);
     case WRITE_DATA_SEQUENCE:
-      return TimedSequenceFromDatastring16(device_info->block_write_sequence, *device_info);
+      return TimedSequenceFromDatastring16(device_info->block_write_sequence,
+                                           device_info->block_write_timing);
     default:
       FATAL("Requested unimplemented sequence %d\n", type);
   }
 }
 
 Status Pic16SequenceGenerator::ValidateSequence(const Datastring16 &sequence) {
-  static const std::set<uint16_t> commands({
-      // clang-format off
-      LOAD_CONFIGURATION,
-      INCREMENT_ADDRESS,
-      BEGIN_PROGRAMMING_08,
-      BEGIN_PROGRAMMING_18,
-      END_PROGRAMMING_0A,
-      END_PROGRAMMING_0E,
-      BULK_ERASE_PROGRAM,
-      BULK_ERASE_DATA,
-      // clang-format on
-  });
-  for (uint16_t step : sequence) {
-    if (!ContainsKey(commands, step)) {
-      return Status(PARSE_ERROR, strings::Cat("Invalid command value ", step));
+  for (auto iter = sequence.begin(); iter != sequence.end(); ++iter) {
+    Pic16Command step = static_cast<Pic16Command>(*iter);
+    if (step == LOAD_CONFIGURATION || step == LOAD_PROG_MEMORY) {
+      ++iter;
+      if (iter == sequence.end()) {
+        return Status(PARSE_ERROR, strings::Cat("Load command ", HexByte(step), " missing data"));
+      }
+    } else if (*iter == 0xff) {
+      // Sleep. Do nothing.
+    } else if (*iter > 0x3f) {
+      return Status(PARSE_ERROR, strings::Cat("Invalid command value ", HexUint16(*iter)));
     }
   }
   return Status::OK;
 }
 
 std::vector<TimedStep> Pic16SequenceGenerator::TimedSequenceFromDatastring16(
-    const Datastring16 &sequence, const DeviceInfo &device_info) const {
+    const Datastring16 &sequence, Duration timing) const {
   std::vector<TimedStep> result;
   Datastring step_string;
-  for (uint16_t step_int : sequence) {
-    Pic16Command step = static_cast<Pic16Command>(step_int);
-    if (step == LOAD_CONFIGURATION) {
-      step_string += GetCommandSequence(step, 0);
-    } else if (step == BULK_ERASE_PROGRAM || step == BULK_ERASE_DATA) {
-      step_string += GetCommandSequence(step);
-      result.push_back(TimedStep{step_string, device_info.bulk_erase_timing});
-      step_string.clear();
-    } else if (step == BEGIN_PROGRAMMING_08 || step == BEGIN_PROGRAMMING_18) {
-      step_string += GetCommandSequence(step);
-      result.push_back(TimedStep{step_string, device_info.block_write_timing});
+  for (auto iter = sequence.begin(); iter != sequence.end(); ++iter) {
+    Pic16Command step = static_cast<Pic16Command>(*iter);
+    if (step == LOAD_CONFIGURATION || step == LOAD_PROG_MEMORY) {
+      ++iter;
+      step_string += GetCommandSequence(step, *iter);
+    } else if (*iter == 0xff) {
+      result.push_back(TimedStep{step_string, timing});
       step_string.clear();
     } else {
-      step_string += GetCommandSequence(step);
+      step_string += GetCommandSequence(*iter);
     }
   }
   if (!step_string.empty()) {

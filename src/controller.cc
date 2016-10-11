@@ -283,7 +283,7 @@ Status Pic16ControllerBase::ReadDeviceId(uint16_t *device_id, uint16_t *revision
 }
 
 Status Pic16ControllerBase::Read(Section section, uint32_t start_address, uint32_t end_address,
-                             const DeviceInfo &device_info, Datastring *result) {
+                                 const DeviceInfo &device_info, Datastring *result) {
   RETURN_IF_ERROR(LoadAddress(section, start_address, device_info));
 
   // This could use a different read mode, which reads more than a single word at a time. However,
@@ -306,7 +306,7 @@ Status Pic16ControllerBase::Read(Section section, uint32_t start_address, uint32
 }
 
 Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datastring &data,
-                              const DeviceInfo &device_info) {
+                                  const DeviceInfo &device_info) {
   RETURN_IF_ERROR(LoadAddress(section, address, device_info));
 
   if (section == FLASH) {
@@ -346,12 +346,13 @@ Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datas
 }
 
 Status Pic16ControllerBase::ChipErase(const DeviceInfo &device_info) {
+  RETURN_IF_ERROR(ResetDevice());
   RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::CHIP_ERASE_SEQUENCE, &device_info));
   return Status::OK;
 }
 
-Status Pic16ControllerBase::SectionErase(Section section, const DeviceInfo &device_info) {
-  return Status::OK;
+Status Pic16ControllerBase::SectionErase(Section, const DeviceInfo &) {
+  return Status(INVALID_ARGUMENT, "Unsupported operation SectionErase");
 }
 
 Status Pic16ControllerBase::WriteCommand(Pic16Command command, uint16_t payload) {
@@ -371,7 +372,7 @@ Status Pic16ControllerBase::ReadWithCommand(Pic16Command command, uint16_t *resu
 }
 
 Status Pic16ControllerBase::WriteTimedSequence(Pic16SequenceGenerator::TimedSequenceType type,
-                                           const DeviceInfo *device_info) {
+                                               const DeviceInfo *device_info) {
   return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, device_info));
 }
 
@@ -428,7 +429,7 @@ Status Pic16Controller::ResetDevice() {
 //==================================================================================================
 
 Status Pic16SmallController::LoadAddress(Section section, uint32_t address,
-                                    const DeviceInfo &device_info) {
+                                         const DeviceInfo &device_info) {
   if (section == CONFIGURATION) {
     if (last_address_ != kConfigurationAddress) {
       RETURN_IF_ERROR(ResetDevice());
@@ -464,5 +465,3 @@ Status Pic16SmallController::ResetDevice() {
   last_address_ = kConfigurationAddress;
   return Status::OK;
 }
-
-

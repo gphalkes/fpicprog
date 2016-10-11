@@ -150,7 +150,8 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
       erase_sections.erase(EEPROM);
     // FALLTHROUGH
     case SECTION_ERASE:
-#warning FIXME: this should pass the sections to the controller to determine if it is possible to erase this combination.
+      // FIXME: this should pass the collection of sections to the controller to determine if it is
+      // possible to erase this combination.
       if (ContainsKey(erase_sections, FLASH)) {
         print_msg(1, "Starting flash erase\n");
         RETURN_IF_ERROR(controller_->SectionErase(FLASH, device_info_));

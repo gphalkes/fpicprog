@@ -26,8 +26,6 @@
 #include "status.h"
 #include "strings.h"
 
-#error TODO: PIC16 reset before erase; PIC16 specify data for commands and where delays should be inserted
-
 DEFINE_string(
     action, "",
     "Action to perform. One of erase, dump-program, write-program, identify, list-programmers. "
@@ -37,16 +35,17 @@ DEFINE_string(
 DEFINE_string(sections, "",
               "Comma separate list of sections to operate on. Possible values: either all "
               "or a combination of flash, user-id, config, eeprom.");
-DEFINE_string(family, "pic18", "Device family to use. One of pic18.");
+DEFINE_string(family, "pic18",
+              "Device family to use. One of pic10, pic10-small, pic12, pic12-small, pic16, "
+              "pic16-small, pic18.");
 DEFINE_string(
     device, "",
-    "Exact device name. Ignored for pic18 family, required for devices in the pic16 family which "
-    "don't provide a device ID. Devices which have a device ID should be detectable using the "
-    "identify action.");
+    "Exact device name. Ignored for pic18 family, required for devices which don't provide a "
+    "device ID. Devices which have a device ID should be detectable using the identify action.");
 
-DEFINE_string(output, "", "File to write the Intel HEX data to.");
-DEFINE_string(input, "", "Intel HEX file to read and program.");
-DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, row, none.");
+DEFINE_string(output, "", "File to write the Intel HEX data to (--action=dump-program).");
+DEFINE_string(input, "", "Intel HEX file to read and program. (--action=write-program)");
+DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, none.");
 DEFINE_string(device_db, "",
               "Device DB file to load. Defaults to " DEVICE_DB_PATH "/<family>.lst.");
 
@@ -82,8 +81,6 @@ static EraseMode ParseEraseMode() {
     return CHIP_ERASE;
   } else if (FLAGS_erase_mode == "section") {
     return SECTION_ERASE;
-  } else if (FLAGS_erase_mode == "row") {
-    return ROW_ERASE;
   } else if (FLAGS_erase_mode == "none") {
     return NO_ERASE;
   } else {
@@ -111,19 +108,18 @@ int main(int argc, char **argv) {
     controller.reset(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
     device_db = std::make_unique<DeviceDb>(1, Datastring{0xff},
                                            [](const Datastring16 &) { return Status::OK; });
-  } else if (FLAGS_family == "pic16") {
+  } else if (FLAGS_family == "pic10" || FLAGS_family == "pic12" || FLAGS_family == "pic16") {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
-    controller.reset(
-        new Pic16Controller(std::move(driver), std::move(sequence_generator)));
+    controller.reset(new Pic16Controller(std::move(driver), std::move(sequence_generator)));
     device_db =
         std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
                                    [](const Datastring16 &sequence) {
                                      return Pic16SequenceGenerator::ValidateSequence(sequence);
                                    });
-  } else if (FLAGS_family == "pic16-small") {
+  } else if (FLAGS_family == "pic10-small" || FLAGS_family == "pic12-small" ||
+             FLAGS_family == "pic16-small") {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
-    controller.reset(
-        new Pic16SmallController(std::move(driver), std::move(sequence_generator)));
+    controller.reset(new Pic16SmallController(std::move(driver), std::move(sequence_generator)));
     device_db =
         std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
                                    [](const Datastring16 &sequence) {

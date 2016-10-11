@@ -69,9 +69,8 @@ class Pic18Controller : public Controller {
 class Pic16ControllerBase : public Controller {
  public:
   Pic16ControllerBase(std::unique_ptr<Driver> driver,
-                  std::unique_ptr<Pic16SequenceGenerator> sequence_generator)
-      : driver_(std::move(driver)),
-        sequence_generator_(std::move(sequence_generator)) {}
+                      std::unique_ptr<Pic16SequenceGenerator> sequence_generator)
+      : driver_(std::move(driver)), sequence_generator_(std::move(sequence_generator)) {}
 
   Status Open() override;
   void Close() override;

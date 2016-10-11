@@ -1,3 +1,6 @@
+# PIC16 devices with Load Configuration command, and which start with their PC at 0.
+# Most of these have device IDs and can be auto-detected by reading configuration words 5 & 6.
+
 [16F887]
 device_id = 0104h
 program_memory_size = 2000h
@@ -5,9 +8,10 @@ config_size = 9
 config_offset = 2000h
 eeprom_size = 256
 eeprom_offset = 2100h
-block_write_sequence = 8h
-chip_erase_sequence = 9h Bh
-eeprom_erase_sequence = Bh
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+eeprom_erase_sequence = 0Bh FFh
 bulk_erase_timing = 6ms
+block_write_timing = 6ms
 missing_locations = 2004h 2005h 2006h
-write_block_size = 2
+write_block_size = 8

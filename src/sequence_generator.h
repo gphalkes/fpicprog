@@ -60,7 +60,7 @@ class Pic16SequenceGenerator : public PicSequenceGenerator {
   };
 
   Datastring GetCommandSequence(Pic16Command command, uint16_t payload) const;
-  Datastring GetCommandSequence(Pic16Command command) const;
+  Datastring GetCommandSequence(uint8_t command) const;
   std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
                                           const DeviceInfo *device_info) const;
 
@@ -68,7 +68,7 @@ class Pic16SequenceGenerator : public PicSequenceGenerator {
 
  private:
   std::vector<TimedStep> TimedSequenceFromDatastring16(const Datastring16 &sequence,
-                                                       const DeviceInfo &device_info) const;
+                                                       Duration timing) const;
 };
 
 #endif

@@ -33,7 +33,7 @@ void fatal(const char *fmt, ...) {
 }
 
 void Sleep(Duration duration) {
-  std::this_thread::sleep_until(std::chrono::high_resolution_clock::now() + duration);
+  std::this_thread::sleep_for(duration);
 }
 
 std::string HexByte(uint8_t byte) {

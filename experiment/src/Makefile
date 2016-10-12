@@ -7,7 +7,7 @@ LDLIBS.fpicprog := -lftdi1 -lgflags -lshlwapi
 CXXTARGETS := fpicprog
 
 COMPILER := external
-CXX := x86_64-w64-mingw32-g++
+CXX := x86_64-w64-mingw32-g++-posix
 #================================================#
 # NO RULES SHOULD BE DEFINED BEFORE THIS INCLUDE #
 #================================================#

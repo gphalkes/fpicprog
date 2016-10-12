@@ -1,10 +1,10 @@
 # Building gflags:
 cmake -DCMAKE_TOOLCHAIN_FILE=../../Toolchain-cross-ming32-linux.cmake ../
 make
-make DESTDIR=../../install
+make DESTDIR=../../install install
 
 # Building libftdi1
 cmake -DCMAKE_TOOLCHAIN_FILE=../../Toolchain-cross-ming32-linux.cmake -DLIBUSB_INCLUDE_DIR=/home/gertjan/projects/picft232r/experiment/libusb/include/libusb-1.0 -DLIBUSB_LIBRARIES='-L/home/gertjan/projects/picft232r/experiment/libusb/MinGW64/dll/ -lusb-1.0' ../
-make ftdi1
-make DESTDIR=../../install
+make
+make DESTDIR=../../install install
 

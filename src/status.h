@@ -32,7 +32,13 @@ enum Code {
   FILE_NOT_FOUND,
 };
 
-class __attribute__((warn_unused_result)) Status {
+#ifdef __clang__
+#define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+#define WARN_UNUSED_RESULT
+#endif
+
+class WARN_UNUSED_RESULT Status {
  public:
   Status() : Status(OK) {}
   Status(Code code, std::string message) : code_(code), message_(message) {}

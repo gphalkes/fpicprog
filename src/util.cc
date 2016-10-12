@@ -20,6 +20,9 @@
 #include <cstring>
 #include <gflags/gflags.h>
 #include <thread>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 DEFINE_int32(verbosity, 1, "Verbosity level. 0 for no output, higher number for more output.");
 
@@ -32,9 +35,58 @@ void fatal(const char *fmt, ...) {
   exit(EXIT_FAILURE);
 }
 
+// Unfortunately the sleep functions on Windows are not particularly accurate, and may even sleep
+// _less_ than the requested amount. Given that we want to do timing accurate to within a
+// millisecond or so, this is not accurate enough. Hence we provide our own timing routines, which
+// partially rely on busy waiting to make them accurate.
+
+#ifdef _WIN32
+static LARGE_INTEGER GetTimestamp() {
+  LARGE_INTEGER start;
+  if (!QueryPerformanceCounter(&start)) {
+    fatal("Error getting performance counter\n");
+  }
+  return start;
+}
+
+void Sleep(Duration duration) {
+  static LARGE_INTEGER frequency;
+  static UINT timer_period;
+  if (frequency.QuadPart == 0) {
+    // We need the performance counters to do any sort of remotely accurate timing.
+    if (!QueryPerformanceFrequency(&frequency)) {
+      fatal("System does not provide performance counter\n");
+    }
+    // Set the timer frequency to 1ms or the best the system can provide. This prevents having to
+    // do busy-waiting for extended periods.
+    TIMECAPS tc;
+    if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR) {
+      fatal("System does not provide timer information\n");
+    }
+    timer_period = std::max(tc.wPeriodMin, 1u);
+    timeBeginPeriod(timer_period);
+  }
+
+  LARGE_INTEGER start = GetTimestamp();
+  // Use Sleep to do as much of the work as possible. However, this needs to take into account
+  // that Sleep may sleep a full timer_period too long.
+  int milliseconds = duration.count() / 1000000;
+  if (milliseconds - timer_period > 0) {
+    Sleep(milliseconds - timer_period);
+  }
+
+  LONGLONG nanoseconds_passed = 0;
+  // Do busy-waiting for the remainder.
+  while (nanoseconds_passed < duration.count()) {
+    LARGE_INTEGER end = GetTimestamp();
+    nanoseconds_passed = (double)(end.QuadPart - start.QuadPart) * 1000000000 / frequency.QuadPart;
+  }
+}
+#else
 void Sleep(Duration duration) {
   std::this_thread::sleep_for(duration);
 }
+#endif
 
 std::string HexByte(uint8_t byte) {
   static char convert[] = "0123456789ABCDEF";

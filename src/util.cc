@@ -42,11 +42,11 @@ void fatal(const char *fmt, ...) {
 
 #ifdef _WIN32
 static LARGE_INTEGER GetTimestamp() {
-  LARGE_INTEGER start;
-  if (!QueryPerformanceCounter(&start)) {
+  LARGE_INTEGER result;
+  if (!QueryPerformanceCounter(&result)) {
     fatal("Error getting performance counter\n");
   }
-  return start;
+  return result;
 }
 
 void Sleep(Duration duration) {
@@ -70,9 +70,9 @@ void Sleep(Duration duration) {
   LARGE_INTEGER start = GetTimestamp();
   // Use Sleep to do as much of the work as possible. However, this needs to take into account
   // that Sleep may sleep a full timer_period too long.
-  int milliseconds = duration.count() / 1000000;
-  if (milliseconds - timer_period > 0) {
-    Sleep(milliseconds - timer_period);
+  int milliseconds_to_sleep = duration.count() / 1000000 - (int) timer_period;
+  if (milliseconds_to_sleep > 0) {
+    Sleep(milliseconds_to_sleep);
   }
 
   LONGLONG nanoseconds_passed = 0;

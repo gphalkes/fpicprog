@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <gflags/gflags.h>
-#include <time.h>
+#include <thread>
 
 DEFINE_int32(verbosity, 1, "Verbosity level. 0 for no output, higher number for more output.");
 
@@ -33,12 +33,10 @@ void fatal(const char *fmt, ...) {
 }
 
 void Sleep(Duration duration) {
-  if (duration <= 0) return;
-  struct timespec to_sleep;
-  to_sleep.tv_sec = duration / 1000000000;
-  to_sleep.tv_nsec = duration % 1000000000;
-  while (nanosleep(&to_sleep, &to_sleep)) {
-    if (errno != EINTR) FATAL("nanosleep failed: %s\n", strerror(errno));
+  if (std::chrono::high_resolution_clock::is_steady) {
+    std::this_thread::sleep_until(std::chrono::high_resolution_clock::now() + duration);
+  } else {
+    std::this_thread::sleep_for(duration);
   }
 }
 

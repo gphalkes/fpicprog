@@ -37,7 +37,7 @@ struct DeviceInfo {
   Datastring16 user_id_erase_sequence;
   Datastring16 config_erase_sequence;
   Datastring16 eeprom_erase_sequence;
-  Duration bulk_erase_timing = 0;
+  Duration bulk_erase_timing = ZeroDuration;
   Duration block_write_timing = MilliSeconds(1);
   Duration config_write_timing = MilliSeconds(5);
   std::vector<uint32_t> missing_locations;

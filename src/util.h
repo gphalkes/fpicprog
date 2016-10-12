@@ -15,6 +15,7 @@
 #define UTIL_H_
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <set>
@@ -68,10 +69,11 @@ enum Pins {
   PGD = (1 << 3),
 };
 
-typedef uint64_t Duration;
-static constexpr inline Duration MilliSeconds(uint64_t x) { return x * 1000000; }
-static constexpr inline Duration MicroSeconds(uint64_t x) { return x * 1000; }
-static constexpr inline Duration NanoSeconds(uint64_t x) { return x; }
+typedef std::chrono::nanoseconds Duration;
+constexpr Duration ZeroDuration = std::chrono::nanoseconds(0);
+static constexpr inline Duration MilliSeconds(uint64_t x) { return std::chrono::milliseconds(x); }
+static constexpr inline Duration MicroSeconds(uint64_t x) { return std::chrono::microseconds(x); }
+static constexpr inline Duration NanoSeconds(uint64_t x) { return std::chrono::nanoseconds(x); }
 
 void Sleep(Duration duration);
 

@@ -70,19 +70,19 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
       result.push_back(
           TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC, base},
                     device_info ? device_info->bulk_erase_timing : MilliSeconds(500)});
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
+      result.push_back(TimedStep{GenerateBitSequence(0, 16), ZeroDuration});
       break;
     case WRITE_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
                                  device_info ? device_info->block_write_timing : MilliSeconds(1)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
+      result.push_back(TimedStep{GenerateBitSequence(0, 16), ZeroDuration});
       break;
     case WRITE_CONFIG_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
                                  device_info ? device_info->config_write_timing : MilliSeconds(1)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), 0});
+      result.push_back(TimedStep{GenerateBitSequence(0, 16), ZeroDuration});
       break;
     default:
       FATAL("Requested unimplemented sequence %d\n", type);

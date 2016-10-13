@@ -19,9 +19,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <gflags/gflags.h>
-#include <thread>
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <windows.h>
+#else
+#include <thread>
 #endif
 
 DEFINE_int32(verbosity, 1, "Verbosity level. 0 for no output, higher number for more output.");

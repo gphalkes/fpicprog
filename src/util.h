@@ -24,7 +24,7 @@
 typedef std::basic_string<uint8_t> Datastring;
 typedef std::basic_string<uint16_t> Datastring16;
 
-enum Pic18Command {
+enum class Pic18Command {
   CORE_INST = 0,
   SHIFT_OUT_TABLAT = 2,
   TABLE_READ = 8,
@@ -39,7 +39,7 @@ enum Pic18Command {
 
 // PIC16 command definitions. Commands up to and including INCREMENT_ADDRESS are the same across
 // devices (if the command is supported). Other commands have varying semantics and codes.
-enum Pic16Command {
+enum class Pic16Command {
   LOAD_CONFIGURATION = 0,
   LOAD_PROG_MEMORY = 2,
   LOAD_DATA_MEMORY = 3,

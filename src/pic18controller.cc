@@ -28,7 +28,7 @@ void Pic18Controller::Close() { driver_->Close(); }
 Status Pic18Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
   RETURN_IF_ERROR(LoadAddress(0x3ffffe));
   Datastring bytes;
-  RETURN_IF_ERROR(ReadWithCommand(TABLE_READ_post_inc, 2, &bytes));
+  RETURN_IF_ERROR(ReadWithCommand(Pic18Command::TABLE_READ_post_inc, 2, &bytes));
 
   *device_id = bytes[0] | static_cast<uint16_t>(bytes[1]) << 8;
   *revision = *device_id & 0x1f;
@@ -40,25 +40,25 @@ Status Pic18Controller::Read(Section section, uint32_t start_address, uint32_t e
                              const DeviceInfo &, Datastring *result) {
   if (section != EEPROM) {
     RETURN_IF_ERROR(LoadAddress(start_address));
-    return ReadWithCommand(TABLE_READ_post_inc, end_address - start_address, result);
+    return ReadWithCommand(Pic18Command::TABLE_READ_post_inc, end_address - start_address, result);
   } else {
     result->clear();
     // BCF EECON1, EEPGD
-    RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9EA6));
+    RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x9EA6));
     // BCF EECON1, CFGS
-    RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
+    RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x9CA6));
     for (uint32_t address = start_address; address < end_address; ++address) {
       RETURN_IF_ERROR(LoadEepromAddress(address));
       // BSF EECON1, RD
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x80A6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x80A6));
       // MOVF EEDATA, W, 0
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x50A8));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x50A8));
       // MOVWF TABLAT
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x6EF5));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x6EF5));
       // NOP
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0000));
       Datastring byte;
-      RETURN_IF_ERROR(ReadWithCommand(SHIFT_OUT_TABLAT, 1, &byte));
+      RETURN_IF_ERROR(ReadWithCommand(Pic18Command::SHIFT_OUT_TABLAT, 1, &byte));
       result->append(byte);
     }
     return Status::OK;
@@ -91,64 +91,64 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
       fflush(stderr);
 
       // BSF EECON1, EEPGD
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x8EA6));
       // BCF EECON1, CFGS
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x9CA6));
       // BSF EECON1, WREN
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x84A6));
       RETURN_IF_ERROR(LoadAddress(address + i));
       for (size_t j = 0; j < block_size - 2; j += 2) {
-        RETURN_IF_ERROR(WriteCommand(TABLE_WRITE_post_inc2,
+        RETURN_IF_ERROR(WriteCommand(Pic18Command::TABLE_WRITE_post_inc2,
                                      (static_cast<uint16_t>(data[i + j + 1]) << 8) | data[i + j]));
       }
       RETURN_IF_ERROR(WriteCommand(
-          TABLE_WRITE_post_inc2_start_pgm,
+          Pic18Command::TABLE_WRITE_post_inc2_start_pgm,
           (static_cast<uint16_t>(data[i + block_size - 1]) << 8) | data[i + block_size - 2]));
       RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE, &device_info));
     }
   } else if (section == CONFIGURATION) {
     for (const uint8_t byte : data) {
       // BSF EECON1, EEPGD
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8EA6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x8EA6));
       // BSF EECON1, CFGS
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x8CA6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x8CA6));
       // BSF EECON1, WREN
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x84A6));
       RETURN_IF_ERROR(LoadAddress(address));
       // Only one of the two copies of byte is actually used. Which one depends on whether address
       // is odd or even. The other byte is ignored.
-      RETURN_IF_ERROR(
-          WriteCommand(TABLE_WRITE_post_inc2_start_pgm, (static_cast<uint16_t>(byte) << 8) | byte));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::TABLE_WRITE_post_inc2_start_pgm,
+                                   (static_cast<uint16_t>(byte) << 8) | byte));
       RETURN_IF_ERROR(WriteTimedSequence(Pic18SequenceGenerator::WRITE_SEQUENCE, &device_info));
       ++address;
     }
   } else if (section == EEPROM) {
     for (const uint8_t byte : data) {
       // BCF EECON1, EEPGD
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9EA6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x9EA6));
       // BCF EECON1, CFGS
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x9CA6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x9CA6));
       RETURN_IF_ERROR(LoadEepromAddress(address));
       // MOVLW <data>
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0E00 | byte));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0E00 | byte));
       // BSF EECON1, WREN
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x84A6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x84A6));
       // BSF EECON1, WREN
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x82A6));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x82A6));
       // NOP
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0000));
       // NOP
-      RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0000));
 
       Datastring value;
       do {
         // MOVF EEDATA, W, 0
-        RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x50A8));
+        RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x50A8));
         // MOVWF TABLAT
-        RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x6EF5));
+        RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x6EF5));
         // NOP
-        RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
-        RETURN_IF_ERROR(ReadWithCommand(SHIFT_OUT_TABLAT, 1, &value));
+        RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0000));
+        RETURN_IF_ERROR(ReadWithCommand(Pic18Command::SHIFT_OUT_TABLAT, 1, &value));
       } while (value[0] & 2);
       // 200us is the minimum requirement for the PIC18s I've seen. However, for safety we add a
       // bit of margin.
@@ -156,7 +156,7 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
       ++address;
     }
     // BSF EECON1, WREN
-    RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x94A6));
+    RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x94A6));
   }
   return Status::OK;
 }
@@ -203,28 +203,28 @@ Status Pic18Controller::WriteTimedSequence(Pic18SequenceGenerator::TimedSequence
 
 Status Pic18Controller::LoadAddress(uint32_t address) {
   // MOVLW <first byte of address>
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0E00 | ((address >> 16) & 0xff)));
+  RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0E00 | ((address >> 16) & 0xff)));
   // MOVWF TBLPTRU
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x6EF8));
+  RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x6EF8));
   // MOVLW <second byte of address>
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0E00 | ((address >> 8) & 0xff)));
+  RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0E00 | ((address >> 8) & 0xff)));
   // MOVWF TBLPTRH
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x6EF7));
+  RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x6EF7));
   // MOVLW <last byte of address>
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0E00 | (address & 0xff)));
+  RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0E00 | (address & 0xff)));
   // MOVWF TBLPTRL
-  return WriteCommand(CORE_INST, 0x6EF6);
+  return WriteCommand(Pic18Command::CORE_INST, 0x6EF6);
 }
 
 Status Pic18Controller::LoadEepromAddress(uint32_t address) {
   // MOVLW <address low byte>
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0E00 | (address & 0xff)));
+  RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0E00 | (address & 0xff)));
   // MOVWF EEARD
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x6EA9));
+  RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x6EA9));
   // MOVLW <address low byte>
-  RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0E00 | ((address >> 8) & 0xff)));
+  RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0E00 | ((address >> 8) & 0xff)));
   // MOVWF EEARD
-  return WriteCommand(CORE_INST, 0x6EAA);
+  return WriteCommand(Pic18Command::CORE_INST, 0x6EAA);
 }
 
 Status Pic18Controller::ExecuteBulkErase(const Datastring16 &sequence,
@@ -236,14 +236,14 @@ Status Pic18Controller::ExecuteBulkErase(const Datastring16 &sequence,
     // 1100 HH HH Write HHh to 3C0005h
     uint16_t upper = value & 0xff00;
     upper |= upper >> 8;
-    RETURN_IF_ERROR(WriteCommand(TABLE_WRITE, upper));
+    RETURN_IF_ERROR(WriteCommand(Pic18Command::TABLE_WRITE, upper));
     RETURN_IF_ERROR(LoadAddress(0x3C0004));
     // 1100 LL LL Write LLh TO 3C0004h to erase entire device.
     uint16_t lower = value & 0xff;
     lower |= lower << 8;
-    RETURN_IF_ERROR(WriteCommand(TABLE_WRITE, lower));
+    RETURN_IF_ERROR(WriteCommand(Pic18Command::TABLE_WRITE, lower));
     // 0000 00 00 NOP
-    RETURN_IF_ERROR(WriteCommand(CORE_INST, 0x0000));
+    RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0000));
     // 0000 00 00 Hold PGD low until erase completes.
     RETURN_IF_ERROR(driver_->WriteTimedSequence(timed_sequence));
   }

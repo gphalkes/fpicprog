@@ -270,9 +270,9 @@ void DeviceInfo::Dump() const {
   DumpSequence("User ID erase sequence:", user_id_erase_sequence);
   DumpSequence("Config erase sequence:", config_erase_sequence);
   DumpSequence("EEPROM erase sequence:", eeprom_erase_sequence);
-  printf("Bulk erase timing: %lldns\n", (long long) bulk_erase_timing.count());
-  printf("Block write timing: %lldns\n", (long long) block_write_timing.count());
-  printf("Config write timing: %lldns\n", (long long) config_write_timing.count());
+  printf("Bulk erase timing: %lldns\n", (long long)bulk_erase_timing.count());
+  printf("Block write timing: %lldns\n", (long long)block_write_timing.count());
+  printf("Config write timing: %lldns\n", (long long)config_write_timing.count());
   printf("Missing locations:");
   for (const auto &location : missing_locations) {
     printf("%06Xh", location);

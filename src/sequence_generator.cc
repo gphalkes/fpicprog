@@ -52,7 +52,7 @@ std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
 Datastring Pic18SequenceGenerator::GetCommandSequence(Pic18Command command,
                                                       uint16_t payload) const {
   Datastring result;
-  result += GenerateBitSequence(command, 4);
+  result += GenerateBitSequence(static_cast<uint32_t>(command), 4);
   result += GenerateBitSequence(payload, 16);
   return result;
 }
@@ -93,7 +93,7 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
 Datastring Pic16SequenceGenerator::GetCommandSequence(Pic16Command command,
                                                       uint16_t payload) const {
   Datastring result;
-  result += GenerateBitSequence(command, 6);
+  result += GenerateBitSequence(static_cast<uint32_t>(command), 6);
   result += GenerateBitSequence(0, 1);
   result += GenerateBitSequence(payload, 14);
   result += GenerateBitSequence(0, 1);
@@ -128,10 +128,12 @@ std::vector<TimedStep> Pic16SequenceGenerator::GetTimedSequence(
 Status Pic16SequenceGenerator::ValidateSequence(const Datastring16 &sequence) {
   for (auto iter = sequence.begin(); iter != sequence.end(); ++iter) {
     Pic16Command step = static_cast<Pic16Command>(*iter);
-    if (step == LOAD_CONFIGURATION || step == LOAD_PROG_MEMORY) {
+    if (step == Pic16Command::LOAD_CONFIGURATION || step == Pic16Command::LOAD_PROG_MEMORY) {
       ++iter;
       if (iter == sequence.end()) {
-        return Status(PARSE_ERROR, strings::Cat("Load command ", HexByte(step), " missing data"));
+        return Status(
+            PARSE_ERROR,
+            strings::Cat("Load command ", HexByte(static_cast<uint8_t>(step)), " missing data"));
       }
     } else if (*iter == 0xff) {
       // Sleep. Do nothing.
@@ -148,7 +150,7 @@ std::vector<TimedStep> Pic16SequenceGenerator::TimedSequenceFromDatastring16(
   Datastring step_string;
   for (auto iter = sequence.begin(); iter != sequence.end(); ++iter) {
     Pic16Command step = static_cast<Pic16Command>(*iter);
-    if (step == LOAD_CONFIGURATION || step == LOAD_PROG_MEMORY) {
+    if (step == Pic16Command::LOAD_CONFIGURATION || step == Pic16Command::LOAD_PROG_MEMORY) {
       ++iter;
       step_string += GetCommandSequence(step, *iter);
     } else if (*iter == 0xff) {

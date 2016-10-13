@@ -26,18 +26,18 @@ Status Pic16ControllerBase::Open() {
 void Pic16ControllerBase::Close() { driver_->Close(); }
 
 Status Pic16ControllerBase::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
-  RETURN_IF_ERROR(WriteCommand(LOAD_CONFIGURATION, 0));
+  RETURN_IF_ERROR(WriteCommand(Pic16Command::LOAD_CONFIGURATION, 0));
 
   for (int i = 0; i < 5; ++i) {
-    RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+    RETURN_IF_ERROR(WriteCommand(Pic16Command::INCREMENT_ADDRESS));
   }
   // The PIC16 family has two different formats for device and revision ID. The first format stores
   // all information in configuration word 6, the second uses configuration word 5 for the revision
   // ID and word 6 for the device ID. The revision ID then starts with 10b, the device ID with 11b.
   uint16_t location5_data, location6_data;
-  RETURN_IF_ERROR(ReadWithCommand(READ_PROG_MEMORY, &location5_data));
-  RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
-  RETURN_IF_ERROR(ReadWithCommand(READ_PROG_MEMORY, &location6_data));
+  RETURN_IF_ERROR(ReadWithCommand(Pic16Command::READ_PROG_MEMORY, &location5_data));
+  RETURN_IF_ERROR(WriteCommand(Pic16Command::INCREMENT_ADDRESS));
+  RETURN_IF_ERROR(ReadWithCommand(Pic16Command::READ_PROG_MEMORY, &location6_data));
   if ((location5_data & 0x3000) == 0x3000) {
     *device_id = location6_data >> 5;
     *revision = location6_data & 0x1f;
@@ -60,7 +60,9 @@ Status Pic16ControllerBase::Read(Section section, uint32_t start_address, uint32
     uint16_t data;
     Status status(SYNC_LOST, "FAKE STATUS");
     for (int j = 0; j < 3 && status.code() == SYNC_LOST; ++j) {
-      status = ReadWithCommand(section == EEPROM ? READ_DATA_MEMORY : READ_PROG_MEMORY, &data);
+      status = ReadWithCommand(
+          section == EEPROM ? Pic16Command::READ_DATA_MEMORY : Pic16Command::READ_PROG_MEMORY,
+          &data);
     }
     RETURN_IF_ERROR(status);
     RETURN_IF_ERROR(IncrementPc(device_info));
@@ -88,7 +90,7 @@ Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datas
         uint16_t datum = data[base + i + 1];
         datum <<= 8;
         datum |= static_cast<uint8_t>(data[base + i]);
-        RETURN_IF_ERROR(WriteCommand(LOAD_PROG_MEMORY, datum));
+        RETURN_IF_ERROR(WriteCommand(Pic16Command::LOAD_PROG_MEMORY, datum));
         if (i != block_size - 2) {
           RETURN_IF_ERROR(IncrementPc(device_info));
         }
@@ -102,7 +104,7 @@ Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datas
       uint16_t datum = data[i + 1];
       datum <<= 8;
       datum |= static_cast<uint8_t>(data[i]);
-      RETURN_IF_ERROR(WriteCommand(LOAD_PROG_MEMORY, datum));
+      RETURN_IF_ERROR(WriteCommand(Pic16Command::LOAD_PROG_MEMORY, datum));
       RETURN_IF_ERROR(
           WriteTimedSequence(Pic16SequenceGenerator::WRITE_DATA_SEQUENCE, &device_info));
       RETURN_IF_ERROR(IncrementPc(device_info));
@@ -126,7 +128,8 @@ Status Pic16ControllerBase::WriteCommand(Pic16Command command, uint16_t payload)
 }
 
 Status Pic16ControllerBase::WriteCommand(Pic16Command command) {
-  return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command));
+  return driver_->WriteDatastring(
+      sequence_generator_->GetCommandSequence(static_cast<uint8_t>(command)));
 }
 
 Status Pic16ControllerBase::ReadWithCommand(Pic16Command command, uint16_t *result) {
@@ -148,7 +151,7 @@ Status Pic16Controller::LoadAddress(Section section, uint32_t address,
                                     const DeviceInfo &device_info) {
   if (section == CONFIGURATION) {
     if (address < last_address_ || last_address_ < device_info.config_offset) {
-      RETURN_IF_ERROR(WriteCommand(LOAD_CONFIGURATION, 0));
+      RETURN_IF_ERROR(WriteCommand(Pic16Command::LOAD_CONFIGURATION, 0));
       last_address_ = device_info.config_offset;
     }
   } else if (section == FLASH) {
@@ -173,7 +176,7 @@ Status Pic16Controller::LoadAddress(Section section, uint32_t address,
 }
 
 Status Pic16Controller::IncrementPc(const DeviceInfo &device_info) {
-  RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  RETURN_IF_ERROR(WriteCommand(Pic16Command::INCREMENT_ADDRESS));
   bool was_config = false;
   if (last_address_ >= device_info.config_offset) {
     was_config = true;
@@ -220,7 +223,7 @@ Status Pic16SmallController::LoadAddress(Section section, uint32_t address,
 }
 
 Status Pic16SmallController::IncrementPc(const DeviceInfo &) {
-  RETURN_IF_ERROR(WriteCommand(INCREMENT_ADDRESS));
+  RETURN_IF_ERROR(WriteCommand(Pic16Command::INCREMENT_ADDRESS));
   // This will wrap around to 0 if the address is the configuration location.
   last_address_ += 2;
   return Status::OK;

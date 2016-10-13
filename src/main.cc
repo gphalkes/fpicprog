@@ -48,8 +48,7 @@ DEFINE_string(
 DEFINE_string(output, "", "File to write the Intel HEX data to (--action=dump-program).");
 DEFINE_string(input, "", "Intel HEX file to read and program. (--action=write-program)");
 DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, none.");
-DEFINE_string(device_db, "",
-              "Device DB file to load. Defaults to "
+DEFINE_string(device_db, "", "Device DB file to load. Defaults to "
 #if defined(DEVICE_DB_PATH)
               DEVICE_DB_PATH "/family.lst.");
 #else

@@ -72,7 +72,7 @@ void Sleep(Duration duration) {
   LARGE_INTEGER start = GetTimestamp();
   // Use Sleep to do as much of the work as possible. However, this needs to take into account
   // that Sleep may sleep a full timer_period too long.
-  int milliseconds_to_sleep = duration.count() / 1000000 - (int) timer_period;
+  int milliseconds_to_sleep = duration.count() / 1000000 - (int)timer_period;
   if (milliseconds_to_sleep > 0) {
     Sleep(milliseconds_to_sleep);
   }
@@ -85,9 +85,7 @@ void Sleep(Duration duration) {
   }
 }
 #else
-void Sleep(Duration duration) {
-  std::this_thread::sleep_for(duration);
-}
+void Sleep(Duration duration) { std::this_thread::sleep_for(duration); }
 #endif
 
 std::string HexByte(uint8_t byte) {

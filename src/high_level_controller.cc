@@ -120,7 +120,8 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
 
   print_msg(2, "Program section addresses + sizes dump\n");
   for (const auto &section : block_aligned_program) {
-    print_msg(2, "Section: %06X-%06X\n", section.first, (uint32_t)(section.first + section.second.size()));
+    print_msg(2, "Section: %06X-%06X\n", section.first,
+              (uint32_t)(section.first + section.second.size()));
   }
 
   std::set<Section> erase_sections;

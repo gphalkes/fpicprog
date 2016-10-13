@@ -22,6 +22,7 @@
 #if defined(_WIN32)
 #include <windows.h>
 #else
+#include <libgen.h>
 #include <thread>
 #endif
 
@@ -41,7 +42,7 @@ void fatal(const char *fmt, ...) {
 // millisecond or so, this is not accurate enough. Hence we provide our own timing routines, which
 // partially rely on busy waiting to make them accurate.
 
-#ifdef _WIN32
+#if defined(_WIN32)
 static LARGE_INTEGER GetTimestamp() {
   LARGE_INTEGER result;
   if (!QueryPerformanceCounter(&result)) {
@@ -123,4 +124,17 @@ void print_msg(int level, const char *fmt, ...) {
     vfprintf(stderr, fmt, args);
     va_end(args);
   }
+}
+
+std::string Dirname(const std::string &str) {
+#if defined(_WIN32)
+  char drive_letter[_MAX_DRIVE], dir[_MAX_DIR];
+  _splitpath(str.c_str(), &drive_letter, &dir, nullptr, nullptr);
+  char path_buffer[_MAX_PATH];
+  _makepath(&path, drive_letter, dir, nullptr, "");
+  return path_buffer;
+#else
+  std::vector<char> buffer(str.begin(), str.end());
+  return dirname(buffer.data());
+#endif
 }

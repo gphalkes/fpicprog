@@ -21,6 +21,8 @@
 #include "controller.h"
 #include "driver.h"
 #include "high_level_controller.h"
+#include "pic16controller.h"
+#include "pic18controller.h"
 #include "program.h"
 #include "sequence_generator.h"
 #include "status.h"
@@ -47,7 +49,12 @@ DEFINE_string(output, "", "File to write the Intel HEX data to (--action=dump-pr
 DEFINE_string(input, "", "Intel HEX file to read and program. (--action=write-program)");
 DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, none.");
 DEFINE_string(device_db, "",
-              "Device DB file to load. Defaults to " DEVICE_DB_PATH "/<family>.lst.");
+              "Device DB file to load. Defaults to "
+#if defined(DEVICE_DB_PATH)
+              DEVICE_DB_PATH "/family.lst.");
+#else
+              "<path to binary>/device_db/<family>.lst.");
+#endif
 
 static std::vector<Section> ParseSections() {
   std::vector<Section> sections;
@@ -131,7 +138,11 @@ int main(int argc, char **argv) {
 
   std::string filename = FLAGS_device_db;
   if (filename.empty()) {
+#if defined(DEVICE_DB_PATH)
     filename = strings::Cat(DEVICE_DB_PATH, "/", FLAGS_family, ".lst");
+#else
+    filename = strings::Cat(Dirname(argv[0]), "/", FLAGS_family, ".lst");
+#endif
   }
   CHECK_OK(device_db->Load(filename));
 

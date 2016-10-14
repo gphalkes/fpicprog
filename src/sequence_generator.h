@@ -33,7 +33,8 @@ class PicSequenceGenerator {
 
  protected:
   std::vector<TimedStep> GenerateInitSequence() const;
-  Datastring GenerateBitSequence(uint32_t data, int bits) const;
+  Datastring GenerateBitSequenceLsb(uint32_t data, int bits) const;
+  Datastring GenerateBitSequenceMsb(uint32_t data, int bits) const;
 };
 
 class Pic18SequenceGenerator : public PicSequenceGenerator {
@@ -69,6 +70,20 @@ class Pic16SequenceGenerator : public PicSequenceGenerator {
  private:
   std::vector<TimedStep> TimedSequenceFromDatastring16(const Datastring16 &sequence,
                                                        Duration timing) const;
+};
+
+class Pic16NewSequenceGenerator : public PicSequenceGenerator {
+ public:
+  enum TimedSequenceType {
+    INIT_SEQUENCE,
+    CHIP_ERASE_SEQUENCE,
+    WRITE_SEQUENCE,
+  };
+
+  Datastring GetCommandSequence(Pic16NewCommand command, uint16_t payload) const;
+  Datastring GetCommandSequence(Pic16NewCommand command) const;
+  std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
+                                          const DeviceInfo *device_info) const;
 };
 
 #endif

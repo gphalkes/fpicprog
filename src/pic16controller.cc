@@ -100,6 +100,12 @@ Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datas
       RETURN_IF_ERROR(IncrementPc(device_info));
     }
   } else {
+    if (address % 2 != 0) {
+      return Status(INVALID_ARGUMENT, "Address is not a multiple of the write_block_size");
+    }
+    if (data.size() % 2 != 0) {
+      return Status(INVALID_ARGUMENT, "Data size is not a multiple of the write_block_size");
+    }
     for (size_t i = 0; i < data.size(); i += 2) {
       uint16_t datum = data[i + 1];
       datum <<= 8;
@@ -120,7 +126,7 @@ Status Pic16ControllerBase::ChipErase(const DeviceInfo &device_info) {
 }
 
 Status Pic16ControllerBase::SectionErase(Section, const DeviceInfo &) {
-  return Status(INVALID_ARGUMENT, "Unsupported operation SectionErase");
+  return Status(UNIMPLEMENTED, "Section erase not implemented");
 }
 
 Status Pic16ControllerBase::WriteCommand(Pic16Command command, uint16_t payload) {

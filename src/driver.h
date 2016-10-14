@@ -35,8 +35,9 @@ class Driver {
   Status WriteTimedSequence(const TimedSequence &sequence);
   Status WriteDatastring(const Datastring &data);
 
+  // FIXME: make the default argument explicit in the call sites and remove the default.
   virtual Status ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count,
-                                  uint32_t count, Datastring16 *result) = 0;
+                                  uint32_t count, Datastring16 *result, bool lsb_first = true) = 0;
 
  protected:
   Driver() = default;

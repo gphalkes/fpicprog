@@ -48,6 +48,20 @@ enum class Pic16Command {
   INCREMENT_ADDRESS = 6,
 };
 
+enum class Pic16NewCommand {
+  LOAD_PC = 0x80,
+  BULK_ERASE = 0x18,
+  ROW_ERASE = 0xf0,
+  LOAD_DATA = 0x00,
+  LOAD_DATA_INC = 0x02,
+  READ_DATA = 0xfc,
+  READ_DATA_INC = 0xfe,
+  INCREMENT_ADDRESS = 0xf8,
+  BEGIN_PROGRAMMING_INT_TIMED = 0xe0,
+  BEGIN_PROGRAMMING_EXT_TIMED = 0xc0,
+  END_PROGRAMMING_EXT_TIMED = 0x82,
+};
+
 enum Section {
   FLASH,
   USER_ID,

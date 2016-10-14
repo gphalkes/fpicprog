@@ -151,7 +151,7 @@ uint8_t ReverseBits(uint8_t data) {
 }
 
 Status FtdiSbDriver::ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count,
-                                      uint32_t count, Datastring16 *result) {
+                                      uint32_t count, Datastring16 *result, bool lsb_first) {
   result->clear();
   RETURN_IF_ERROR(FlushOutput());
   received_data_.clear();
@@ -168,7 +168,12 @@ Status FtdiSbDriver::ReadWithSequence(const Datastring &sequence, int bit_offset
   for (uint32_t i = 0; i < count; ++i) {
     uint16_t datum = 0;
     for (int j = 0; j < bit_count; ++j) {
-      datum |= bit_stream.GetBit(i * sequence.size() + (bit_offset + j) * 2 + 1) << j;
+      if (lsb_first) {
+        datum |= bit_stream.GetBit(i * sequence.size() + (bit_offset + j) * 2 + 1) << j;
+      } else {
+        datum <<= 1;
+        datum |= bit_stream.GetBit(i * sequence.size() + (bit_offset + j) * 2 + 1);
+      }
     }
     *result += datum;
   }

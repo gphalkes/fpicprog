@@ -15,10 +15,21 @@
 
 #include "strings.h"
 
-Datastring PicSequenceGenerator::GenerateBitSequence(uint32_t data, int bits) const {
+Datastring PicSequenceGenerator::GenerateBitSequenceLsb(uint32_t data, int bits) const {
   Datastring result;
   const uint8_t base = nMCLR | PGM;
   for (int i = 0; i < bits; ++i) {
+    bool bit_set = (data >> i) & 1;
+    result.push_back(base | PGC | (bit_set ? PGD : 0));
+    result.push_back(base | (bit_set ? PGD : 0));
+  }
+  return result;
+}
+
+Datastring PicSequenceGenerator::GenerateBitSequenceMsb(uint32_t data, int bits) const {
+  Datastring result;
+  const uint8_t base = nMCLR | PGM;
+  for (int i = bits - 1; i >= 0; --i) {
     bool bit_set = (data >> i) & 1;
     result.push_back(base | PGC | (bit_set ? PGD : 0));
     result.push_back(base | (bit_set ? PGD : 0));
@@ -52,8 +63,8 @@ std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
 Datastring Pic18SequenceGenerator::GetCommandSequence(Pic18Command command,
                                                       uint16_t payload) const {
   Datastring result;
-  result += GenerateBitSequence(static_cast<uint32_t>(command), 4);
-  result += GenerateBitSequence(payload, 16);
+  result += GenerateBitSequenceLsb(static_cast<uint32_t>(command), 4);
+  result += GenerateBitSequenceLsb(payload, 16);
   return result;
 }
 
@@ -70,19 +81,19 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
       result.push_back(
           TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC, base},
                     device_info ? device_info->bulk_erase_timing : MilliSeconds(500)});
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), ZeroDuration});
+      result.push_back(TimedStep{GenerateBitSequenceLsb(0, 16), ZeroDuration});
       break;
     case WRITE_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
                                  device_info ? device_info->block_write_timing : MilliSeconds(1)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), ZeroDuration});
+      result.push_back(TimedStep{GenerateBitSequenceLsb(0, 16), ZeroDuration});
       break;
     case WRITE_CONFIG_SEQUENCE:
       result.push_back(TimedStep{{base | PGC, base, base | PGC, base, base | PGC, base, base | PGC},
                                  device_info ? device_info->config_write_timing : MilliSeconds(1)});
       result.push_back(TimedStep{{base}, MicroSeconds(200)});
-      result.push_back(TimedStep{GenerateBitSequence(0, 16), ZeroDuration});
+      result.push_back(TimedStep{GenerateBitSequenceLsb(0, 16), ZeroDuration});
       break;
     default:
       FATAL("Requested unimplemented sequence %d\n", type);
@@ -90,19 +101,21 @@ std::vector<TimedStep> Pic18SequenceGenerator::GetTimedSequence(
   return result;
 }
 
+//==================================================================================================
+
 Datastring Pic16SequenceGenerator::GetCommandSequence(Pic16Command command,
                                                       uint16_t payload) const {
   Datastring result;
-  result += GenerateBitSequence(static_cast<uint32_t>(command), 6);
-  result += GenerateBitSequence(0, 1);
-  result += GenerateBitSequence(payload, 14);
-  result += GenerateBitSequence(0, 1);
+  result += GenerateBitSequenceLsb(static_cast<uint32_t>(command), 6);
+  result += GenerateBitSequenceLsb(0, 1);
+  result += GenerateBitSequenceLsb(payload, 14);
+  result += GenerateBitSequenceLsb(0, 1);
   return result;
 }
 
 Datastring Pic16SequenceGenerator::GetCommandSequence(uint8_t command) const {
   Datastring result;
-  result += GenerateBitSequence(command, 6);
+  result += GenerateBitSequenceLsb(command, 6);
   return result;
 }
 
@@ -164,4 +177,45 @@ std::vector<TimedStep> Pic16SequenceGenerator::TimedSequenceFromDatastring16(
     result.push_back(TimedStep{step_string, MicroSeconds(0)});
   }
   return result;
+}
+
+//==================================================================================================
+
+Datastring Pic16NewSequenceGenerator::GetCommandSequence(Pic16NewCommand command,
+                                                         uint16_t payload) const {
+  Datastring result;
+  result += GenerateBitSequenceMsb(static_cast<uint32_t>(command), 8);
+  result += GenerateBitSequenceMsb(0, 9);
+  result += GenerateBitSequenceMsb(payload, 14);
+  result += GenerateBitSequenceMsb(0, 1);
+  return result;
+}
+
+Datastring Pic16NewSequenceGenerator::GetCommandSequence(Pic16NewCommand command) const {
+  Datastring result;
+  result += GenerateBitSequenceMsb(static_cast<uint32_t>(command), 8);
+  return result;
+}
+
+std::vector<TimedStep> Pic16NewSequenceGenerator::GetTimedSequence(
+    TimedSequenceType type, const DeviceInfo *device_info) const {
+  switch (type) {
+    case INIT_SEQUENCE:
+      return GenerateInitSequence();
+    case CHIP_ERASE_SEQUENCE:
+      // FIXME: the second step is only necessary if the device has EEPROM memory.
+      return {
+          TimedStep{GetCommandSequence(Pic16NewCommand::LOAD_PC, 0x8000) +
+                        GetCommandSequence(Pic16NewCommand::BULK_ERASE),
+                    device_info->bulk_erase_timing},
+          TimedStep{GetCommandSequence(Pic16NewCommand::LOAD_PC, 0xF000) +
+                        GetCommandSequence(Pic16NewCommand::BULK_ERASE),
+                    device_info->bulk_erase_timing},
+      };
+    case WRITE_SEQUENCE:
+      return {TimedStep{GetCommandSequence(Pic16NewCommand::BEGIN_PROGRAMMING_INT_TIMED),
+                        device_info->block_write_timing}};
+    default:
+      FATAL("Requested unimplemented sequence %d\n", type);
+  }
 }

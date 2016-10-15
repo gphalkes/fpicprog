@@ -115,6 +115,8 @@ const char *SectionToName(Section section) {
   }
 }
 
+bool will_print(int level) { return level <= FLAGS_verbosity; }
+
 void print_msg(int level, const char *fmt, ...) {
   if (level <= FLAGS_verbosity) {
     va_list args;

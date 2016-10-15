@@ -1,8 +1,8 @@
 DEBUG:=1
 
-SOURCES.fpicprog = main.cc pic16controller.cc pic16newcontroller.cc pic18controller.cc driver.cc \
-	sequence_generator.cc util.cc status.cc strings.cc device_db.cc program.cc \
-	high_level_controller.cc ftdi_sb.cc
+SOURCES.fpicprog = main.cc pic16controller.cc pic16newcontroller.cc pic18controller.cc \
+	pic24controller.cc driver.cc sequence_generator.cc util.cc status.cc strings.cc device_db.cc \
+	program.cc high_level_controller.cc ftdi_sb.cc
 LDLIBS.fpicprog := -lftdi -lgflags
 
 CXXTARGETS := fpicprog
@@ -14,5 +14,5 @@ include ../../makesys/rules.mk
 
 CXXFLAGS += -std=c++14
 CXXFLAGS += -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS
-#CXXFLAGS += -DDEVICE_DB_PATH=\"$(CURDIR)/../device_db\"
+CXXFLAGS += -DDEVICE_DB_PATH=\"$(CURDIR)/../device_db\"
 LDFLAGS += -std=c++14

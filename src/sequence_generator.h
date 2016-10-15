@@ -86,4 +86,17 @@ class Pic16NewSequenceGenerator : public PicSequenceGenerator {
                                           const DeviceInfo *device_info) const;
 };
 
+class Pic24SequenceGenerator : public PicSequenceGenerator {
+ public:
+  enum TimedSequenceType {
+    INIT_SEQUENCE,
+  };
+
+  // PIC24 has only two commands: SIX and REGOUT. SIX executes a command while REGOUT reads data.
+  Datastring GetWriteCommandSequence(uint32_t payload) const;
+  Datastring GetReadCommandSequence() const;
+  std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
+                                          const DeviceInfo *device_info) const;
+};
+
 #endif

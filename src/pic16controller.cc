@@ -38,12 +38,13 @@ Status Pic16ControllerBase::ReadDeviceId(uint16_t *device_id, uint16_t *revision
   RETURN_IF_ERROR(ReadWithCommand(Pic16Command::READ_PROG_MEMORY, &location5_data));
   RETURN_IF_ERROR(WriteCommand(Pic16Command::INCREMENT_ADDRESS));
   RETURN_IF_ERROR(ReadWithCommand(Pic16Command::READ_PROG_MEMORY, &location6_data));
-  if ((location5_data & 0x3000) == 0x3000) {
-    *device_id = location6_data >> 5;
-    *revision = location6_data & 0x1f;
-  } else {
+  print_msg(9, "Device ID words: %04X %04X\n", location5_data, location6_data);
+  if ((location6_data & 0x3000) == 0x3000 && (location5_data & 0x3000) == 0x2000) {
     *device_id = location6_data;
     *revision = location5_data;
+  } else {
+    *device_id = location6_data >> 5;
+    *revision = location6_data & 0x1f;
   }
   return ResetDevice();
 }

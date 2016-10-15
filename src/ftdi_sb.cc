@@ -164,6 +164,14 @@ Status FtdiSbDriver::ReadWithSequence(const Datastring &sequence, int bit_offset
   }
   RETURN_IF_ERROR(FlushOutput());
 
+  if (will_print(9)) {
+    print_msg(9, "Got bytes");
+    for (uint8_t datum : received_data_) {
+      print_msg(9, " %02X", datum);
+    }
+    print_msg(9, "\n");
+  }
+
   BitStreamWrapper bit_stream(&received_data_);
   for (uint32_t i = 0; i < count; ++i) {
     uint16_t datum = 0;

@@ -137,6 +137,7 @@ std::string HexByte(uint8_t byte);
 std::string HexUint16(uint16_t word);
 std::string HexUint32(uint32_t address);
 
+bool will_print(int level);
 void print_msg(int level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 
 std::string Dirname(const std::string &str);

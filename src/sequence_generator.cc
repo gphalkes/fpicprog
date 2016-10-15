@@ -14,6 +14,13 @@
 #include "sequence_generator.h"
 
 #include "strings.h"
+#include <gflags/gflags.h>
+
+DEFINE_string(handshake, "lvp",
+              "Handshake mode. One of lvp, nmclr-first, pgm-first. For "
+              "low-voltage/single-supply-voltage programming, simply use lvp. If either nMCLR or "
+              "PGM drives a high-voltage, nmclr-first or pgm-first can be used to determine which "
+              "pin should raise first.");
 
 Datastring PicSequenceGenerator::GenerateBitSequenceLsb(uint32_t data, int bits) const {
   Datastring result;
@@ -39,24 +46,38 @@ Datastring PicSequenceGenerator::GenerateBitSequenceMsb(uint32_t data, int bits)
 
 std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
   std::vector<TimedStep> result;
-  // This sequence combines the requirements for both the two and the three pin programming.
-  // It inserts a little extra wait, but that is a small price to pay for the extra convenience
-  // of having only a single sequence.
-  result.push_back(TimedStep{{0, nMCLR, 0}, MilliSeconds(10)});
-  {
-    Datastring magic;
-    uint32_t key = 0x4D434850;  // MCHP
-    for (int i = 31; i >= 0; --i) {
-      bool bit_set = (key >> i) & 1;
-      magic.push_back(bit_set ? PGD : 0);
-      magic.push_back(PGC | (bit_set ? PGD : 0));
+  if (FLAGS_handshake == "nmclr-first") {
+    result.push_back(TimedStep{{0}, MicroSeconds(100)});
+    result.push_back(TimedStep{{nMCLR}, MicroSeconds(100)});
+    result.push_back(TimedStep{{nMCLR | PGM}, ZeroDuration});
+  } else if (FLAGS_handshake == "pgm-first") {
+    result.push_back(TimedStep{{0}, MicroSeconds(100)});
+    result.push_back(TimedStep{{PGM}, MicroSeconds(100)});
+    result.push_back(TimedStep{{nMCLR | PGM}, MicroSeconds(400)});
+  } else {
+    if (FLAGS_handshake != "lvp") {
+      fprintf(stderr, "WARNING: handshake mode %s is unknown. Falling back to lvp mode.",
+              FLAGS_handshake.c_str());
     }
-    // Needs to be held for 40ns for the three-pin sequence, but for several microseconds for
-    // the two-pin version.
-    magic.push_back(PGM);
-    result.push_back(TimedStep{magic, MicroSeconds(20)});
+    // This sequence combines the requirements for both the two and the three pin programming.
+    // It inserts a little extra wait, but that is a small price to pay for the extra convenience
+    // of having only a single sequence.
+    result.push_back(TimedStep{{0, nMCLR, 0}, MilliSeconds(10)});
+    {
+      Datastring magic;
+      uint32_t key = 0x4D434850;  // MCHP
+      for (int i = 31; i >= 0; --i) {
+        bool bit_set = (key >> i) & 1;
+        magic.push_back(bit_set ? PGD : 0);
+        magic.push_back(PGC | (bit_set ? PGD : 0));
+      }
+      // Needs to be held for 40ns for the three-pin sequence, but for several microseconds for
+      // the two-pin version.
+      magic.push_back(PGM);
+      result.push_back(TimedStep{magic, MicroSeconds(20)});
+    }
+    result.push_back(TimedStep{{PGM | nMCLR}, MicroSeconds(400)});
   }
-  result.push_back(TimedStep{{PGM | nMCLR}, MicroSeconds(400)});
   return result;
 }
 
@@ -218,4 +239,35 @@ std::vector<TimedStep> Pic16NewSequenceGenerator::GetTimedSequence(
     default:
       FATAL("Requested unimplemented sequence %d\n", type);
   }
+}
+
+Datastring Pic24SequenceGenerator::GetWriteCommandSequence(uint32_t payload) const {
+  Datastring result;
+  result += GenerateBitSequenceLsb(0, 4);
+  result += GenerateBitSequenceLsb(payload, 24);
+  return result;
+}
+
+Datastring Pic24SequenceGenerator::GetReadCommandSequence() const {
+  Datastring result;
+  result += GenerateBitSequenceLsb(1, 4);
+  result += GenerateBitSequenceLsb(0, 24);
+  return result;
+}
+
+std::vector<TimedStep> Pic24SequenceGenerator::GetTimedSequence(TimedSequenceType type,
+                                                                const DeviceInfo *) const {
+  std::vector<TimedStep> result;
+  switch (type) {
+    case INIT_SEQUENCE:
+      result = GenerateInitSequence();
+      // First command should be a NOP (e.g. all zeros), but also requires 9 clocks instead of the
+      // normal 4 clocks to clock in the command.
+      result.push_back(
+          {GenerateBitSequenceLsb(0, 9) + GenerateBitSequenceLsb(0, 24), ZeroDuration});
+      break;
+    default:
+      FATAL("Requested unimplemented sequence %d\n", type);
+  }
+  return result;
 }

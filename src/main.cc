@@ -22,7 +22,9 @@
 #include "driver.h"
 #include "high_level_controller.h"
 #include "pic16controller.h"
+#include "pic16newcontroller.h"
 #include "pic18controller.h"
+#include "pic24controller.h"
 #include "program.h"
 #include "sequence_generator.h"
 #include "status.h"
@@ -131,6 +133,19 @@ int main(int argc, char **argv) {
                                    [](const Datastring16 &sequence) {
                                      return Pic16SequenceGenerator::ValidateSequence(sequence);
                                    });
+  } else if (FLAGS_family == "pic16-new") {
+    std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator(new Pic16NewSequenceGenerator);
+    controller.reset(new Pic16NewController(std::move(driver), std::move(sequence_generator)));
+    device_db =
+        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+                                   [](const Datastring16 &sequence) {
+                                     return Pic16SequenceGenerator::ValidateSequence(sequence);
+                                   });
+  } else if (FLAGS_family == "pic24") {
+    std::unique_ptr<Pic24SequenceGenerator> sequence_generator(new Pic24SequenceGenerator);
+    controller.reset(new Pic24Controller(std::move(driver), std::move(sequence_generator)));
+    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff},
+                                           [](const Datastring16 &) { return Status::OK; });
   } else {
     fatal("Unknown device family %s.\n", FLAGS_family.c_str());
   }
@@ -140,7 +155,7 @@ int main(int argc, char **argv) {
 #if defined(DEVICE_DB_PATH)
     filename = strings::Cat(DEVICE_DB_PATH, "/", FLAGS_family, ".lst");
 #else
-    filename = strings::Cat(Dirname(argv[0]), "/", FLAGS_family, ".lst");
+    filename = strings::Cat(Dirname(argv[0]), "/device_db/", FLAGS_family, ".lst");
 #endif
   }
   CHECK_OK(device_db->Load(filename));

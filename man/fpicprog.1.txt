@@ -1,0 +1,107 @@
+:version: <VERSION>
+:summary: PIC programmer software using FTDI chips
+
+NAME
+====
+
+fpicprog - PIC programmer software using FTDI chips
+
+SYNOPSIS
+========
+
+fpicprog --action=<action> [_OPTIONS_]
+
+DESCRIPTION
+===========
+
+fpicprog is a software driver for FTDI USB chips like the FT232RL to program
+Microchip PIC\(rg chips.
+
+OPTIONS
+=======
+
+fpicprog accepts the following options:
+
+*--action*=_action_::
+	Instruct fpicprog what to do. Available actions are _erase_,
+	_dump-program_, _write-program_, _identify_, and _list-programmers_.
+	When using _erase_, _dump-program_ or _write-program_, the --sections flag
+	can be used to indicate which sections to operate on. For _write-program_
+	and _dump-program_ an empty flag means all sections, while for erase an
+	explicit --sections=all must be passed. The _list-programmers_ action
+	identifies the available programmers connected to the computer. (See
+	PROGRAMMERS below for information on how to make the programmers available
+	to fpicprog). The _identify_ action attempt to identify the PIC chip
+	connected to the programmer. This does not work for all devices, as not
+	all devices provide a device ID. Also note that you have to select the
+	appropriate device family (see --family) for this to work.
+*--help*::
+	Display a comprehensive help message. This also lists several options
+	which have been omitted here for brevity.
+*--section*=_sections_::
+	Selects the sections to operate on. Valid names are either _all_ or a comma
+	separated list of one or more of _flash_, _user-id_, _config_, _eeprom_.
+	Note that not all devices/families support operating on a subset of the
+	available sections.
+*--family*=_family_::
+	Selects the device family the connected device belongs to. This should be
+	one of pic10, pic12, pic16, pic16-new or pic18. Other values are accepted,
+	but are either for incomplete implementations, or for high-voltage
+	programming, which is not officially supported by fpicprog at this time.
+*--device*=_device_::
+	Selects the device to program. Acceptable values are determined by the
+	family. Typically, this is the device name without the leading PIC, and
+	using capital letters. E.g. 18F45K50. See the device list files for
+	possible values.
+*--device_db*=_device database path_::
+	Device DB file to load. The default value depends on the --family flag,
+	and can be seen by looking at the --help output.
+*--input*=_file name_::
+	Hex file to read for writing to the device.
+*--output*=_file name_::
+	Location to write the Hex file to when dumping a program.
+*--erase_mode*=_mode_::
+	Mode of erasing the device to use. Either _chip_, _section_ or _none_. The
+	default mode is _chip_, meaning that the entire chip will be erased when
+	selection the actions _erase_ or _write-program_.
+
+*--ftdi_product_id*=_pid_::
+	Select the USB Product ID of the programmer to open. By default fpicprog
+	will look for a programmer with USB Product ID 0x6001.
+TODO: list the other ftdi_ options, especially those changing the pins.
+
+PROGRAMMERS
+===========
+
+fpicprog was designed to work with FTDI FT232RL chips. However, several other
+FTDI chips provide the required functionality (i.e. synchronous bit-bang mode)
+as well. This includes the FT232RQ, FT245RL, FT245RQ and the FT2232 series of
+devices. The latter use different USB Product IDs (0x6010, 0x6011 and 0x6014).
+
+On Linux systems, by default the programmers typically are only accessible by
+root. To make fpicprog able to access the programmers as a regular user, use
+udev rules to set the permissions on the programmer. The following example
+makes the programmers (with USB Product ID 0x6001) accessible to all users:
+
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0666"
+
+BUGS
+====
+
+If you think you have found a bug, please check that you are using the latest
+version of fpicprog <http://os.ghalkes.nl/fpicprog.html>. A bugtracker is
+available at <https://github.com/gphalkes/fpicprog/issues>. When reporting bugs,
+please include a minimal example that demonstrates the problem.
+
+AUTHOR
+======
+
+G.P. Halkes <tilde@ghalkes.nl>
+
+COPYRIGHT
+=========
+
+Copyright \(co 2016 G.P. Halkes +
+fpicprog is licensed under the GNU General Public License version 3. +
+For more details on the license, see the file COPYING in the documentation
+directory. On Un*x systems this is usually /usr/share/doc/fpicprog.

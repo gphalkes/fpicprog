@@ -1,0 +1,82 @@
+# Copyright (C) 2016 G.P. Halkes
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 3, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+.POSIX:
+
+# C++-compiler flags
+CXXFLAGS=-O2
+
+# CONFIGFLAGS should contain all the flags to compile against the required
+# libraries (libftdi and google-gflags).
+# CONFIGLIBS should contain all the flags to link against the required
+# libraries.
+# If CONFIGFLAGS contains a definition for the DEVICE_DB_PATH, fpicprog will
+# look in that directory for finding the device db files. If DEVICE_DB_PATH is
+# not defined, fpicprog will attempt to locate the device db files relative to
+# the executable.
+CONFIGFLAGS=-DDEVICE_DB_PATH=\"$(datadir)/fpicprog\"
+CONFIGLIBS=-lftdi -lgflags
+
+# Installation prefix and install paths
+prefix=/usr/local
+bindir=$(prefix)/bin
+docdir=$(prefix)/share/doc
+mandir=$(prefix)/share/man
+datadir=$(prefix)/share
+
+# Install program to use (should be BSD install compatible)
+INSTALL=install
+
+SILENTCXX=@echo '[CXX]' $< ;
+SILENTLD=@echo '[LD]' $@ ;
+
+OBJECTS=<OBJECTS>
+
+all: src/fpicprog
+
+.PHONY: all clean dist-clean install uninstall
+.SUFFIXES: .cc .o .mo .po
+.IGNORE: uninstall
+
+clean:
+	rm -rf src/*.o src/fpicprog
+
+dist-clean: clean
+	rm -rf Makefile config.log
+
+.cc.o:
+	$(SILENTCXX) $(CXX) $(CXXFLAGS) $(CONFIGFLAGS) -Isrc -c -o $@ $<
+
+src/fpicprog: $(OBJECTS)
+	$(SILENTLD) $(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(LDLIBS) $(CONFIGLIBS)
+
+# Macros to make DESTDIR support more readable
+_bindir=$(DESTDIR)$(bindir)
+_docdir=$(DESTDIR)$(docdir)
+_mandir=$(DESTDIR)$(mandir)
+_datadir=$(DESTDIR)$(datadir)
+
+install: all
+	$(INSTALL) -d $(_bindir)
+	$(INSTALL) -s src/fpicprog $(_bindir)
+	$(INSTALL) -d $(_docdir)
+	$(INSTALL) -m0644 COPYING README Changelog $(_docdir)
+	$(INSTALL) -d $(_mandir)/man1
+	$(INSTALL) -m0644 man/fpicprog.1 $(_mandir)/man1
+	$(INSTALL) -d $(_datadir)/fpicprog/
+	$(INSTALL) -m0644 <DEVICE_LISTS> $(_datadir)/fpicprog/
+
+uninstall:
+	rm -f $(_bindir)/fpicprog
+	rm -rf $(_docdir)
+	rm -f $(_mandir)/man1/fpicprog.1
+	rm -rf $(_datadir)/fpicprog

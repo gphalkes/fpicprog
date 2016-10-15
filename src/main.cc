@@ -52,7 +52,7 @@ DEFINE_string(input, "", "Intel HEX file to read and program. (--action=write-pr
 DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, none.");
 DEFINE_string(device_db, "", "Device DB file to load. Defaults to "
 #if defined(DEVICE_DB_PATH)
-              DEVICE_DB_PATH "/family.lst.");
+              DEVICE_DB_PATH "/<family>.lst.");
 #else
               "<path to binary>/device_db/<family>.lst.");
 #endif
@@ -100,7 +100,9 @@ int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   std::unique_ptr<Driver> driver = Driver::CreateFromFlags();
-  if (FLAGS_action == "list-programmers") {
+  if (FLAGS_action.empty()) {
+      fatal("No action specified\n");
+  } else if (FLAGS_action == "list-programmers") {
     std::vector<std::string> devices;
     CHECK_OK(driver->List(&devices));
     for (const auto &device : devices) {
@@ -165,9 +167,7 @@ int main(int argc, char **argv) {
     high_level_controller.SetDevice(FLAGS_device);
   }
 
-  if (FLAGS_action.empty()) {
-    fatal("No action specified\n");
-  } else if (FLAGS_action == "erase") {
+  if (FLAGS_action == "erase") {
     if (FLAGS_sections.empty()) {
       fatal("Erase requires setting --sections\n");
     } else if (FLAGS_sections == "all") {

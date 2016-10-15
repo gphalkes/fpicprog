@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 
   std::unique_ptr<Driver> driver = Driver::CreateFromFlags();
   if (FLAGS_action.empty()) {
-      fatal("No action specified\n");
+    fatal("No action specified\n");
   } else if (FLAGS_action == "list-programmers") {
     std::vector<std::string> devices;
     CHECK_OK(driver->List(&devices));

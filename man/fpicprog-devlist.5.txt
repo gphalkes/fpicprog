@@ -1,0 +1,152 @@
+:version: <VERSION>
+:summary: fpicprog device list definitions
+
+NAME
+====
+
+fpicprog-devlist - Device list definitions for fpicprog
+
+DESCRIPTION
+===========
+
+This document explains the device list files in the device database. The device
+list files are used to instruct fpicprog on the properties of the device such
+as memory size, command sequences and command timings. If you wish to add a
+device to the device lists, please study the "Flash programming specification"
+for the device.
+
+FILE STRUCTURE
+==============
+
+Each device list file conforms to the following structure:
+- Empty lines are ignored.
+- Lines starting with a # sign are comments and ignored.
+- Lines with a string in square brackets ([]) start a new section. Each section
+  describes a device. Each device may only occur once.
+- All other lines must start with a keyword, followed by an equals sign (=).
+  The text after the equals sign will be interpreted depending on the keyword.
+
+When reading the device file, leading and trailing whitespace is ignored.
+
+Hexadecimal numbers are written as a set of hexadecimal digits followed by a
+small letter h. Some keywords require time durations to be specified. These are
+written as a decimal number followed by a unit. Time units are either ms for
+milliseconds or us for microseconds.
+
+KEYWORDS
+========
+
+This section describes the available keywords. The next sections will describe
+how these are used for the different device families. Units for sizes depend
+on the device family, and are either bytes or words.
+
+device__id::
+  The device ID of the part, if available. This is used for auto-detection of
+  the device.
+
+program__memory__size::
+  Size of the program memory.
+user__id__size::
+  Size of the User ID storage, if separate from the configuration words.
+user__id__address::
+  Address of the User ID storage, if separate from the configuration words.
+config__size::
+  Size of the configuration words.
+config__address::
+  Address of the configuration words.
+eeprom__size::
+  Size of the EEPROM storage.
+eeprom__address::
+  Address of the EEPROM storage.
+write__block__size::
+  Size of a single write in units for program memory. For configuration, User
+  ID and EEPROM memory, this is fixed per device family.
+block__write__sequence::
+  The sequence of commands to execute for a block write.
+chip__erase__sequence:
+  The sequence of commands to execute for a chip erase.
+flash__erase__sequence::
+  The sequence of commands to execute for a flash (program memory) erase.
+user__id__erase__sequence::
+  The sequence of commands to execute for a User ID erase.
+config__erase__sequence::
+  The sequence of commands to execute for a configuration words erase.
+eeprom__erase__sequence::
+  The sequence of commands to execute for a EEPROM erase.
+block__write__timing::
+  Time to wait after/during executing the block write sequence.
+bulk__erase__timing::
+  Time to wait after/during executing one of the bulk erase sequences.
+missing__locations::
+  Locations which are part of one of the areas (typically the configuration
+  words) which are not implemented. These will be read as all ones, even if
+  different values are written to them. Adding these to the missing__locations
+  list will make fpicprog ignore these locations when dumping device contents
+  or writing and verifying data.
+
+PIC10, PIC12 AND PIC16 FAMILIES
+===============================
+The PIC10, PIC12 and PIC16 devices can be classified into three groups based on
+the programming methodology.
+
+The first group is the group of small devices. These are devices that have
+small memories, and have their (single) configuration word at the end of their
+memory range. On device reset, the PC is set to the configuration word. These
+devices can be recognized by set of 6-bit programming commands without a
+"Load Configuration" command. These devices require high-voltage programming.
+
+The second group of devices are the "standard" devices. These devices have a
+6-bit programming command set, with command 000000b "Load Configuration". Most
+devices fall into this category.
+
+The third group of devices are the latest devices from Microchip in the PIC16
+family. These devices feature an 8-bit programming command set.
+
+Note that within the PIC10, PIC12 and PIC16 families, fpicprog considers these
+three groups separate families. fpicprog for example has separate family names
+pic16-small, pic16 and pic16-new.
+
+For all these devices, the size and address units in the device files are
+14-bit words. The datasheets for these devices also use words as their units.
+
+:table options: center=true box=table 1+l|ccc
++------------------------+-------+----------+-----+
+| Keyword                | small | standard | new |
++------------------------+-------+----------+-----+
+| device__id             |   X   |     X    |  X  |
+| program__memory__size  |   X   |     X    |  X  |
+| user__id__size         |   X   |          |     |
+| user__id__address      |   X   |          |     |
+| config__size           |       |     X    |  X  |
+| config__address        |   X   |     X    |  X  |
+| eeprom__size           |       |     X    |  X  |
+| eeprom__address        |       |     X    |  X  |
+| write__block__size     |   X   |     X    |  X  |
+| block__write__sequence |   X   |     X    |     |
+| chip__erase__sequence  |   X   |     X    |     |
+| block__write__timing   |   X   |     X    |  X  |
+| bulk__erase__timing    |   X   |     X    |  X  |
+| missing__locations     |       |     X    |  X  |
++------------------------+-------+----------+-----+
+
+The block__write__sequence and the chip__erase__sequence are a list of
+programming commands. If the command is "Load Configuration" or "Load Data",
+the argument must be given immediately after. Besides the normal commands,
+the command FFh is replaced by a wait with the appropriate timing. The command
+FEh <number> is expanded to number repetitions of the "Increment address"
+command.
+
+For the standard family, the User ID is considered part of the configuration
+words. However, the locations between the User ID and the configuration words,
+including the device ID, must be added to the missing__locations.
+
+PIC18 FAMILY
+============
+
+For the PIC18 family, sizes and addresses are specified in bytes, just like the
+datasheets. All keywords are supported except for the block__write__sequence.
+The different erase sequences list the words written to the address combination
+3C0005h:3C0004h to select what has to be erased. Most PIC18s require several
+different erase commands to erase the whole of the flash (program) memory as it
+is divided into multiple blocks. The other erase sequences typically consist of
+a single value.

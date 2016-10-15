@@ -34,19 +34,19 @@ Status HighLevelController::ReadProgram(const std::vector<Section> &sections, Pr
   }
   if (ContainsKey(sections_set, USER_ID) && device_info_.user_id_size > 0) {
     print_msg(1, "Reading user ID data\n");
-    RETURN_IF_ERROR(ReadData(USER_ID, &(*program)[device_info_.user_id_offset],
-                             device_info_.user_id_offset, device_info_.user_id_size));
+    RETURN_IF_ERROR(ReadData(USER_ID, &(*program)[device_info_.user_id_address],
+                             device_info_.user_id_address, device_info_.user_id_size));
   }
   if (ContainsKey(sections_set, CONFIGURATION) && device_info_.config_size > 0) {
     print_msg(1, "Reading configuration data\n");
-    RETURN_IF_ERROR(ReadData(CONFIGURATION, &(*program)[device_info_.config_offset],
-                             device_info_.config_offset, device_info_.config_size));
+    RETURN_IF_ERROR(ReadData(CONFIGURATION, &(*program)[device_info_.config_address],
+                             device_info_.config_address, device_info_.config_size));
     RemoveMissingConfigBytes(program, device_info_);
   }
   if (ContainsKey(sections_set, EEPROM) && device_info_.eeprom_size > 0) {
     print_msg(1, "Reading EEPROM data\n");
-    RETURN_IF_ERROR(ReadData(EEPROM, &(*program)[device_info_.eeprom_offset],
-                             device_info_.eeprom_offset, device_info_.eeprom_size));
+    RETURN_IF_ERROR(ReadData(EEPROM, &(*program)[device_info_.eeprom_address],
+                             device_info_.eeprom_address, device_info_.eeprom_size));
   }
   return Status::OK;
 }
@@ -128,14 +128,14 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
   for (const auto &section : block_aligned_program) {
     if (section.first < device_info_.program_memory_size) {
       erase_sections.insert(FLASH);
-    } else if (section.first >= device_info_.user_id_offset &&
-               section.first < device_info_.user_id_offset + device_info_.user_id_size) {
+    } else if (section.first >= device_info_.user_id_address &&
+               section.first < device_info_.user_id_address + device_info_.user_id_size) {
       erase_sections.insert(USER_ID);
-    } else if (section.first >= device_info_.config_offset &&
-               section.first < device_info_.config_offset + device_info_.config_size) {
+    } else if (section.first >= device_info_.config_address &&
+               section.first < device_info_.config_address + device_info_.config_size) {
       erase_sections.insert(CONFIGURATION);
-    } else if (section.first >= device_info_.eeprom_offset &&
-               section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
+    } else if (section.first >= device_info_.eeprom_address &&
+               section.first < device_info_.eeprom_address + device_info_.eeprom_size) {
       erase_sections.insert(EEPROM);
     }
   }
@@ -184,24 +184,25 @@ Status HighLevelController::WriteProgram(const std::vector<Section> &sections,
       print_msg(1, "Verifying written flash data\n");
       RETURN_IF_ERROR(VerifyData(FLASH, section.second, section.first));
     } else if (ContainsKey(write_sections, USER_ID) &&
-               section.first >= device_info_.user_id_offset &&
-               section.first < device_info_.user_id_offset + device_info_.user_id_size) {
+               section.first >= device_info_.user_id_address &&
+               section.first < device_info_.user_id_address + device_info_.user_id_size) {
       print_msg(1, "Writing user ID data %06X-%06X\n", section.first,
                 (uint32_t)(section.first + section.second.size()));
       RETURN_IF_ERROR(controller_->Write(USER_ID, section.first, section.second, device_info_));
       print_msg(1, "Verifying written user ID data\n");
       RETURN_IF_ERROR(VerifyData(USER_ID, section.second, section.first));
     } else if (ContainsKey(write_sections, CONFIGURATION) &&
-               section.first >= device_info_.config_offset &&
-               section.first < device_info_.config_offset + device_info_.config_size) {
+               section.first >= device_info_.config_address &&
+               section.first < device_info_.config_address + device_info_.config_size) {
       print_msg(1, "Writing configuration data %06X-%06X\n", section.first,
                 (uint32_t)(section.first + section.second.size()));
       RETURN_IF_ERROR(
           controller_->Write(CONFIGURATION, section.first, section.second, device_info_));
       print_msg(1, "Verifying written configuration data\n");
       RETURN_IF_ERROR(VerifyData(CONFIGURATION, section.second, section.first));
-    } else if (ContainsKey(write_sections, EEPROM) && section.first >= device_info_.eeprom_offset &&
-               section.first < device_info_.eeprom_offset + device_info_.eeprom_size) {
+    } else if (ContainsKey(write_sections, EEPROM) &&
+               section.first >= device_info_.eeprom_address &&
+               section.first < device_info_.eeprom_address + device_info_.eeprom_size) {
       print_msg(1, "Writing EEPROM data %06X-%06X\n", section.first,
                 (uint32_t)(section.first + section.second.size()));
       RETURN_IF_ERROR(controller_->Write(EEPROM, section.first, section.second, device_info_));

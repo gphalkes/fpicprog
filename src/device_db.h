@@ -25,11 +25,11 @@ struct DeviceInfo {
   uint16_t device_id = 0;
   uint32_t program_memory_size = 0;
   uint32_t user_id_size = 0;
-  uint32_t user_id_offset = 0;
+  uint32_t user_id_address = 0;
   uint32_t config_size = 0;
-  uint32_t config_offset = 0;
+  uint32_t config_address = 0;
   uint32_t eeprom_size = 0;
-  uint32_t eeprom_offset = 0;
+  uint32_t eeprom_address = 0;
   uint16_t write_block_size = 0;
   Datastring16 block_write_sequence;
   Datastring16 chip_erase_sequence;

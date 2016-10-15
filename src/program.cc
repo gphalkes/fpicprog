@@ -217,9 +217,9 @@ void WriteIhex(const Program &program, FILE *out) {
 
 Status MergeProgramBlocks(Program *program, const DeviceInfo &device_info) {
   std::set<uint32_t> section_boundaries;
-  section_boundaries.insert(device_info.user_id_offset);
-  section_boundaries.insert(device_info.config_offset);
-  section_boundaries.insert(device_info.eeprom_offset);
+  section_boundaries.insert(device_info.user_id_address);
+  section_boundaries.insert(device_info.config_address);
+  section_boundaries.insert(device_info.eeprom_address);
 
   auto last_section = program->begin();
   auto iter = last_section;
@@ -241,12 +241,12 @@ Status MergeProgramBlocks(Program *program, const DeviceInfo &device_info) {
 
   std::vector<Interval<uint32_t>> device_sections;
   device_sections.emplace_back(0, device_info.program_memory_size);
-  device_sections.emplace_back(device_info.user_id_offset,
-                               device_info.user_id_offset + device_info.user_id_size);
-  device_sections.emplace_back(device_info.config_offset,
-                               device_info.config_offset + device_info.config_size);
-  device_sections.emplace_back(device_info.eeprom_offset,
-                               device_info.eeprom_offset + device_info.eeprom_size);
+  device_sections.emplace_back(device_info.user_id_address,
+                               device_info.user_id_address + device_info.user_id_size);
+  device_sections.emplace_back(device_info.config_address,
+                               device_info.config_address + device_info.config_size);
+  device_sections.emplace_back(device_info.eeprom_address,
+                               device_info.eeprom_address + device_info.eeprom_size);
 
   for (const auto &section : *program) {
     bool contained = false;

@@ -1,0 +1,10 @@
+[16F54]
+program_memory_size = 200h
+user_id_size = 4
+user_id_address = 200h
+config_address = 3ffh
+block_write_sequence = 08h FFh 0Eh
+chip_erase_sequence = FEh 200h 09h FFh
+bulk_erase_timing = 10ms
+block_write_timing = 2ms
+write_block_size = 1

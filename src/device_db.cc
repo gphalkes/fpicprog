@@ -75,11 +75,11 @@ static Status DurationValue(const std::string &str, Duration *result) {
 static void MultiplyUnits(DeviceInfo *info, uint32_t unit_factor) {
   info->program_memory_size *= unit_factor;
   info->user_id_size *= unit_factor;
-  info->user_id_offset *= unit_factor;
+  info->user_id_address *= unit_factor;
   info->config_size *= unit_factor;
-  info->config_offset *= unit_factor;
+  info->config_address *= unit_factor;
   info->eeprom_size *= unit_factor;
-  info->eeprom_offset *= unit_factor;
+  info->eeprom_address *= unit_factor;
   info->write_block_size *= unit_factor;
   std::vector<uint32_t> missing_locations;
   for (uint32_t location : info->missing_locations) {
@@ -151,20 +151,20 @@ Status DeviceDb::Load(const std::string &name) {
       } else if (key == "user_id_size") {
         RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.user_id_size),
                                     strings::Cat(" in device database at line ", i + 1));
-      } else if (key == "user_id_offset") {
-        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.user_id_offset),
+      } else if (key == "user_id_address") {
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.user_id_address),
                                     strings::Cat(" in device database at line ", i + 1));
       } else if (key == "config_size") {
         RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.config_size),
                                     strings::Cat(" in device database at line ", i + 1));
-      } else if (key == "config_offset") {
-        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.config_offset),
+      } else if (key == "config_address") {
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.config_address),
                                     strings::Cat(" in device database at line ", i + 1));
       } else if (key == "eeprom_size") {
         RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.eeprom_size),
                                     strings::Cat(" in device database at line ", i + 1));
-      } else if (key == "eeprom_offset") {
-        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.eeprom_offset),
+      } else if (key == "eeprom_address") {
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.eeprom_address),
                                     strings::Cat(" in device database at line ", i + 1));
       } else if (key == "write_block_size") {
         RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.write_block_size),
@@ -259,11 +259,11 @@ void DeviceInfo::Dump() const {
   printf("Device ID: %04Xh\n", device_id);
   printf("Program memory size: %06Xh\n", program_memory_size);
   printf("User ID size: %d\n", user_id_size);
-  printf("User ID offset: %06Xh\n", user_id_offset);
+  printf("User ID offset: %06Xh\n", user_id_address);
   printf("Config size: %d\n", config_size);
-  printf("Config offset: %06Xh\n", config_offset);
+  printf("Config offset: %06Xh\n", config_address);
   printf("EEPROM size: %d\n", eeprom_size);
-  printf("EEPROM offset: %06Xh\n", eeprom_offset);
+  printf("EEPROM offset: %06Xh\n", eeprom_address);
   printf("Write block size: %d\n", write_block_size);
   DumpSequence("Chip erase sequence:", chip_erase_sequence);
   DumpSequence("Flash erase sequence:", flash_erase_sequence);
@@ -288,7 +288,7 @@ Status DeviceInfo::Validate() const {
   IntervalSet<uint32_t> used_intervals;
   used_intervals.Add(Interval<uint32_t>(0, program_memory_size));
   if (user_id_size > 0) {
-    Interval<uint32_t> user_id_interval(user_id_offset, user_id_offset + user_id_size);
+    Interval<uint32_t> user_id_interval(user_id_address, user_id_address + user_id_size);
     if (used_intervals.Overlaps(user_id_interval)) {
       return Status(PARSE_ERROR, strings::Cat(name, ": User ID overlaps with other segments"));
     }
@@ -296,7 +296,7 @@ Status DeviceInfo::Validate() const {
   }
 
   if (config_size > 0) {
-    Interval<uint32_t> config_interval(config_offset, config_offset + config_size);
+    Interval<uint32_t> config_interval(config_address, config_address + config_size);
     if (used_intervals.Overlaps(config_interval)) {
       return Status(PARSE_ERROR,
                     strings::Cat(name, ": Configuration overlaps with other segments"));
@@ -305,7 +305,7 @@ Status DeviceInfo::Validate() const {
   }
 
   if (eeprom_size > 0) {
-    Interval<uint32_t> eeprom_interval(eeprom_offset, eeprom_offset + eeprom_size);
+    Interval<uint32_t> eeprom_interval(eeprom_address, eeprom_address + eeprom_size);
     if (used_intervals.Overlaps(eeprom_interval)) {
       return Status(PARSE_ERROR, strings::Cat(name, ": EERPOM overlaps with other segments"));
     }

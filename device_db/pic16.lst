@@ -5,9 +5,9 @@
 device_id = 0104h
 program_memory_size = 2000h
 config_size = 9
-config_offset = 2000h
+config_address = 2000h
 eeprom_size = 256
-eeprom_offset = 2100h
+eeprom_address = 2100h
 block_write_sequence = 08h FFh
 chip_erase_sequence = 09h FFh 0Bh FFh
 eeprom_erase_sequence = 0Bh FFh

@@ -171,6 +171,11 @@ Status Pic16SequenceGenerator::ValidateSequence(const Datastring16 &sequence) {
       }
     } else if (*iter == 0xff) {
       // Sleep. Do nothing.
+    } else if (*iter == 0xfe) {
+      ++iter;
+      if (iter == sequence.end()) {
+        return Status(PARSE_ERROR, strings::Cat("Set address command missing address"));
+      }
     } else if (*iter > 0x3f) {
       return Status(PARSE_ERROR, strings::Cat("Invalid command value ", HexUint16(*iter)));
     }
@@ -190,6 +195,11 @@ std::vector<TimedStep> Pic16SequenceGenerator::TimedSequenceFromDatastring16(
     } else if (*iter == 0xff) {
       result.push_back(TimedStep{step_string, timing});
       step_string.clear();
+    } else if (*iter == 0xfe) {
+      ++iter;
+      for (uint16_t i = 0; i <= *iter; ++i) {
+        step_string += GetCommandSequence(static_cast<uint8_t>(Pic16Command::INCREMENT_ADDRESS));
+      }
     } else {
       step_string += GetCommandSequence(*iter);
     }
@@ -240,6 +250,8 @@ std::vector<TimedStep> Pic16NewSequenceGenerator::GetTimedSequence(
       FATAL("Requested unimplemented sequence %d\n", type);
   }
 }
+
+//==================================================================================================
 
 Datastring Pic24SequenceGenerator::GetWriteCommandSequence(uint32_t payload) const {
   Datastring result;

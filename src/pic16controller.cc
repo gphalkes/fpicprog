@@ -157,16 +157,16 @@ Status Pic16ControllerBase::WriteTimedSequence(Pic16SequenceGenerator::TimedSequ
 Status Pic16Controller::LoadAddress(Section section, uint32_t address,
                                     const DeviceInfo &device_info) {
   if (section == CONFIGURATION) {
-    if (address < last_address_ || last_address_ < device_info.config_offset) {
+    if (address < last_address_ || last_address_ < device_info.config_address) {
       RETURN_IF_ERROR(WriteCommand(Pic16Command::LOAD_CONFIGURATION, 0));
-      last_address_ = device_info.config_offset;
+      last_address_ = device_info.config_address;
     }
   } else if (section == FLASH) {
     if (address < last_address_) {
       RETURN_IF_ERROR(ResetDevice());
     }
   } else if (section == EEPROM) {
-    address -= device_info.eeprom_offset;
+    address -= device_info.eeprom_address;
     if (address < last_address_) {
       RETURN_IF_ERROR(ResetDevice());
     }
@@ -185,11 +185,11 @@ Status Pic16Controller::LoadAddress(Section section, uint32_t address,
 Status Pic16Controller::IncrementPc(const DeviceInfo &device_info) {
   RETURN_IF_ERROR(WriteCommand(Pic16Command::INCREMENT_ADDRESS));
   bool was_config = false;
-  if (last_address_ >= device_info.config_offset) {
+  if (last_address_ >= device_info.config_address) {
     was_config = true;
   }
   last_address_ += 2;
-  if (last_address_ >= device_info.config_offset && !was_config) {
+  if (last_address_ >= device_info.config_address && !was_config) {
     // Force a reset of the PC if an overflow into the config area was detected.
     last_address_ = std::numeric_limits<uint32_t>::max();
   }

@@ -15,3 +15,18 @@ bulk_erase_timing = 6ms
 block_write_timing = 6ms
 missing_locations = 2004h 2005h 2006h
 write_block_size = 8
+
+[16F84A]
+device_id = 002Bh
+program_memory_size = 400h
+config_size = 7
+config_address = 2000h
+eeprom_size = 64
+eeprom_address = 2100h
+block_write_sequence = 18h FFh
+chip_erase_sequence = 00h 02h 3FFFh 09h 08h FFh 03h 3FFFh 0Bh 08h FFh
+eeprom_erase_sequence = 03h 3FFFh 0Bh 08h FFh
+bulk_erase_timing = 10ms
+block_write_timing = 4ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 1

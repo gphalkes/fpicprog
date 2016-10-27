@@ -72,11 +72,12 @@ std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
         magic.push_back(PGC | (bit_set ? PGD : 0));
       }
       // Needs to be held for 40ns for the three-pin sequence, but for several microseconds for
-      // the two-pin version.
+      // the two-pin version. PIC24s are really slow and need 1ms.
       magic.push_back(PGM);
-      result.push_back(TimedStep{magic, MicroSeconds(20)});
+      result.push_back(TimedStep{magic, MilliSeconds(1)});
     }
-    result.push_back(TimedStep{{PGM | nMCLR}, MicroSeconds(400)});
+    // PIC24 needs this time to be at least 25 ms. PIC16 and PIC18 require much shorter times.
+    result.push_back(TimedStep{{PGM | nMCLR}, MilliSeconds(25)});
   }
   return result;
 }
@@ -162,7 +163,7 @@ std::vector<TimedStep> Pic16SequenceGenerator::GetTimedSequence(
 Status Pic16SequenceGenerator::ValidateSequence(const Datastring16 &sequence) {
   for (auto iter = sequence.begin(); iter != sequence.end(); ++iter) {
     Pic16Command step = static_cast<Pic16Command>(*iter);
-    if (step == Pic16Command::LOAD_CONFIGURATION || step == Pic16Command::LOAD_PROG_MEMORY) {
+    if (step == Pic16Command::LOAD_PROG_MEMORY || step == Pic16Command::LOAD_DATA_MEMORY) {
       ++iter;
       if (iter == sequence.end()) {
         return Status(

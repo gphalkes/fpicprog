@@ -194,7 +194,7 @@ uint8_t FtdiSbDriver::PinNameToValue(const std::string &name) {
       return (1 << pin.number);
     }
   }
-  FATAL("No pin named %s available.", name.c_str());
+  FATAL("No pin named %s available.\n", name.c_str());
 }
 
 Status FtdiSbDriver::DrainInput(int expected_size) {

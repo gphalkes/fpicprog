@@ -112,7 +112,9 @@ Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datas
       uint16_t datum = data[i + 1];
       datum <<= 8;
       datum |= static_cast<uint8_t>(data[i]);
-      RETURN_IF_ERROR(WriteCommand(Pic16Command::LOAD_PROG_MEMORY, datum));
+      RETURN_IF_ERROR(WriteCommand(
+          section == EEPROM ? Pic16Command::LOAD_DATA_MEMORY : Pic16Command::LOAD_PROG_MEMORY,
+          datum));
       RETURN_IF_ERROR(
           WriteTimedSequence(Pic16SequenceGenerator::WRITE_DATA_SEQUENCE, &device_info));
       RETURN_IF_ERROR(IncrementPc(device_info));
@@ -124,6 +126,7 @@ Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datas
 Status Pic16ControllerBase::ChipErase(const DeviceInfo &device_info) {
   RETURN_IF_ERROR(ResetDevice());
   RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::CHIP_ERASE_SEQUENCE, &device_info));
+  RETURN_IF_ERROR(ResetDevice());
   return Status::OK;
 }
 

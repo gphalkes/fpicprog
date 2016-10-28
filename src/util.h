@@ -139,6 +139,7 @@ std::string HexUint32(uint32_t address);
 
 bool will_print(int level);
 void print_msg(int level, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
+void PrintProgress(size_t done, size_t total);
 
 std::string Dirname(const std::string &str);
 

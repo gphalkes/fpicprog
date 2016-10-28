@@ -87,6 +87,7 @@ Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datas
       return Status(INVALID_ARGUMENT, "Data size is not a multiple of the write_block_size");
     }
     for (size_t base = 0; base < data.size(); base += block_size) {
+      PrintProgress(base, data.size());
       for (uint32_t i = 0; i < block_size; i += 2) {
         uint16_t datum = data[base + i + 1];
         datum <<= 8;

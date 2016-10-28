@@ -82,13 +82,8 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
     if (block_size % 2 != 0 || block_size < 2) {
       return Status(Code::INVALID_ARGUMENT, "Block size for writing must be a multiple of 2");
     }
-    AutoClosureRunner reset_line([] {
-      fprintf(stderr, "\r");
-      fflush(stderr);
-    });
     for (size_t i = 0; i < data.size(); i += block_size) {
-      print_msg(1, "\r%.0f%%", 100.0 * i / data.size());
-      fflush(stderr);
+      PrintProgress(i, data.size());
 
       // BSF EECON1, EEPGD
       RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x8EA6));

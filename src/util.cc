@@ -126,6 +126,20 @@ void print_msg(int level, const char *fmt, ...) {
   }
 }
 
+void PrintProgress(size_t done, size_t total) {
+  static size_t last_done = -1;
+  static size_t last_total = -1;
+
+  if (last_done < done || last_total != total) {
+    last_done = -1;
+    last_total = total;
+  }
+  if (last_done == -1 || done >= total - 1 || done - last_done > 100) {
+    print_msg(1, "%.0f%%\r", 100.0 * done / total);
+    fflush(stderr);
+  }
+}
+
 std::string Dirname(const std::string &str) {
 #if defined(_WIN32)
   char drive_letter[_MAX_DRIVE], dir[_MAX_DIR];

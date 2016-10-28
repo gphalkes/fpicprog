@@ -45,6 +45,7 @@ Status Pic16NewController::Write(Section section, uint32_t address, const Datast
   RETURN_IF_ERROR(WriteCommand(Pic16NewCommand::LOAD_PC, address / 2));
 
   for (size_t write_count = 0; write_count < data.size(); write_count += block_size) {
+    PrintProgress(write_count, data.size());
     for (uint32_t step = 0; step < block_size; step += 2) {
       uint16_t datum = data[write_count + step + 1];
       datum <<= 8;

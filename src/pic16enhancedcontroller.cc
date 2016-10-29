@@ -1,13 +1,13 @@
-#include "pic16newcontroller.h"
+#include "pic16enhancedcontroller.h"
 
-Status Pic16NewController::Open() {
+Status Pic16EnhancedController::Open() {
   RETURN_IF_ERROR(driver_->Open());
   return WriteTimedSequence(Pic16NewSequenceGenerator::INIT_SEQUENCE, nullptr);
 }
 
-void Pic16NewController::Close() { driver_->Close(); }
+void Pic16EnhancedController::Close() { driver_->Close(); }
 
-Status Pic16NewController::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
+Status Pic16EnhancedController::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
   RETURN_IF_ERROR(WriteCommand(Pic16NewCommand::LOAD_PC, 0x8005));
   Datastring16 words;
   RETURN_IF_ERROR(ReadWithCommand(Pic16NewCommand::READ_DATA_INC, 2, &words));
@@ -17,8 +17,8 @@ Status Pic16NewController::ReadDeviceId(uint16_t *device_id, uint16_t *revision)
   return Status::OK;
 }
 
-Status Pic16NewController::Read(Section, uint32_t start_address, uint32_t end_address,
-                                const DeviceInfo &, Datastring *result) {
+Status Pic16EnhancedController::Read(Section, uint32_t start_address, uint32_t end_address,
+                                     const DeviceInfo &, Datastring *result) {
   RETURN_IF_ERROR(WriteCommand(Pic16NewCommand::LOAD_PC, start_address / 2));
   Datastring16 words;
   RETURN_IF_ERROR(
@@ -30,8 +30,8 @@ Status Pic16NewController::Read(Section, uint32_t start_address, uint32_t end_ad
   return Status::OK;
 }
 
-Status Pic16NewController::Write(Section section, uint32_t address, const Datastring &data,
-                                 const DeviceInfo &device_info) {
+Status Pic16EnhancedController::Write(Section section, uint32_t address, const Datastring &data,
+                                      const DeviceInfo &device_info) {
   uint32_t block_size = 2;
   if (section == FLASH) {
     block_size = device_info.write_block_size;
@@ -57,27 +57,27 @@ Status Pic16NewController::Write(Section section, uint32_t address, const Datast
   return Status::OK;
 }
 
-Status Pic16NewController::ChipErase(const DeviceInfo &device_info) {
+Status Pic16EnhancedController::ChipErase(const DeviceInfo &device_info) {
   return WriteTimedSequence(Pic16NewSequenceGenerator::CHIP_ERASE_SEQUENCE, &device_info);
 }
 
-Status Pic16NewController::SectionErase(Section, const DeviceInfo &) {
+Status Pic16EnhancedController::SectionErase(Section, const DeviceInfo &) {
   return Status(UNIMPLEMENTED, "Section erase not implemented");
 }
 
-Status Pic16NewController::WriteCommand(Pic16NewCommand command, uint16_t payload) {
+Status Pic16EnhancedController::WriteCommand(Pic16NewCommand command, uint16_t payload) {
   return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command, payload));
 }
 
-Status Pic16NewController::ReadWithCommand(Pic16NewCommand command, uint32_t count,
-                                           Datastring16 *result) {
+Status Pic16EnhancedController::ReadWithCommand(Pic16NewCommand command, uint32_t count,
+                                                Datastring16 *result) {
   result->clear();
   RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 12,
                                             8, count, result, /* lsb_first = */ false));
   return Status::OK;
 }
 
-Status Pic16NewController::WriteTimedSequence(Pic16NewSequenceGenerator::TimedSequenceType type,
-                                              const DeviceInfo *device_info) {
+Status Pic16EnhancedController::WriteTimedSequence(
+    Pic16NewSequenceGenerator::TimedSequenceType type, const DeviceInfo *device_info) {
   return driver_->WriteTimedSequence(sequence_generator_->GetTimedSequence(type, device_info));
 }

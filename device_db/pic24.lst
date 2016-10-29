@@ -7,7 +7,6 @@
 [24F04KA200]
 device_id = 0D02h
 program_memory_size = 2816
-eeprom_memory_size = 512
 config_size = 18
 config_address = F80000h
-missing_config_locations = F80000h F80002h
+missing_locations = F80000h F80002h

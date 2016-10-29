@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
   // Build a fake device info which simply merges everything.
   device_info.program_memory_size = std::numeric_limits<uint32_t>::max();
   CHECK_OK(MergeProgramBlocks(&program, device_info));
-  for (const auto& part : program) {
+  for (const auto &part : program) {
     uint32_t start = (part.first / FLAGS_bytes_per_line) * FLAGS_bytes_per_line;
     printf("%08X:", start);
     uint32_t i = start;
@@ -49,4 +49,3 @@ int main(int argc, char *argv[]) {
     printf("\n--\n");
   }
 }
-

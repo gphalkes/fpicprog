@@ -44,7 +44,8 @@ Datastring PicSequenceGenerator::GenerateBitSequenceMsb(uint32_t data, int bits)
   return result;
 }
 
-Datastring PicSequenceGenerator::GenerateBitSequenceLsbInvertedClock(uint32_t data, int bits) const {
+Datastring PicSequenceGenerator::GenerateBitSequenceLsbInvertedClock(uint32_t data,
+                                                                     int bits) const {
   Datastring result;
   const uint8_t base = nMCLR | PGM;
   for (int i = 0; i < bits; ++i) {
@@ -294,7 +295,8 @@ std::vector<TimedStep> Pic24SequenceGenerator::GetTimedSequence(TimedSequenceTyp
       // First command should be a NOP (e.g. all zeros), but also requires 9 clocks instead of the
       // normal 4 clocks to clock in the command.
       result.push_back(
-          {GenerateBitSequenceLsbInvertedClock(0, 9) + GenerateBitSequenceLsbInvertedClock(0, 24), ZeroDuration});
+          {GenerateBitSequenceLsbInvertedClock(0, 9) + GenerateBitSequenceLsbInvertedClock(0, 24),
+           ZeroDuration});
       break;
     default:
       FATAL("Requested unimplemented sequence %d\n", type);

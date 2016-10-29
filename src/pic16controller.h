@@ -55,7 +55,7 @@ class Pic16ControllerBase : public Controller {
   std::unique_ptr<Pic16SequenceGenerator> sequence_generator_;
 };
 
-class Pic16Controller : public Pic16ControllerBase {
+class Pic16MidrangeController : public Pic16ControllerBase {
  protected:
   using Pic16ControllerBase::Pic16ControllerBase;
 
@@ -66,7 +66,7 @@ class Pic16Controller : public Pic16ControllerBase {
   uint32_t last_address_ = 0;
 };
 
-class Pic16SmallController : public Pic16ControllerBase {
+class Pic16BaselineController : public Pic16ControllerBase {
  protected:
   using Pic16ControllerBase::Pic16ControllerBase;
 

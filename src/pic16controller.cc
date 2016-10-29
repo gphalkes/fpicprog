@@ -159,8 +159,8 @@ Status Pic16ControllerBase::WriteTimedSequence(Pic16SequenceGenerator::TimedSequ
 
 //==================================================================================================
 
-Status Pic16Controller::LoadAddress(Section section, uint32_t address,
-                                    const DeviceInfo &device_info) {
+Status Pic16MidrangeController::LoadAddress(Section section, uint32_t address,
+                                            const DeviceInfo &device_info) {
   if (section == CONFIGURATION) {
     if (address < last_address_ || last_address_ < device_info.config_address) {
       RETURN_IF_ERROR(WriteCommand(Pic16Command::LOAD_CONFIGURATION, 0));
@@ -187,7 +187,7 @@ Status Pic16Controller::LoadAddress(Section section, uint32_t address,
   return Status::OK;
 }
 
-Status Pic16Controller::IncrementPc(const DeviceInfo &device_info) {
+Status Pic16MidrangeController::IncrementPc(const DeviceInfo &device_info) {
   RETURN_IF_ERROR(WriteCommand(Pic16Command::INCREMENT_ADDRESS));
   bool was_config = false;
   if (last_address_ >= device_info.config_address) {
@@ -201,7 +201,7 @@ Status Pic16Controller::IncrementPc(const DeviceInfo &device_info) {
   return Status::OK;
 }
 
-Status Pic16Controller::ResetDevice() {
+Status Pic16MidrangeController::ResetDevice() {
   RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr));
   last_address_ = 0;
   return Status::OK;
@@ -209,8 +209,8 @@ Status Pic16Controller::ResetDevice() {
 
 //==================================================================================================
 
-Status Pic16SmallController::LoadAddress(Section section, uint32_t address,
-                                         const DeviceInfo &device_info) {
+Status Pic16BaselineController::LoadAddress(Section section, uint32_t address,
+                                            const DeviceInfo &device_info) {
   if (section == CONFIGURATION) {
     if (last_address_ != kConfigurationAddress) {
       RETURN_IF_ERROR(ResetDevice());
@@ -234,14 +234,14 @@ Status Pic16SmallController::LoadAddress(Section section, uint32_t address,
   return Status::OK;
 }
 
-Status Pic16SmallController::IncrementPc(const DeviceInfo &) {
+Status Pic16BaselineController::IncrementPc(const DeviceInfo &) {
   RETURN_IF_ERROR(WriteCommand(Pic16Command::INCREMENT_ADDRESS));
   // This will wrap around to 0 if the address is the configuration location.
   last_address_ += 2;
   return Status::OK;
 }
 
-Status Pic16SmallController::ResetDevice() {
+Status Pic16BaselineController::ResetDevice() {
   RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::INIT_SEQUENCE, nullptr));
   last_address_ = kConfigurationAddress;
   return Status::OK;

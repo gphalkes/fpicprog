@@ -22,7 +22,7 @@
 #include "driver.h"
 #include "high_level_controller.h"
 #include "pic16controller.h"
-#include "pic16newcontroller.h"
+#include "pic16enhancedcontroller.h"
 #include "pic18controller.h"
 #include "pic24controller.h"
 #include "program.h"
@@ -40,12 +40,11 @@ DEFINE_string(sections, "",
               "Comma separate list of sections to operate on. Possible values: either all "
               "or a combination of flash, user-id, config, eeprom.");
 DEFINE_string(family, "",
-              "Device family to use. One of pic10, pic10-small, pic12, pic12-small, pic16, "
-              "pic16-small, pic18.");
-DEFINE_string(
-    device, "",
-    "Exact device name. Ignored for pic18 family, required for devices which don't provide a "
-    "device ID. Devices which have a device ID should be detectable using the identify action.");
+              "Device family to use. One of pic10, pic10-baseline, pic12, pic12-baseline, pic16, "
+              "pic16-baseline, pic16-enhanced, pic18.");
+DEFINE_string(device, "",
+              "Exact device name. Required for devices which don't provide a device ID. Devices "
+              "which have a device ID should be detectable using the identify action.");
 
 DEFINE_string(output, "", "File to write the Intel HEX data to (--action=dump-program).");
 DEFINE_string(input, "", "Intel HEX file to read and program. (--action=write-program)");
@@ -111,7 +110,6 @@ int main(int argc, char **argv) {
     exit(0);
   }
 
-
   std::unique_ptr<Controller> controller;
   std::unique_ptr<DeviceDb> device_db;
   if (FLAGS_family.empty()) {
@@ -123,7 +121,7 @@ int main(int argc, char **argv) {
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic10" || FLAGS_family == "pic12" || FLAGS_family == "pic16") {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
-    controller.reset(new Pic16Controller(std::move(driver), std::move(sequence_generator)));
+    controller.reset(new Pic16MidrangeController(std::move(driver), std::move(sequence_generator)));
     device_db =
         std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
                                    [](const Datastring16 &sequence) {
@@ -132,7 +130,7 @@ int main(int argc, char **argv) {
   } else if (FLAGS_family == "pic10-small" || FLAGS_family == "pic12-small" ||
              FLAGS_family == "pic16-small") {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
-    controller.reset(new Pic16SmallController(std::move(driver), std::move(sequence_generator)));
+    controller.reset(new Pic16BaselineController(std::move(driver), std::move(sequence_generator)));
     device_db =
         std::make_unique<DeviceDb>(2, Datastring{0xff, 0x0f},
                                    [](const Datastring16 &sequence) {
@@ -140,7 +138,7 @@ int main(int argc, char **argv) {
                                    });
   } else if (FLAGS_family == "pic16-new") {
     std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator(new Pic16NewSequenceGenerator);
-    controller.reset(new Pic16NewController(std::move(driver), std::move(sequence_generator)));
+    controller.reset(new Pic16EnhancedController(std::move(driver), std::move(sequence_generator)));
     device_db =
         std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
                                    [](const Datastring16 &sequence) {

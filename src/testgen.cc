@@ -24,9 +24,7 @@
 DEFINE_string(family, "",
               "Device family to use. One of pic10, pic10-small, pic12, pic12-small, pic16, "
               "pic16-small, pic18.");
-DEFINE_string(
-    device, "",
-    "Name of the device to write a test program for.");
+DEFINE_string(device, "", "Name of the device to write a test program for.");
 
 DEFINE_string(output, "", "File to write the Intel HEX data to.");
 DEFINE_string(device_db, "", "Device DB file to load. Defaults to "
@@ -37,7 +35,8 @@ DEFINE_string(device_db, "", "Device DB file to load. Defaults to "
 #endif
 
 DEFINE_string(config_data, "",
-              "Configuration data to write into the program. This can not be auto-generated because setting the wrong bits may turn on code protection etc.");
+              "Configuration data to write into the program. This can not be auto-generated "
+              "because setting the wrong bits may turn on code protection etc.");
 
 // FIXME: add test data for User ID and allow to specify data for config words.
 
@@ -55,18 +54,15 @@ int main(int argc, char *argv[]) {
     device_db = std::make_unique<DeviceDb>(1, Datastring{0xff},
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic10" || FLAGS_family == "pic12" || FLAGS_family == "pic16") {
-    device_db =
-        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
-                                   [](const Datastring16 &) { return Status::OK; });
+    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+                                           [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic10-small" || FLAGS_family == "pic12-small" ||
              FLAGS_family == "pic16-small") {
-    device_db =
-        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x0f},
-                                   [](const Datastring16 &) { return Status::OK; });
+    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x0f},
+                                           [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic16-new") {
-    device_db =
-        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
-                                   [](const Datastring16 &) { return Status::OK; });
+    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+                                           [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic24") {
     device_db = std::make_unique<DeviceDb>(2, Datastring{0xff},
                                            [](const Datastring16 &) { return Status::OK; });

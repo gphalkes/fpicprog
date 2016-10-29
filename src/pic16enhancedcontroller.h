@@ -11,8 +11,8 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef PIC16NEWCONTROLLER_H_
-#define PIC16NEWCONTROLLER_H_
+#ifndef PIC16ENHANCEDCONTROLLER_H_
+#define PIC16ENHANCEDCONTROLLER_H_
 
 #include <map>
 #include <memory>
@@ -23,10 +23,10 @@
 #include "driver.h"
 #include "program.h"
 
-class Pic16NewController : public Controller {
+class Pic16EnhancedController : public Controller {
  public:
-  Pic16NewController(std::unique_ptr<Driver> driver,
-                     std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator)
+  Pic16EnhancedController(std::unique_ptr<Driver> driver,
+                          std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator)
       : driver_(std::move(driver)), sequence_generator_(std::move(sequence_generator)) {}
 
   Status Open() override;

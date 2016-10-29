@@ -44,6 +44,27 @@ Datastring PicSequenceGenerator::GenerateBitSequenceMsb(uint32_t data, int bits)
   return result;
 }
 
+Datastring PicSequenceGenerator::GenerateBitSequenceLsbInvertedClock(uint32_t data, int bits) const {
+  Datastring result;
+  const uint8_t base = nMCLR | PGM;
+  for (int i = 0; i < bits; ++i) {
+    bool bit_set = (data >> i) & 1;
+    result.push_back(base | (bit_set ? PGD : 0));
+    result.push_back(base | PGC | (bit_set ? PGD : 0));
+  }
+  return result;
+}
+
+Datastring PicSequenceGenerator::GenerateMagicSequence(uint32_t key, uint8_t base) const {
+  Datastring magic;
+  for (int i = 31; i >= 0; --i) {
+    bool bit_set = (key >> i) & 1;
+    magic.push_back(base | (bit_set ? PGD : 0));
+    magic.push_back(base | PGC | (bit_set ? PGD : 0));
+  }
+  return magic;
+}
+
 std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
   std::vector<TimedStep> result;
   if (FLAGS_handshake == "nmclr-first") {
@@ -62,15 +83,9 @@ std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
     // of having only a single sequence.
     result.push_back(TimedStep{{0, nMCLR, 0}, MilliSeconds(10)});
     {
-      Datastring magic;
-      uint32_t key = 0x4D434850;  // MCHP
-      for (int i = 31; i >= 0; --i) {
-        bool bit_set = (key >> i) & 1;
-        magic.push_back(bit_set ? PGD : 0);
-        magic.push_back(PGC | (bit_set ? PGD : 0));
-      }
+      Datastring magic = GenerateMagicSequence(0x4D434850, 0);  // MCHP
       // Needs to be held for 40ns for the three-pin sequence, but for several microseconds for
-      // the two-pin version. PIC24s are really slow and need 1ms.
+      // the two-pin version.
       magic.push_back(PGM);
       result.push_back(TimedStep{magic, MicroSeconds(20)});
     }
@@ -253,15 +268,15 @@ std::vector<TimedStep> Pic16NewSequenceGenerator::GetTimedSequence(
 
 Datastring Pic24SequenceGenerator::GetWriteCommandSequence(uint32_t payload) const {
   Datastring result;
-  result += GenerateBitSequenceLsb(0, 4);
-  result += GenerateBitSequenceLsb(payload, 24);
+  result += GenerateBitSequenceLsbInvertedClock(0, 4);
+  result += GenerateBitSequenceLsbInvertedClock(payload, 24);
   return result;
 }
 
 Datastring Pic24SequenceGenerator::GetReadCommandSequence() const {
   Datastring result;
-  result += GenerateBitSequenceLsb(1, 4);
-  result += GenerateBitSequenceLsb(0, 24);
+  result += GenerateBitSequenceLsbInvertedClock(1, 4);
+  result += GenerateBitSequenceLsbInvertedClock(0, 24);
   return result;
 }
 
@@ -270,11 +285,16 @@ std::vector<TimedStep> Pic24SequenceGenerator::GetTimedSequence(TimedSequenceTyp
   std::vector<TimedStep> result;
   switch (type) {
     case INIT_SEQUENCE:
-      result = GenerateInitSequence();
+      result.push_back(TimedStep{{0, nMCLR | PGM, PGM}, MilliSeconds(2)});
+      {
+        Datastring magic = GenerateMagicSequence(0x4D434851, PGM);  // MCHQ
+        result.push_back(TimedStep{magic, MilliSeconds(2)});
+      }
+      result.push_back(TimedStep{{nMCLR | PGM}, MilliSeconds(27)});
       // First command should be a NOP (e.g. all zeros), but also requires 9 clocks instead of the
       // normal 4 clocks to clock in the command.
       result.push_back(
-          {GenerateBitSequenceLsb(0, 9) + GenerateBitSequenceLsb(0, 24), ZeroDuration});
+          {GenerateBitSequenceLsbInvertedClock(0, 9) + GenerateBitSequenceLsbInvertedClock(0, 24), ZeroDuration});
       break;
     default:
       FATAL("Requested unimplemented sequence %d\n", type);

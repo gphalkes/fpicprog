@@ -1,0 +1,13 @@
+# PIC24 and dsPIC30 devices.
+# Addresses and sizes are given in 16-bit words. This means that program memory
+# size should be specified as 2 * number of instructions.
+# eeprom_address would typically be 7FFE00h and config_address is usually
+# F80000h.
+
+[24F04KA200]
+device_id = 0D02h
+program_memory_size = 2816
+eeprom_memory_size = 512
+config_size = 18
+config_address = F80000h
+missing_config_locations = F80000h F80002h

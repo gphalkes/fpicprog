@@ -8,7 +8,10 @@ LDLIBS.fpicprog := -lftdi -lgflags
 SOURCES.testgen = testgen.cc program.cc device_db.cc strings.cc util.cc status.cc
 LDLIBS.testgen := -lgflags
 
-CXXTARGETS := fpicprog testgen
+SOURCES.formathex = formathex.cc program.cc device_db.cc strings.cc util.cc status.cc
+LDLIBS.formathex = -lgflags 
+
+CXXTARGETS := fpicprog testgen formathex
 #================================================#
 # NO RULES SHOULD BE DEFINED BEFORE THIS INCLUDE #
 #================================================#

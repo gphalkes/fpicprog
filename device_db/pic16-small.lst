@@ -1,3 +1,6 @@
+# PIC16 baseline core devices.
+# All sizes and addresses are given in words, not in bytes.
+
 [16F54]
 program_memory_size = 200h
 user_id_size = 4

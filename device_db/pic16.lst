@@ -1,4 +1,4 @@
-# PIC16 devices with Load Configuration command, and which start with their PC at 0.
+# PIC16 midrange devices.
 # Most of these have device IDs and can be auto-detected by reading configuration words 5 & 6.
 
 [16F887]

@@ -134,7 +134,7 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
       // 1011 [b] 1011 [b] 0000 [0] 1011 [b] 0000 [0] 0000 [0]
       RETURN_IF_ERROR(WriteCommand(0xBB0B00));
       RETURN_IF_ERROR(WriteCommand(NOP));
-      RETURN_IF_ERROR(WriteCommand(NOP)); // FIXME: this one is likely not necessary
+      RETURN_IF_ERROR(WriteCommand(NOP));
 
       datum = data[bytes_written + 1];
       datum <<= 8;
@@ -155,55 +155,15 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
     RETURN_IF_ERROR(WriteCommand(NOP));
     RETURN_IF_ERROR(WriteCommand(NOP));
 
-    bool done = false;
-    do {
-      RETURN_IF_ERROR(ResetPc());
-      // MOV NVMCON, W2
-      RETURN_IF_ERROR(WriteCommand(0x803B02));
-      // MOV W2, VISI
-      RETURN_IF_ERROR(WriteCommand(0x883C22));
-      RETURN_IF_ERROR(WriteCommand(NOP));
-      uint16_t nvmcon;
-      RETURN_IF_ERROR(ReadVisi(&nvmcon));
-      RETURN_IF_ERROR(WriteCommand(NOP));
-      done = !(nvmcon & 0x8000);
-    } while (!done);
+    RETURN_IF_ERROR(WaitForWr0());
   }
 
   return Status::OK;
 }
 
 Status Pic24Controller::ChipErase(const DeviceInfo &) {
-  RETURN_IF_ERROR(ResetPc());
-  // MOV #0x4064, W10
-  RETURN_IF_ERROR(WriteCommand(0x24064A));
-  // MOV W10, NVMCON
-  RETURN_IF_ERROR(WriteCommand(0x883B0A));
-  RETURN_IF_ERROR(LoadAddress(0));
-  // TBLWTL W0, [W0]
-  RETURN_IF_ERROR(WriteCommand(0xBB0800));
-  RETURN_IF_ERROR(WriteCommand(NOP));
-  RETURN_IF_ERROR(WriteCommand(NOP));
-
-  // BSET NVMCON, #WR
-  RETURN_IF_ERROR(WriteCommand(0xA8E761));
-  RETURN_IF_ERROR(WriteCommand(NOP));
-  RETURN_IF_ERROR(WriteCommand(NOP));
-
-  bool done = false;
-  do {
-    RETURN_IF_ERROR(ResetPc());
-    // MOV NVMCON, W2
-    RETURN_IF_ERROR(WriteCommand(0x803B02));
-    // MOV W2, VISI
-    RETURN_IF_ERROR(WriteCommand(0x883C22));
-    RETURN_IF_ERROR(WriteCommand(NOP));
-    uint16_t nvmcon;
-    RETURN_IF_ERROR(ReadVisi(&nvmcon));
-    RETURN_IF_ERROR(WriteCommand(NOP));
-    done = !(nvmcon & 0x8000);
-  } while (!done);
-  return Status::OK;
+  RETURN_IF_ERROR(ExecuteErase(0x4064));
+  return ExecuteErase(0x4050);
 }
 
 Status Pic24Controller::SectionErase(Section, const DeviceInfo &) {
@@ -246,4 +206,39 @@ Status Pic24Controller::ResetPc() {
   RETURN_IF_ERROR(WriteCommand(0x040200));
   // NOP (with top of address).
   return WriteCommand(NOP);
+}
+
+Status Pic24Controller::ExecuteErase(uint32_t nvmcon) {
+  // MOV #0x4064, W10
+  RETURN_IF_ERROR(WriteCommand(0x20000A | (nvmcon << 4)));
+  // MOV W10, NVMCON
+  RETURN_IF_ERROR(WriteCommand(0x883B0A));
+  RETURN_IF_ERROR(LoadAddress(0));
+  // TBLWTL W0, [W0]
+  RETURN_IF_ERROR(WriteCommand(0xBB0800));
+  RETURN_IF_ERROR(WriteCommand(NOP));
+  RETURN_IF_ERROR(WriteCommand(NOP));
+
+  // BSET NVMCON, #WR
+  RETURN_IF_ERROR(WriteCommand(0xA8E761));
+  RETURN_IF_ERROR(WriteCommand(NOP));
+  RETURN_IF_ERROR(WriteCommand(NOP));
+  return WaitForWr0();
+}
+
+Status Pic24Controller::WaitForWr0() {
+  bool done = false;
+  do {
+    RETURN_IF_ERROR(ResetPc());
+    // MOV NVMCON, W2
+    RETURN_IF_ERROR(WriteCommand(0x803B02));
+    // MOV W2, VISI
+    RETURN_IF_ERROR(WriteCommand(0x883C22));
+    RETURN_IF_ERROR(WriteCommand(NOP));
+    uint16_t nvmcon;
+    RETURN_IF_ERROR(ReadVisi(&nvmcon));
+    RETURN_IF_ERROR(WriteCommand(NOP));
+    done = !(nvmcon & 0x8000);
+  } while (!done);
+  return Status::OK;
 }

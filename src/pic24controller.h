@@ -51,6 +51,11 @@ class Pic24Controller : public Controller {
   // Loads W7 with the address of the VISI register.
   Status LoadVisiAddress();
 
+  // Executes an erase sequence with the given value for NVMCON.
+  Status ExecuteErase(uint32_t nvmcon);
+  // Waits for the WR bit of NVMCON to return to 0.
+  Status WaitForWr0();
+
   std::unique_ptr<Driver> driver_;
   std::unique_ptr<Pic24SequenceGenerator> sequence_generator_;
 };

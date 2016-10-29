@@ -174,7 +174,6 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
 }
 
 Status Pic24Controller::ChipErase(const DeviceInfo &) {
-  /*
   RETURN_IF_ERROR(ResetPc());
   // MOV #0x4064, W10
   RETURN_IF_ERROR(WriteCommand(0x24064A));
@@ -204,7 +203,6 @@ Status Pic24Controller::ChipErase(const DeviceInfo &) {
     RETURN_IF_ERROR(WriteCommand(NOP));
     done = !(nvmcon & 0x8000);
   } while (!done);
-*/
   return Status::OK;
 }
 

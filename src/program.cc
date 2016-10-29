@@ -34,17 +34,6 @@ class IHexChecksum {
   int32_t checksum_ = 0;
 };
 
-static int AscciToInt(int c) {
-  if (c >= '0' && c <= '9') {
-    return c - '0';
-  } else if (c >= 'a' && c <= 'f') {
-    return c - 'a' + 10;
-  } else if (c >= 'A' && c <= 'F') {
-    return c - 'A' + 10;
-  }
-  return -1;
-}
-
 static Status ReadAsciiByte(int line_number, FILE *in, uint8_t *byte) {
   int c = fgetc(in);
   if (c == EOF) {
@@ -54,7 +43,7 @@ static Status ReadAsciiByte(int line_number, FILE *in, uint8_t *byte) {
     }
     return Status(Code::PARSE_ERROR, strings::Cat("Unexpected end-of-file at line ", line_number));
   }
-  int nibble = AscciToInt(c);
+  int nibble = strings::AscciToInt(c);
   if (nibble < 0) {
     return Status(Code::PARSE_ERROR, strings::Cat("Unexpected character ", std::string(1, c),
                                                   " at line ", line_number));
@@ -69,7 +58,7 @@ static Status ReadAsciiByte(int line_number, FILE *in, uint8_t *byte) {
     }
     return Status(Code::PARSE_ERROR, strings::Cat("Unexpected end-of-file at line ", line_number));
   }
-  nibble = AscciToInt(c);
+  nibble = strings::AscciToInt(c);
   if (nibble < 0) {
     return Status(Code::PARSE_ERROR,
                   strings::Cat("Unexpected character ", strings::CEscape(std::string(1, c)),

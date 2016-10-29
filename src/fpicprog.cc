@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
     controller.reset(new Pic16SmallController(std::move(driver), std::move(sequence_generator)));
     device_db =
-        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x0f},
                                    [](const Datastring16 &sequence) {
                                      return Pic16SequenceGenerator::ValidateSequence(sequence);
                                    });

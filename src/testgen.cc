@@ -36,6 +36,9 @@ DEFINE_string(device_db, "", "Device DB file to load. Defaults to "
               "<path to binary>/device_db/<family>.lst.");
 #endif
 
+DEFINE_string(config_data, "",
+              "Configuration data to write into the program. This can not be auto-generated because setting the wrong bits may turn on code protection etc.");
+
 // FIXME: add test data for User ID and allow to specify data for config words.
 
 int main(int argc, char *argv[]) {
@@ -58,7 +61,7 @@ int main(int argc, char *argv[]) {
   } else if (FLAGS_family == "pic10-small" || FLAGS_family == "pic12-small" ||
              FLAGS_family == "pic16-small") {
     device_db =
-        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x0f},
                                    [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic16-new") {
     device_db =
@@ -107,6 +110,9 @@ int main(int argc, char *argv[]) {
       eeprom_memory_data[i * device_db->GetBlockSizeMultiple()] = i;
     }
     test_program[device_info.eeprom_address] = std::move(eeprom_memory_data);
+  }
+  if (!FLAGS_config_data.empty()) {
+
   }
 
   FILE *out = stdout;

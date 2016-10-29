@@ -2,6 +2,7 @@
 program_memory_size = 200h
 user_id_size = 4
 user_id_address = 200h
+config_size = 1
 config_address = 3ffh
 block_write_sequence = 08h FFh 0Eh
 chip_erase_sequence = FEh 200h 09h FFh

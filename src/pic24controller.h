@@ -41,11 +41,13 @@ class Pic24Controller : public Controller {
 
  private:
   Status WriteCommand(uint32_t payload);
-  Status ReadWithCommand(uint16_t *result);
+  Status ReadVisi(uint16_t *result);
   Status WriteTimedSequence(Pic24SequenceGenerator::TimedSequenceType type,
                             const DeviceInfo *device_info);
-  // Loads TBLPAG:W6 with the address. Executes a GOTO 0x200 before any other commands.
+  // Loads TBLPAG:W6 with the address.
   Status LoadAddress(uint32_t address);
+  // Resets the PC by executing a GOTO 0x0200 instruction.
+  Status ResetPc();
   // Loads W7 with the address of the VISI register.
   Status LoadVisiAddress();
 

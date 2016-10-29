@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
     device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic24") {
-    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff},
+    device_db = std::make_unique<DeviceDb>(4, Datastring{0xff, 0xff, 0xff, 0x00},
                                            [](const Datastring16 &) { return Status::OK; });
   } else {
     fatal("Unknown device family %s.\n", FLAGS_family.c_str());

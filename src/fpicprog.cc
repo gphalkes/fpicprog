@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
   } else if (FLAGS_family == "pic24") {
     std::unique_ptr<Pic24SequenceGenerator> sequence_generator(new Pic24SequenceGenerator);
     controller.reset(new Pic24Controller(std::move(driver), std::move(sequence_generator)));
-    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff},
+    device_db = std::make_unique<DeviceDb>(4, Datastring{0xff, 0xff, 0xff, 0x00},
                                            [](const Datastring16 &) { return Status::OK; });
   } else {
     fatal("Unknown device family %s.\n", FLAGS_family.c_str());

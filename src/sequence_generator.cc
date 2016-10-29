@@ -49,11 +49,9 @@ std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
   if (FLAGS_handshake == "nmclr-first") {
     result.push_back(TimedStep{{0}, MicroSeconds(100)});
     result.push_back(TimedStep{{nMCLR}, MicroSeconds(100)});
-    result.push_back(TimedStep{{nMCLR | PGM}, ZeroDuration});
   } else if (FLAGS_handshake == "pgm-first") {
     result.push_back(TimedStep{{0}, MicroSeconds(100)});
     result.push_back(TimedStep{{PGM}, MicroSeconds(100)});
-    result.push_back(TimedStep{{nMCLR | PGM}, MicroSeconds(400)});
   } else {
     if (FLAGS_handshake != "lvp") {
       fprintf(stderr, "WARNING: handshake mode %s is unknown. Falling back to lvp mode.",
@@ -74,11 +72,10 @@ std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
       // Needs to be held for 40ns for the three-pin sequence, but for several microseconds for
       // the two-pin version. PIC24s are really slow and need 1ms.
       magic.push_back(PGM);
-      result.push_back(TimedStep{magic, MilliSeconds(1)});
+      result.push_back(TimedStep{magic, MicroSeconds(20)});
     }
-    // PIC24 needs this time to be at least 25 ms. PIC16 and PIC18 require much shorter times.
-    result.push_back(TimedStep{{PGM | nMCLR}, MilliSeconds(25)});
   }
+  result.push_back(TimedStep{{PGM | nMCLR}, MicroSeconds(400)});
   return result;
 }
 

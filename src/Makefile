@@ -5,7 +5,10 @@ SOURCES.fpicprog = main.cc pic16controller.cc pic16newcontroller.cc pic18control
 	program.cc high_level_controller.cc ftdi_sb.cc
 LDLIBS.fpicprog := -lftdi -lgflags
 
-CXXTARGETS := fpicprog
+SOURCES.testgen = testgen.cc program.cc device_db.cc strings.cc util.cc status.cc
+LDLIBS.testgen := -lgflags
+
+CXXTARGETS := fpicprog testgen
 #================================================#
 # NO RULES SHOULD BE DEFINED BEFORE THIS INCLUDE #
 #================================================#

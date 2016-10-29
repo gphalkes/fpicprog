@@ -39,7 +39,7 @@ DEFINE_string(
 DEFINE_string(sections, "",
               "Comma separate list of sections to operate on. Possible values: either all "
               "or a combination of flash, user-id, config, eeprom.");
-DEFINE_string(family, "pic18",
+DEFINE_string(family, "",
               "Device family to use. One of pic10, pic10-small, pic12, pic12-small, pic16, "
               "pic16-small, pic18.");
 DEFINE_string(
@@ -111,9 +111,12 @@ int main(int argc, char **argv) {
     exit(0);
   }
 
+
   std::unique_ptr<Controller> controller;
   std::unique_ptr<DeviceDb> device_db;
-  if (FLAGS_family == "pic18") {
+  if (FLAGS_family.empty()) {
+    fatal("--family must be specified\n");
+  } else if (FLAGS_family == "pic18") {
     std::unique_ptr<Pic18SequenceGenerator> sequence_generator(new Pic18SequenceGenerator);
     controller.reset(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
     device_db = std::make_unique<DeviceDb>(1, Datastring{0xff},

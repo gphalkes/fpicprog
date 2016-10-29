@@ -229,13 +229,14 @@ Status MergeProgramBlocks(Program *program, const DeviceInfo &device_info) {
     if (last_section_end < iter->first) {
       last_section = iter;
       ++iter;
-      continue;
     } else if (last_section_end == iter->first &&
                !ContainsKey(section_boundaries, last_section_end)) {
       last_section->second.append(iter->second);
       iter = program->erase(iter);
     } else if (last_section_end > iter->first) {
       return Status(Code::INVALID_PROGRAM, "Overlapping sections in program");
+    } else {
+      ++iter;
     }
   }
 

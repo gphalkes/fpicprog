@@ -112,7 +112,30 @@ int main(int argc, char *argv[]) {
     test_program[device_info.eeprom_address] = std::move(eeprom_memory_data);
   }
   if (!FLAGS_config_data.empty()) {
-
+    if (FLAGS_config_data.size() % (2 * device_db->GetBlockSizeMultiple())) {
+      fatal("--config_data has wrong size (must be mutiple of %d bytes)\n",
+            device_db->GetBlockSizeMultiple());
+    }
+    Datastring config_data;
+    for (size_t i = 0; i < FLAGS_config_data.size(); i += 2) {
+      uint8_t datum;
+      int parse_result = strings::AscciToInt(FLAGS_config_data[i]);
+      if (parse_result < 0) {
+        fatal("Invalid character '%c' in --config_data.\n", FLAGS_config_data[i]);
+      }
+      datum = parse_result;
+      datum <<= 4;
+      parse_result = strings::AscciToInt(FLAGS_config_data[i + 1]);
+      if (parse_result < 0) {
+        fatal("Invalid character '%c' in --config_data.\n", FLAGS_config_data[i + 1]);
+      }
+      datum |= parse_result;
+      config_data.push_back(datum);
+    }
+    if (config_data.size() > device_info.config_size) {
+      fatal("--config_data is too large.");
+    }
+    test_program[device_info.config_address] = std::move(config_data);
   }
 
   FILE *out = stdout;

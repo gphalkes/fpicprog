@@ -52,7 +52,8 @@ Status Pic24Controller::ReadDeviceId(uint16_t *device_id, uint16_t *revision) {
   return Status::OK;
 }
 
-Status Pic24Controller::Read(Section, uint32_t start_address, uint32_t end_address, const DeviceInfo &, Datastring *result) {
+Status Pic24Controller::Read(Section, uint32_t start_address, uint32_t end_address,
+                             const DeviceInfo &, Datastring *result) {
   RETURN_IF_ERROR(ResetPc());
   RETURN_IF_ERROR(LoadVisiAddress());
   RETURN_IF_ERROR(LoadAddress(start_address / 2));
@@ -95,11 +96,8 @@ Status Pic24Controller::Read(Section, uint32_t start_address, uint32_t end_addre
   return Status::OK;
 }
 
-Status Pic24Controller::Write(Section section, uint32_t address, const Datastring &data, const DeviceInfo &device_info) {
-  if (section != FLASH) {
-    return Status(UNIMPLEMENTED, "Writing sections other than FLASH is not yet implemented");
-  }
-
+Status Pic24Controller::Write(Section section, uint32_t address, const Datastring &data,
+                              const DeviceInfo &device_info) {
   if (data.size() % device_info.write_block_size != 0) {
     return Status(Code::INVALID_ARGUMENT,
                   strings::Cat("Data must be a multiple of the block size (", data.size(), " / ",
@@ -107,16 +105,34 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
   }
   if (address % device_info.write_block_size != 0) {
     return Status(Code::INVALID_ARGUMENT,
-                  strings::Cat("Write address must be a multiple of the block size (", address, " / ",
-                               device_info.write_block_size, ")"));
+                  strings::Cat("Write address must be a multiple of the block size (", address,
+                               " / ", device_info.write_block_size, ")"));
+  }
+  // FIXME: these should be checked elsewhere, and only ASSERTed here.
+  if (device_info.block_write_sequence.size() != 1 ||
+      device_info.config_write_sequence.size() != 1 ||
+      device_info.eeprom_write_sequence.size() > 1) {
+    fatal("DeviceInfo is invalid for writing\n");
   }
   RETURN_IF_ERROR(ResetPc());
+
+  uint32_t write_command;
+  if (section == FLASH) {
+    write_command = device_info.block_write_sequence[0];
+  } else if (section == CONFIGURATION) {
+    write_command = device_info.config_write_sequence[0];
+  } else if (section == EEPROM) {
+    if (device_info.eeprom_write_sequence.size() != 1) {
+      fatal("Device info does not allow EEPROM writes\n");
+    }
+    write_command = device_info.eeprom_write_sequence[0];
+  }
 
   size_t bytes_written = 0;
   while (bytes_written < data.size()) {
     PrintProgress(bytes_written, data.size());
-    // MOV #0x4004, W10
-    RETURN_IF_ERROR(WriteCommand(0x24004A));
+    // MOV #<write command>, W10
+    RETURN_IF_ERROR(WriteCommand(0x20000A | (write_command << 4)));
     // MOV W10, NVMCON
     RETURN_IF_ERROR(WriteCommand(0x883B0A));
     RETURN_IF_ERROR(LoadAddress((address + bytes_written) / 2));

@@ -14,3 +14,5 @@ config_size = 9
 config_address = 7C0000h
 missing_locations = 7C0000h 7C0001h
 write_block_size = 32
+block_write_sequence = 4004h
+config_write_sequence = 4004h

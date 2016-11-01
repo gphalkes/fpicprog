@@ -63,6 +63,10 @@ write__block__size::
   ID and EEPROM memory, this is fixed per device family.
 block__write__sequence::
   The sequence of commands to execute for a block write.
+config__write__sequence::
+  The sequence of commands to execute for a configuration word write.
+eeprom__write__sequence::
+  The sequence of commands to execute for an EEPROM word write.
 chip__erase__sequence:
   The sequence of commands to execute for a chip erase.
 flash__erase__sequence::
@@ -150,3 +154,7 @@ The different erase sequences list the words written to the address combination
 different erase commands to erase the whole of the flash (program) memory as it
 is divided into multiple blocks. The other erase sequences typically consist of
 a single value.
+
+
+PIC24 FAMILY
+============

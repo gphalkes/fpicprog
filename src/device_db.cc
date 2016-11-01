@@ -173,6 +173,14 @@ Status DeviceDb::Load(const std::string &name) {
         RETURN_IF_ERROR_WITH_APPEND(
             SequenceValue(value, &last_info.block_write_sequence, sequence_validator_),
             strings::Cat(" in device database at line ", i + 1));
+      } else if (key == "config_write_sequence") {
+        RETURN_IF_ERROR_WITH_APPEND(
+            SequenceValue(value, &last_info.config_write_sequence, sequence_validator_),
+            strings::Cat(" in device database at line ", i + 1));
+      } else if (key == "eeprom_write_sequence") {
+        RETURN_IF_ERROR_WITH_APPEND(
+            SequenceValue(value, &last_info.eeprom_write_sequence, sequence_validator_),
+            strings::Cat(" in device database at line ", i + 1));
       } else if (key == "chip_erase_sequence") {
         RETURN_IF_ERROR_WITH_APPEND(
             SequenceValue(value, &last_info.chip_erase_sequence, sequence_validator_),
@@ -255,6 +263,7 @@ static void DumpSequence(const char *name, const Datastring16 &sequence) {
 }
 
 void DeviceInfo::Dump() const {
+  // FIXME: this is out of date!
   printf("Name: %s\n", name.c_str());
   printf("Device ID: %04Xh\n", device_id);
   printf("Program memory size: %06Xh\n", program_memory_size);

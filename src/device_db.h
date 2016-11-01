@@ -32,6 +32,8 @@ struct DeviceInfo {
   uint32_t eeprom_address = 0;
   uint16_t write_block_size = 0;
   Datastring16 block_write_sequence;
+  Datastring16 config_write_sequence;
+  Datastring16 eeprom_write_sequence;
   Datastring16 chip_erase_sequence;
   Datastring16 flash_erase_sequence;
   Datastring16 user_id_erase_sequence;
@@ -48,6 +50,7 @@ struct DeviceInfo {
 
 class DeviceDb {
  public:
+  // FIXME: the sequence validator should be passed what sequence is being validated.
   using SequenceValidator = std::function<Status(const Datastring16 &)>;
 
   DeviceDb(uint32_t unit_factor, const Datastring &block_filler,

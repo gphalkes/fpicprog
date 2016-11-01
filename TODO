@@ -1,2 +1,4 @@
 - Add more processors.
 - Add controllers for different families.
+- Make unit-tests for the different sequences, such that it is easier to validate that changes are
+  OK. Especially changes to the sequence generator and such need proper validation.

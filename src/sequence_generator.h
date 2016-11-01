@@ -33,10 +33,11 @@ class PicSequenceGenerator {
 
  protected:
   std::vector<TimedStep> GenerateInitSequence() const;
-  Datastring GenerateBitSequenceLsb(uint32_t data, int bits) const;
-  Datastring GenerateBitSequenceMsb(uint32_t data, int bits) const;
-  Datastring GenerateBitSequenceLsbInvertedClock(uint32_t data, int bits) const;
-  Datastring GenerateMagicSequence(uint32_t key, uint8_t base) const;
+  Datastring GenerateBitSequenceLsbUpDown(uint32_t data, int bits) const;
+  Datastring GenerateBitSequenceMsbUpDown(uint32_t data, int bits) const;
+  Datastring GenerateBitSequenceLsbDownUp(uint32_t data, int bits) const;
+  Datastring GenerateBitSequenceMsbDownUp(uint32_t data, int bits,
+                                          uint8_t base = nMCLR | PGM) const;
 };
 
 class Pic18SequenceGenerator : public PicSequenceGenerator {

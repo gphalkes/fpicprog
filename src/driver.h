@@ -36,7 +36,7 @@ class Driver {
   Status WriteDatastring(const Datastring &data);
 
   // FIXME: make the default argument explicit in the call sites and remove the default.
-  virtual Status ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count,
+  virtual Status ReadWithSequence(const Datastring &sequence, const std::vector<int> bit_offsets, int bit_count,
                                   uint32_t count, Datastring16 *result, bool lsb_first = true) = 0;
 
  protected:

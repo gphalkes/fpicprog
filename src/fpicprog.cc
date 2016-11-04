@@ -110,6 +110,8 @@ int main(int argc, char **argv) {
     exit(0);
   }
 
+  // FIXME: move initialization of the device DB to a separate function to be called from both here
+  // and testgen.
   std::unique_ptr<Controller> controller;
   std::unique_ptr<DeviceDb> device_db;
   if (FLAGS_family.empty()) {
@@ -117,13 +119,13 @@ int main(int argc, char **argv) {
   } else if (FLAGS_family == "pic18") {
     std::unique_ptr<Pic18SequenceGenerator> sequence_generator(new Pic18SequenceGenerator);
     controller.reset(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
-    device_db = std::make_unique<DeviceDb>(1, Datastring{0xff},
+    device_db = std::make_unique<DeviceDb>(1, 1, Datastring{0xff},
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic10" || FLAGS_family == "pic12" || FLAGS_family == "pic16") {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
     controller.reset(new Pic16MidrangeController(std::move(driver), std::move(sequence_generator)));
     device_db =
-        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f},
                                    [](const Datastring16 &sequence) {
                                      return Pic16SequenceGenerator::ValidateSequence(sequence);
                                    });
@@ -132,7 +134,7 @@ int main(int argc, char **argv) {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
     controller.reset(new Pic16BaselineController(std::move(driver), std::move(sequence_generator)));
     device_db =
-        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x0f},
+        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x0f},
                                    [](const Datastring16 &sequence) {
                                      return Pic16SequenceGenerator::ValidateSequence(sequence);
                                    });
@@ -140,14 +142,14 @@ int main(int argc, char **argv) {
     std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator(new Pic16NewSequenceGenerator);
     controller.reset(new Pic16EnhancedController(std::move(driver), std::move(sequence_generator)));
     device_db =
-        std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f},
                                    [](const Datastring16 &sequence) {
                                      return Pic16SequenceGenerator::ValidateSequence(sequence);
                                    });
   } else if (FLAGS_family == "pic24") {
     std::unique_ptr<Pic24SequenceGenerator> sequence_generator(new Pic24SequenceGenerator);
     controller.reset(new Pic24Controller(std::move(driver), std::move(sequence_generator)));
-    device_db = std::make_unique<DeviceDb>(4, Datastring{0xff, 0xff, 0xff, 0x00},
+    device_db = std::make_unique<DeviceDb>(4, 2, Datastring{0xff, 0xff, 0xff, 0x00},
                                            [](const Datastring16 &) { return Status::OK; });
   } else {
     fatal("Unknown device family %s.\n", FLAGS_family.c_str());

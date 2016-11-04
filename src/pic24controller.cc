@@ -24,6 +24,10 @@
 // 16 bits at each address, but uses separate instructions for reading the words add even and odd
 // addresses (TBLRDL and TBLRDH).
 
+// This PIC24 programming datasheet suggests using a packed data format for faster programming and
+// reading. However, due to the fact that using the packed format then requires extra instructions
+// for (un)packing the data, it actually does not result in any savings.
+
 Status Pic24Controller::Open() {
   RETURN_IF_ERROR(driver_->Open());
   return WriteTimedSequence(Pic24SequenceGenerator::INIT_SEQUENCE, nullptr);
@@ -60,7 +64,9 @@ Status Pic24Controller::Read(Section, uint32_t start_address, uint32_t end_addre
   // Add a NOP because we will be using the register in the next command for addressing.
   RETURN_IF_ERROR(WriteCommand(NOP));
 
-  // FIXME: reading can be sped up by using the repeated read functionality of the driver.
+  // FIXME: reading can be sped up by using the repeated read functionality of the driver. This does
+  // require updating that functionality to allow specifying multiple locations within the string
+  // to read from.
   uint32_t current_address = start_address;
   while (current_address < end_address) {
     if ((current_address & 0x1ffff) == 0 && current_address != start_address) {
@@ -193,7 +199,7 @@ Status Pic24Controller::WriteCommand(uint32_t payload) {
 Status Pic24Controller::ReadVisi(uint16_t *result) {
   Datastring16 data;
   RETURN_IF_ERROR(
-      driver_->ReadWithSequence(sequence_generator_->GetReadCommandSequence(), 12, 16, 1, &data));
+      driver_->ReadWithSequence(sequence_generator_->GetReadCommandSequence(), {12}, 16, 1, &data));
   *result = data[0];
   return Status::OK;
 }

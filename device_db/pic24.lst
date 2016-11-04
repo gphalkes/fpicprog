@@ -1,18 +1,17 @@
 # PIC24 and dsPIC30 devices.
-# Addresses and sizes are given in 32-bit words. This means that the program
-# size should be specified as the number of instructions (each instruction being
-# 24 bits of data and 8 0-bits).
-# eeprom_address would typically be 3FFF00h (7FFE00h in the data sheets) and
-# config_address is usually 7C0000h (F80000h in the data sheets). eeprom_size
-# should be specified in the number of 2-byte words, as in the HEX file the
-# words are also padded to 32 bits.
+# Sizes are given in 32-bit words. This means that the program size should be specified as the
+# number of instructions (each instruction being 24 bits of data and 8 0-bits). Addresses are
+# specified in two-byte increments. This allows copying the addresses as specified in the data
+# sheets. config_address is usually F80000h. config_size should be (address of the last address
+# word - F80000h) / 2 + 1. eeprom_size should be specified in the number of 2-byte words, as in the
+# HEX file the words are also padded to 32 bits.
 
 [24F04KA200]
 device_id = 0D02h
 program_memory_size = 1408
 config_size = 9
-config_address = 7C0000h
-missing_locations = 7C0000h 7C0001h
+config_address = F80000h
+missing_locations = F80000h F80002h
 write_block_size = 32
 block_write_sequence = 4004h
 config_write_sequence = 4004h

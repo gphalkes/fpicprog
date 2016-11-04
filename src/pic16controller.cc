@@ -146,7 +146,7 @@ Status Pic16ControllerBase::WriteCommand(Pic16Command command) {
 
 Status Pic16ControllerBase::ReadWithCommand(Pic16Command command, uint16_t *result) {
   Datastring16 data;
-  RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 7,
+  RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), {7},
                                             14, 1, &data));
   *result = data[0];
   return Status::OK;

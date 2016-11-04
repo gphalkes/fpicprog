@@ -72,7 +72,7 @@ Status Pic16EnhancedController::WriteCommand(Pic16NewCommand command, uint16_t p
 Status Pic16EnhancedController::ReadWithCommand(Pic16NewCommand command, uint32_t count,
                                                 Datastring16 *result) {
   result->clear();
-  RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 12,
+  RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), {12},
                                             8, count, result, /* lsb_first = */ false));
   return Status::OK;
 }

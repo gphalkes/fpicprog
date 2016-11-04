@@ -182,7 +182,7 @@ Status Pic18Controller::WriteCommand(Pic18Command command, uint16_t payload) {
 
 Status Pic18Controller::ReadWithCommand(Pic18Command command, uint32_t count, Datastring *result) {
   Datastring16 data;
-  RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), 12,
+  RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0), {12},
                                             8, count, &data));
   result->clear();
   for (const uint16_t c : data) {

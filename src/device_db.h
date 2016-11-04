@@ -53,9 +53,10 @@ class DeviceDb {
   // FIXME: the sequence validator should be passed what sequence is being validated.
   using SequenceValidator = std::function<Status(const Datastring16 &)>;
 
-  DeviceDb(uint32_t unit_factor, const Datastring &block_filler,
+  DeviceDb(uint32_t unit_factor, uint32_t address_factor, const Datastring &block_filler,
            SequenceValidator sequence_validator)
       : unit_factor_(unit_factor),
+        address_factor_(address_factor),
         block_filler_(block_filler),
         sequence_validator_(sequence_validator) {}
   Status Load(const std::string &name);
@@ -68,6 +69,7 @@ class DeviceDb {
  private:
   std::map<uint16_t, DeviceInfo> device_db_;
   const uint32_t unit_factor_;
+  const uint32_t address_factor_;
   const Datastring block_filler_;
   SequenceValidator sequence_validator_;
 };

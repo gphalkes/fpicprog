@@ -51,20 +51,20 @@ int main(int argc, char *argv[]) {
   if (FLAGS_family.empty()) {
     fatal("--family must be specified\n");
   } else if (FLAGS_family == "pic18") {
-    device_db = std::make_unique<DeviceDb>(1, Datastring{0xff},
+    device_db = std::make_unique<DeviceDb>(1, 1, Datastring{0xff},
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic10" || FLAGS_family == "pic12" || FLAGS_family == "pic16") {
-    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+    device_db = std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f},
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic10-small" || FLAGS_family == "pic12-small" ||
              FLAGS_family == "pic16-small") {
-    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x0f},
+    device_db = std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x0f},
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic16-new") {
-    device_db = std::make_unique<DeviceDb>(2, Datastring{0xff, 0x3f},
+    device_db = std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f},
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic24") {
-    device_db = std::make_unique<DeviceDb>(4, Datastring{0xff, 0xff, 0xff, 0x00},
+    device_db = std::make_unique<DeviceDb>(4, 2, Datastring{0xff, 0xff, 0xff, 0x00},
                                            [](const Datastring16 &) { return Status::OK; });
   } else {
     fatal("Unknown device family %s.\n", FLAGS_family.c_str());

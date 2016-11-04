@@ -45,6 +45,9 @@ Status FtdiSbDriver::Open() {
     return Status(Code::INIT_FAILED,
                   strings::Cat("Couldn't open FTDI device: ", ftdi_get_error_string(&ftdic_)));
   }
+  // Setting this to higher values than 100'000 does not seem to yield faster data transfers. This
+  // is probably due to the round-tripping that has to be done for the reads, and the limited size
+  // of the receive buffer.
   if (ftdi_set_baudrate(&ftdic_, 100000)) {
     AutoClosureRunner deinit([this] { ftdi_deinit(&ftdic_); });
     return Status(Code::INIT_FAILED,
@@ -127,9 +130,9 @@ Status FtdiSbDriver::SetPins(uint8_t pins) {
 Status FtdiSbDriver::FlushOutput() {
   Status status;
   while (!output_buffer_.empty()) {
-    // In theory we should be able to push this up to 128. However, reading becomes unreliable when
-    // we write more than 64 bytes at a time.
-    int size = std::min<int>(64, output_buffer_.size());
+    // We use the maximum value of 128 bytes here. This does lose sync more often than when using
+    // the smaller size of 64, but it increases read speed nonetheless.
+    int size = std::min<int>(128, output_buffer_.size());
     if (ftdi_write_data(&ftdic_, const_cast<uint8_t *>(output_buffer_.data()), size) != size) {
       return Status(Code::USB_WRITE_ERROR,
                     strings::Cat("Write failed: ", ftdi_get_error_string(&ftdic_)));
@@ -150,7 +153,7 @@ uint8_t ReverseBits(uint8_t data) {
   return result;
 }
 
-Status FtdiSbDriver::ReadWithSequence(const Datastring &sequence, int bit_offset, int bit_count,
+Status FtdiSbDriver::ReadWithSequence(const Datastring &sequence, const std::vector<int> bit_offsets, int bit_count,
                                       uint32_t count, Datastring16 *result, bool lsb_first) {
   result->clear();
   RETURN_IF_ERROR(FlushOutput());
@@ -173,17 +176,19 @@ Status FtdiSbDriver::ReadWithSequence(const Datastring &sequence, int bit_offset
   }
 
   BitStreamWrapper bit_stream(&received_data_);
-  for (uint32_t i = 0; i < count; ++i) {
-    uint16_t datum = 0;
-    for (int j = 0; j < bit_count; ++j) {
-      if (lsb_first) {
-        datum |= bit_stream.GetBit(i * sequence.size() + (bit_offset + j) * 2 + 1) << j;
-      } else {
-        datum <<= 1;
-        datum |= bit_stream.GetBit(i * sequence.size() + (bit_offset + j) * 2 + 1);
+  for (int bit_offset : bit_offsets) {
+    for (uint32_t i = 0; i < count; ++i) {
+      uint16_t datum = 0;
+      for (int j = 0; j < bit_count; ++j) {
+        if (lsb_first) {
+          datum |= bit_stream.GetBit(i * sequence.size() + (bit_offset + j) * 2 + 1) << j;
+        } else {
+          datum <<= 1;
+          datum |= bit_stream.GetBit(i * sequence.size() + (bit_offset + j) * 2 + 1);
+        }
       }
+      *result += datum;
     }
-    *result += datum;
   }
   return Status::OK;
 }

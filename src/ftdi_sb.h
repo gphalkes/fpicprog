@@ -28,7 +28,7 @@ class FtdiSbDriver : public Driver {
   void Close() override;
   Status List(std::vector<std::string> *list) const override;
 
-  Status ReadWithSequence(const Datastring &sequence, const std::vector<int> bit_offsets,
+  Status ReadWithSequence(const Datastring &sequence, const std::vector<int> &bit_offsets,
                           int bit_count, uint32_t count, Datastring16 *result,
                           bool lsb_first) override;
 

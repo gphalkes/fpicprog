@@ -154,7 +154,7 @@ uint8_t ReverseBits(uint8_t data) {
 }
 
 Status FtdiSbDriver::ReadWithSequence(const Datastring &sequence,
-                                      const std::vector<int> bit_offsets, int bit_count,
+                                      const std::vector<int> &bit_offsets, int bit_count,
                                       uint32_t count, Datastring16 *result, bool lsb_first) {
   result->clear();
   RETURN_IF_ERROR(FlushOutput());
@@ -177,8 +177,8 @@ Status FtdiSbDriver::ReadWithSequence(const Datastring &sequence,
   }
 
   BitStreamWrapper bit_stream(&received_data_);
-  for (int bit_offset : bit_offsets) {
-    for (uint32_t i = 0; i < count; ++i) {
+  for (uint32_t i = 0; i < count; ++i) {
+    for (int bit_offset : bit_offsets) {
       uint16_t datum = 0;
       for (int j = 0; j < bit_count; ++j) {
         if (lsb_first) {

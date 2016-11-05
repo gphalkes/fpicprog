@@ -68,6 +68,24 @@ Status Pic24Controller::Read(Section, uint32_t start_address, uint32_t end_addre
   // require updating that functionality to allow specifying multiple locations within the string
   // to read from.
   uint32_t current_address = start_address;
+
+  Datastring read_sequence;
+  // TBLRDL [W6], [W7]
+  // 1011     1010     0Bqq     qddd     dppp     ssss
+  // 1011 [b] 1010 [a] 0000 [0] 1011 [b] 1001 [9] 0110 [6]
+  read_sequence += sequence_generator_->GetWriteCommandSequence(0xBA0B96);
+  read_sequence += sequence_generator_->GetWriteCommandSequence(NOP);
+  read_sequence += sequence_generator_->GetWriteCommandSequence(NOP);
+  read_sequence += sequence_generator_->GetReadCommandSequence();
+
+  // TBLRDH [W6++], [W7]
+  // 1011     1010     1Bqq     qddd     dppp     ssss
+  // 1011 [b] 1010 [a] 1000 [8] 1011 [b] 1011 [b] 0110 [6]
+  read_sequence += sequence_generator_->GetWriteCommandSequence(0xBA8BB6);
+  read_sequence += sequence_generator_->GetWriteCommandSequence(NOP);
+  read_sequence += sequence_generator_->GetWriteCommandSequence(NOP);
+  read_sequence += sequence_generator_->GetReadCommandSequence();
+
   while (current_address < end_address) {
     if ((current_address & 0x1ffff) == 0 && current_address != start_address) {
       RETURN_IF_ERROR(ResetPc());
@@ -78,28 +96,17 @@ Status Pic24Controller::Read(Section, uint32_t start_address, uint32_t end_addre
       RETURN_IF_ERROR(ResetPc());
     }
 
-    // TBLRDL [W6], [W7]
-    // 1011     1010     0Bqq     qddd     dppp     ssss
-    // 1011 [b] 1010 [a] 0000 [0] 1011 [b] 1001 [9] 0110 [6]
-    RETURN_IF_ERROR(WriteCommand(0xBA0B96));
-    RETURN_IF_ERROR(WriteCommand(NOP));
-    RETURN_IF_ERROR(WriteCommand(NOP));
-    uint16_t data;
-    RETURN_IF_ERROR(ReadVisi(&data));
-    result->push_back(data & 0xff);
-    result->push_back((data >> 8) & 0xff);
-
-    // TBLRDH [W6++], [W7]
-    // 1011     1010     1Bqq     qddd     dppp     ssss
-    // 1011 [b] 1010 [a] 1000 [8] 1011 [b] 1011 [b] 0110 [6]
-    RETURN_IF_ERROR(WriteCommand(0xBA8BB6));
-    RETURN_IF_ERROR(WriteCommand(NOP));
-    RETURN_IF_ERROR(WriteCommand(NOP));
-    RETURN_IF_ERROR(ReadVisi(&data));
-    result->push_back(data & 0xff);
-    result->push_back((data >> 8) & 0xff);
-
-    current_address += 4;
+    // Make sure we don't attempt to read across 64-byte boundaries, and don't attempt to read too
+    // much in a single go.
+    int iterations =
+        std::min<int>(current_address % 64 == 0 ? 16 : 1, (end_address - current_address) / 4);
+    Datastring16 data;
+    RETURN_IF_ERROR(driver_->ReadWithSequence(read_sequence, {96, 208}, 16, iterations, &data));
+    for (int16_t datum : data) {
+      result->push_back(datum & 0xff);
+      result->push_back((datum >> 8) & 0xff);
+    }
+    current_address += 4 * iterations;
   }
 
   return Status::OK;

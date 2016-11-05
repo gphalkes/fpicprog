@@ -74,7 +74,10 @@ Status Pic24Controller::Read(Section, uint32_t start_address, uint32_t end_addre
       RETURN_IF_ERROR(LoadAddress(current_address / 2));
       // Add a NOP because we will be using the register in the next command for addressing.
       RETURN_IF_ERROR(WriteCommand(NOP));
+    } else if (current_address % 64 == 0) {
+      RETURN_IF_ERROR(ResetPc());
     }
+
     // TBLRDL [W6], [W7]
     // 1011     1010     0Bqq     qddd     dppp     ssss
     // 1011 [b] 1010 [a] 0000 [0] 1011 [b] 1001 [9] 0110 [6]
@@ -120,7 +123,6 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
       device_info.eeprom_write_sequence.size() > 1) {
     fatal("DeviceInfo is invalid for writing\n");
   }
-  RETURN_IF_ERROR(ResetPc());
 
   uint32_t write_command;
   if (section == FLASH) {
@@ -137,6 +139,7 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
   size_t bytes_written = 0;
   while (bytes_written < data.size()) {
     PrintProgress(bytes_written, data.size());
+    RETURN_IF_ERROR(ResetPc());
     // MOV #<write command>, W10
     RETURN_IF_ERROR(WriteCommand(0x20000A | (write_command << 4)));
     // MOV W10, NVMCON

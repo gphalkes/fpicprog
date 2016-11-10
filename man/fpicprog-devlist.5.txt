@@ -87,6 +87,8 @@ missing__locations::
   different values are written to them. Adding these to the missing__locations
   list will make fpicprog ignore these locations when dumping device contents
   or writing and verifying data.
+calibration__word__address::
+  The location of the calibration word, if the device has one.
 
 PIC10, PIC12 AND PIC16 FAMILIES
 ===============================

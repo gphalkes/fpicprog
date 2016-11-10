@@ -214,6 +214,9 @@ Status DeviceDb::Load(const std::string &name) {
           RETURN_IF_ERROR(NumericalValue(single_value, &parsed_value));
           last_info.missing_locations.push_back(parsed_value);
         }
+      } else if (key == "calibration_word_address") {
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.calibration_word_address),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else {
         return Status(PARSE_ERROR, strings::Cat("Device database has unknown key on line ", i + 1));
       }

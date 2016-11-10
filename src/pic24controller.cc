@@ -193,9 +193,20 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
   return Status::OK;
 }
 
-Status Pic24Controller::ChipErase(const DeviceInfo &) {
-  RETURN_IF_ERROR(ExecuteErase(0x4064));
-  return ExecuteErase(0x4050);
+Status Pic24Controller::ChipErase(const DeviceInfo &device_info) {
+  Datastring diagnostic_word;
+  if (device_info.calibration_word_address != 0) {
+    RETURN_IF_ERROR(Read(CONFIGURATION, device_info.calibration_word_address,
+                         device_info.calibration_word_address + 4, device_info, &diagnostic_word));
+  }
+  for (uint16_t command : device_info.chip_erase_sequence) {
+    RETURN_IF_ERROR(ExecuteErase(command));
+  }
+  if (device_info.calibration_word_address != 0) {
+    RETURN_IF_ERROR(
+        Write(CONFIGURATION, device_info.calibration_word_address, diagnostic_word, device_info));
+  }
+  return Status::OK;
 }
 
 Status Pic24Controller::SectionErase(Section, const DeviceInfo &) {
@@ -245,7 +256,7 @@ Status Pic24Controller::ExecuteErase(uint32_t nvmcon) {
   RETURN_IF_ERROR(WriteCommand(0x20000A | (nvmcon << 4)));
   // MOV W10, NVMCON
   RETURN_IF_ERROR(WriteCommand(0x883B0A));
-  RETURN_IF_ERROR(LoadAddress(0));
+  RETURN_IF_ERROR(LoadAddress(0x00800000));
   // TBLWTL W0, [W0]
   RETURN_IF_ERROR(WriteCommand(0xBB0800));
   RETURN_IF_ERROR(WriteCommand(NOP));

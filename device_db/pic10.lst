@@ -1,0 +1,50 @@
+# PIC10 midrange devices.
+# Most of these have device IDs and can be auto-detected by reading configuration words 5 & 6.
+
+[10F320]
+device_id = 014Dh
+program_memory_size = 100h
+config_size = 8
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = FEh 2000h 09h FFh
+bulk_erase_timing = 5ms
+block_write_timing = 5ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 1
+
+[10F322]
+device_id = 014Ch
+program_memory_size = 200h
+config_size = 8
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = FEh 2000h 09h FFh
+bulk_erase_timing = 5ms
+block_write_timing = 5ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 1
+
+[10LF320]
+device_id = 014Fh
+program_memory_size = 100h
+config_size = 8
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = FEh 2000h 09h FFh
+bulk_erase_timing = 5ms
+block_write_timing = 5ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 1
+
+[10LF322]
+device_id = 014Eh
+program_memory_size = 200h
+config_size = 8
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = FEh 2000h 09h FFh
+bulk_erase_timing = 5ms
+block_write_timing = 5ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 1

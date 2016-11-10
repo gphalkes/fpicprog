@@ -125,9 +125,16 @@ Status Pic16ControllerBase::Write(Section section, uint32_t address, const Datas
 }
 
 Status Pic16ControllerBase::ChipErase(const DeviceInfo &device_info) {
+  Datastring calibration_word;
+  if (device_info.calibration_word_address != 0) {
+    RETURN_IF_ERROR(Read(USER_ID, device_info.calibration_word_address, device_info.calibration_word_address + 2, device_info, &calibration_word));
+  }
   RETURN_IF_ERROR(ResetDevice());
   RETURN_IF_ERROR(WriteTimedSequence(Pic16SequenceGenerator::CHIP_ERASE_SEQUENCE, &device_info));
   RETURN_IF_ERROR(ResetDevice());
+  if (device_info.calibration_word_address != 0) {
+    RETURN_IF_ERROR(Write(USER_ID, device_info.calibration_word_address, calibration_word, device_info));
+  }
   return Status::OK;
 }
 

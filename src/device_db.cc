@@ -88,6 +88,8 @@ static void MultiplyUnits(DeviceInfo *info, uint32_t unit_factor, uint32_t addre
     }
   }
   info->missing_locations = missing_locations;
+  info->calibration_word_size *= unit_factor;
+  info->calibration_word_address *= address_factor;
 }
 
 // FIXME: add some way to disallow certain fields
@@ -214,6 +216,9 @@ Status DeviceDb::Load(const std::string &name) {
           RETURN_IF_ERROR(NumericalValue(single_value, &parsed_value));
           last_info.missing_locations.push_back(parsed_value);
         }
+      } else if (key == "calibration_word_size") {
+        RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.calibration_word_size),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "calibration_word_address") {
         RETURN_IF_ERROR_WITH_APPEND(NumericalValue(value, &last_info.calibration_word_address),
                                     strings::Cat(" in device database at line ", i + 1));

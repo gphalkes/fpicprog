@@ -43,6 +43,7 @@ struct DeviceInfo {
   Duration block_write_timing = MilliSeconds(1);
   Duration config_write_timing = MilliSeconds(5);
   std::vector<uint32_t> missing_locations;
+  uint32_t calibration_word_size = 0;
   uint32_t calibration_word_address = 0;
 
   void Dump() const;

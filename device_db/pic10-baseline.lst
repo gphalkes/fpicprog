@@ -8,10 +8,11 @@ user_id_address = 100h
 config_address = 1FFh
 write_block_size = 1
 block_write_sequence = 08h FFh 0Eh
-chip__erase__sequence = FEh 100h 09h FFh
+chip__erase__sequence = FEh 101h 09h FFh
 block__write__timing = 2ms
 bulk__erase__timing = 10ms
 calibration_word_address = 104h
+calibration_word_size = 1
 
 [10F202]
 program_memory_size = 200h
@@ -20,10 +21,11 @@ user_id_address = 200h
 config_address = 3FFh
 write_block_size = 1
 block_write_sequence = 08h FFh 0Eh
-chip__erase__sequence = FEh 200h 09h FFh
+chip__erase__sequence = FEh 201h 09h FFh
 block__write__timing = 2ms
 bulk__erase__timing = 10ms
 calibration_word_address = 204h
+calibration_word_size = 1
 
 [10F204]
 program_memory_size = 100h
@@ -32,10 +34,11 @@ user_id_address = 100h
 config_address = 1FFh
 write_block_size = 1
 block_write_sequence = 08h FFh 0Eh
-chip__erase__sequence = FEh 100h 09h FFh
+chip__erase__sequence = FEh 101h 09h FFh
 block__write__timing = 2ms
 bulk__erase__timing = 10ms
 calibration_word_address = 104h
+calibration_word_size = 1
 
 [10F206]
 program_memory_size = 200h
@@ -44,10 +47,11 @@ user_id_address = 200h
 config_address = 3FFh
 write_block_size = 1
 block_write_sequence = 08h FFh 0Eh
-chip__erase__sequence = FEh 200h 09h FFh
+chip__erase__sequence = FEh 201h 09h FFh
 block__write__timing = 2ms
 bulk__erase__timing = 10ms
 calibration_word_address = 204h
+calibration_word_size = 1
 
 [10F220]
 program_memory_size = 100h
@@ -56,10 +60,11 @@ user_id_address = 100h
 config_address = 1FFh
 write_block_size = 1
 block_write_sequence = 08h FFh 0Eh
-chip__erase__sequence = FEh 100h 09h FFh
+chip__erase__sequence = FEh 101h 09h FFh
 block__write__timing = 2ms
 bulk__erase__timing = 10ms
 calibration_word_address = 104h
+calibration_word_size = 1
 
 [10F222]
 program_memory_size = 200h
@@ -68,7 +73,8 @@ user_id_address = 200h
 config_address = 3FFh
 write_block_size = 1
 block_write_sequence = 08h FFh 0Eh
-chip__erase__sequence = FEh 200h 09h FFh
+chip__erase__sequence = FEh 201h 09h FFh
 block__write__timing = 2ms
 bulk__erase__timing = 10ms
 calibration_word_address = 204h
+calibration_word_size = 1

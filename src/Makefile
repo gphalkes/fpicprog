@@ -1,6 +1,6 @@
 DEBUG:=1
 
-SOURCES.fpicprog = fpicprog.cc pic16controller.cc pic16enhancedcontroller.cc pic18controller.cc \
+SOURCES.fpicprog = fpicprog.cc pic16controller.cc pic16newcontroller.cc pic18controller.cc \
 	pic24controller.cc driver.cc sequence_generator.cc util.cc status.cc strings.cc device_db.cc \
 	program.cc high_level_controller.cc ftdi_sb.cc
 LDLIBS.fpicprog := -lftdi -lgflags

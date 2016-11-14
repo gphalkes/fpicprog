@@ -27,3 +27,208 @@ bulk_erase_timing = 10ms
 block_write_timing = 4ms
 missing_locations = 2004h 2005h 2006h
 write_block_size = 1
+
+
+[16F631]
+device_id = 00A1h
+program_memory_size = 400h
+eeprom_size = 128
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[16F636]
+device_id = 0085h
+program_memory_size = 800h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+# The device ID listed in the data sheet for the PIC16F639 is the same as for
+# the PIC16F636. As we can only have a single device with a particular device 
+# ID, this is disabled.
+#[16F639]
+#device_id = 0085h
+#program_memory_size = 800h
+#eeprom_size = 256
+#eeprom_address = 2100h
+#config_size = 9
+#config_address = 2000h
+#block_write_sequence = 08h FFh
+#chip_erase_sequence = 09h FFh 0Bh FFh
+#bulk_erase_timing = 6ms
+#block_write_timing = 6ms
+#missing_locations = 2004h 2005h 2006h
+#write_block_size = 4
+
+[16F677]
+device_id = 00A2h
+program_memory_size = 800h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[16F684]
+device_id = 0084h
+program_memory_size = 800h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[16F685]
+device_id = 0025h
+program_memory_size = 1000h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[16F687]
+device_id = 0099h
+program_memory_size = 800h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[16F688]
+device_id = 008Ch
+program_memory_size = 1000h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[16F689]
+device_id = 009Ah
+program_memory_size = 1000h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[16F690]
+device_id = 00A0h
+program_memory_size = 1000h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[16F1847]
+device_id = 00A4h
+program_memory_size = 2000h
+eeprom_size = 256
+eeprom_address = F000h
+config_size = 9
+config_address = 8000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 00h 09h FFh 0Bh 0FFh
+bulk_erase_timing = 5ms
+block_write_timing = 3ms
+missing_locations = 8004h 8005h 8006h
+write_block_size = 32
+
+[16LF1847]
+device_id = 00A5h
+program_memory_size = 2000h
+eeprom_size = 256
+eeprom_address = F000h
+config_size = 9
+config_address = 8000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 00h 09h FFh 0Bh 0FFh
+bulk_erase_timing = 5ms
+block_write_timing = 3ms
+missing_locations = 8004h 8005h 8006h
+write_block_size = 32
+
+
+# Disabled because the programmer can not save OSCAL and the BG bits of the
+# configuration word. 
+#[16F630]
+#device_id = 0086h
+#program_memory_size = 3FFh
+#eeprom_size = 128
+#eeprom_address = 2100h
+#config_size = 9
+#config_address = 2000h
+#block_write_sequence = 08h FFh
+#chip_erase_sequence = 09h FFh 0Bh FFh
+#bulk_erase_timing = 6ms
+#block_write_timing = 6ms
+#missing_locations = 2004h 2005h 2006h
+#write_block_size = 1
+
+# Disabled because the programmer can not save OSCAL and the BG bits of the
+# configuration word. 
+#[16F676]
+#device_id = 0087h
+#program_memory_size = 3FFh
+#eeprom_size = 128
+#eeprom_address = 2100h
+#config_size = 9
+#config_address = 2000h
+#block_write_sequence = 08h FFh
+#chip_erase_sequence = 09h FFh 0Bh FFh
+#bulk_erase_timing = 8ms
+#block_write_timing = 6ms
+#missing_locations = 2004h 2005h 2006h
+#write_block_size = 1

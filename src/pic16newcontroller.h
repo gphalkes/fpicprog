@@ -23,10 +23,10 @@
 #include "driver.h"
 #include "program.h"
 
-class Pic16EnhancedController : public Controller {
+class Pic16NewController : public Controller {
  public:
-  Pic16EnhancedController(std::unique_ptr<Driver> driver,
-                          std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator)
+  Pic16NewController(std::unique_ptr<Driver> driver,
+                     std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator)
       : driver_(std::move(driver)), sequence_generator_(std::move(sequence_generator)) {}
 
   Status Open() override;

@@ -193,8 +193,10 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
 Status Pic24Controller::ChipErase(const DeviceInfo &device_info) {
   Datastring diagnostic_word;
   if (device_info.calibration_word_address != 0) {
-    RETURN_IF_ERROR(Read(CONFIGURATION, device_info.calibration_word_address,
-                         device_info.calibration_word_address + 4, device_info, &diagnostic_word));
+    RETURN_IF_ERROR(
+        Read(CONFIGURATION, device_info.calibration_word_address,
+             device_info.calibration_word_address + 4 * device_info.calibration_word_size,
+             device_info, &diagnostic_word));
   }
   for (uint16_t command : device_info.chip_erase_sequence) {
     RETURN_IF_ERROR(ExecuteErase(command));

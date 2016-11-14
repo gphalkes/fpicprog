@@ -1,0 +1,32 @@
+# PIC12 baseline core devices.
+# All sizes and addresses are given in words, not in bytes.
+
+# The PIC12F529T48A has an EEPROM, but that is included in the program memory 
+# size. Programming will not happen correctly if it is specified as EEPROM.
+[12F529T48A]
+program_memory_size = 640h
+user_id_size = 4
+user_id_address = 640h
+config_address = 7FFh
+write_block_size = 1
+block_write_sequence = 08h FFh 0Eh
+chip__erase__sequence = 09h FFh FEh 641h 09h FFh
+block__write__timing = 2ms
+bulk__erase__timing = 10ms
+calibration_word_address = 644h
+calibration_word_size = 4
+
+# The PIC12F529T39A has an EEPROM, but that is included in the program memory 
+# size. Programming will not happen correctly if it is specified as EEPROM.
+[12F529T39A]
+program_memory_size = 640h
+user_id_size = 4
+user_id_address = 640h
+config_address = 7FFh
+write_block_size = 1
+block_write_sequence = 08h FFh 0Eh
+chip__erase__sequence = 09h FFh FEh 641h 09h FFh
+block__write__timing = 2ms
+bulk__erase__timing = 10ms
+calibration_word_address = 644h
+calibration_word_size = 4

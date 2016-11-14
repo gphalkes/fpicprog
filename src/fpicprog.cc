@@ -22,7 +22,7 @@
 #include "driver.h"
 #include "high_level_controller.h"
 #include "pic16controller.h"
-#include "pic16enhancedcontroller.h"
+#include "pic16newcontroller.h"
 #include "pic18controller.h"
 #include "pic24controller.h"
 #include "program.h"
@@ -41,7 +41,7 @@ DEFINE_string(sections, "",
               "or a combination of flash, user-id, config, eeprom.");
 DEFINE_string(family, "",
               "Device family to use. One of pic10, pic10-baseline, pic12, pic12-baseline, pic16, "
-              "pic16-baseline, pic16-enhanced, pic18.");
+              "pic16-baseline, pic16-new, pic18.");
 DEFINE_string(device, "",
               "Exact device name. Required for devices which don't provide a device ID. Devices "
               "which have a device ID should be detectable using the identify action.");
@@ -140,7 +140,7 @@ int main(int argc, char **argv) {
                                    });
   } else if (FLAGS_family == "pic16-new") {
     std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator(new Pic16NewSequenceGenerator);
-    controller.reset(new Pic16EnhancedController(std::move(driver), std::move(sequence_generator)));
+    controller.reset(new Pic16NewController(std::move(driver), std::move(sequence_generator)));
     device_db =
         std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f},
                                    [](const Datastring16 &sequence) {

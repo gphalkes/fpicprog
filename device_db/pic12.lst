@@ -1,0 +1,138 @@
+# PIC12 midrange devices.
+# Most of these have device IDs and can be auto-detected by reading configuration words 5 & 6.
+
+[12F1571]
+device_id = 3051h
+program_memory_size = 400h
+config_size = 9
+config_address = 8000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 00h 09h FFh
+bulk_erase_timing = 5ms
+block_write_timing = 5ms
+missing_locations = 8004h 8005h 8006h
+write_block_size = 32
+
+[12LF1571]
+device_id = 3053h
+program_memory_size = 400h
+config_size = 9
+config_address = 8000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 00h 09h FFh
+bulk_erase_timing = 5ms
+block_write_timing = 5ms
+missing_locations = 8004h 8005h 8006h
+write_block_size = 32
+
+[12F1572]
+device_id = 3050h
+program_memory_size = 400h
+config_size = 9
+config_address = 8000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 00h 09h FFh
+bulk_erase_timing = 5ms
+block_write_timing = 5ms
+missing_locations = 8004h 8005h 8006h
+write_block_size = 32
+
+[12LF1572]
+device_id = 3052h
+program_memory_size = 400h
+config_size = 9
+config_address = 8000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 00h 09h FFh
+bulk_erase_timing = 5ms
+block_write_timing = 5ms
+missing_locations = 8004h 8005h 8006h
+write_block_size = 32
+
+[12F635]
+device_id = 007Dh
+program_memory_size = 400h
+eeprom_size = 128
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[12F683]
+device_id = 0023h
+program_memory_size = 800h
+eeprom_size = 256
+eeprom_address = 2100h
+config_size = 9
+config_address = 2000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 09h FFh 0Bh FFh
+bulk_erase_timing = 6ms
+block_write_timing = 6ms
+missing_locations = 2004h 2005h 2006h
+write_block_size = 4
+
+[12F1840]
+device_id = 00DCh
+program_memory_size = 1000h
+eeprom_size = 256
+eeprom_address = F000h
+config_size = 9
+config_address = 8000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 00h 09h FFh 0Bh 0FFh
+bulk_erase_timing = 5ms
+block_write_timing = 3ms
+missing_locations = 8004h 8005h 8006h
+write_block_size = 32
+
+[12LF1840]
+device_id = 00DEh
+program_memory_size = 1000h
+eeprom_size = 256
+eeprom_address = F000h
+config_size = 9
+config_address = 8000h
+block_write_sequence = 08h FFh
+chip_erase_sequence = 00h 09h FFh 0Bh 0FFh
+bulk_erase_timing = 5ms
+block_write_timing = 3ms
+missing_locations = 8004h 8005h 8006h
+write_block_size = 32
+
+# Disabled because the programmer can not save OSCAL and the BG bits of the
+# configuration word. 
+#[12F629]
+#device_id = 007Ch
+#program_memory_size = 3FFh
+#eeprom_size = 128
+#eeprom_address = 2100h
+#config_size = 9
+#config_address = 2000h
+#block_write_sequence = 08h FFh
+#chip_erase_sequence = 09h FFh 0Bh FFh
+#bulk_erase_timing = 6ms
+#block_write_timing = 6ms
+#missing_locations = 2004h 2005h 2006h
+#write_block_size = 1
+
+# Disabled because the programmer can not save OSCAL and the BG bits of the
+# configuration word. 
+#[12F675]
+#device_id = 007Eh
+#program_memory_size = 3FFh
+#eeprom_size = 128
+#eeprom_address = 2100h
+#config_size = 9
+#config_address = 2000h
+#block_write_sequence = 08h FFh
+#chip_erase_sequence = 09h FFh 0Bh FFh
+#bulk_erase_timing = 8ms
+#block_write_timing = 6ms
+#missing_locations = 2004h 2005h 2006h
+#write_block_size = 1

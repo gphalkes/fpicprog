@@ -87,51 +87,55 @@ missing__locations::
   different values are written to them. Adding these to the missing__locations
   list will make fpicprog ignore these locations when dumping device contents
   or writing and verifying data.
+calibration__word__address::
+  The location of the calibration word, if the device has one.
 
 PIC10, PIC12 AND PIC16 FAMILIES
 ===============================
 The PIC10, PIC12 and PIC16 devices can be classified into three groups based on
-the programming methodology.
+the core.
 
-The first group is the group of small devices. These are devices that have
+The first group is the group of baseline devices. These are devices that have
 small memories, and have their (single) configuration word at the end of their
 memory range. On device reset, the PC is set to the configuration word. These
 devices can be recognized by set of 6-bit programming commands without a
 "Load Configuration" command. These devices require high-voltage programming.
 
-The second group of devices are the "standard" devices. These devices have a
+The second group of devices are the midrange devices. These devices have a
 6-bit programming command set, with command 000000b "Load Configuration". Most
 devices fall into this category.
 
 The third group of devices are the latest devices from Microchip in the PIC16
-family. These devices feature an 8-bit programming command set.
+family. These devices have an enhanced midrange core and feature an 8-bit
+programming command set.
 
 Note that within the PIC10, PIC12 and PIC16 families, fpicprog considers these
 three groups separate families. fpicprog for example has separate family names
-pic16-small, pic16 and pic16-new.
+pic16-baseline, pic16 and pic16-enhanced.
 
 For all these devices, the size and address units in the device files are
 14-bit words. The datasheets for these devices also use words as their units.
 
 :table options: center=true box=table 1+l|ccc
-+------------------------+-------+----------+-----+
-| Keyword                | small | standard | new |
-+------------------------+-------+----------+-----+
-| device__id             |   X   |     X    |  X  |
-| program__memory__size  |   X   |     X    |  X  |
-| user__id__size         |   X   |          |     |
-| user__id__address      |   X   |          |     |
-| config__size           |       |     X    |  X  |
-| config__address        |   X   |     X    |  X  |
-| eeprom__size           |       |     X    |  X  |
-| eeprom__address        |       |     X    |  X  |
-| write__block__size     |   X   |     X    |  X  |
-| block__write__sequence |   X   |     X    |     |
-| chip__erase__sequence  |   X   |     X    |     |
-| block__write__timing   |   X   |     X    |  X  |
-| bulk__erase__timing    |   X   |     X    |  X  |
-| missing__locations     |       |     X    |  X  |
-+------------------------+-------+----------+-----+
++--------------------------+----------+----------+----------+
+| Keyword                  | baseline | midrange | enhanced |
++--------------------------+----------+----------+----------+
+| device__id               |     X    |     X    |     X    |
+| program__memory__size    |     X    |     X    |     X    |
+| user__id__size           |     X    |          |          |
+| user__id__address        |     X    |          |          |
+| config__size             |          |     X    |     X    |
+| config__address          |     X    |     X    |     X    |
+| eeprom__size             |          |     X    |     X    |
+| eeprom__address          |          |     X    |     X    |
+| write__block__size       |     X    |     X    |     X    |
+| block__write__sequence   |     X    |     X    |          |
+| chip__erase__sequence    |     X    |     X    |          |
+| block__write__timing     |     X    |     X    |     X    |
+| bulk__erase__timing      |     X    |     X    |     X    |
+| missing__locations       |          |     X    |     X    |
+| calibration_word_address |     X    |          |          |
++--------------------------+----------+----------+----------+
 
 The block__write__sequence and the chip__erase__sequence are a list of
 programming commands. If the command is "Load Configuration" or "Load Data",
@@ -140,7 +144,7 @@ the command FFh is replaced by a wait with the appropriate timing. The command
 FEh <number> is expanded to number repetitions of the "Increment address"
 command.
 
-For the standard family, the User ID is considered part of the configuration
+For the midrange family, the User ID is considered part of the configuration
 words. However, the locations between the User ID and the configuration words,
 including the device ID, must be added to the missing__locations.
 

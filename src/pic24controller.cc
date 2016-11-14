@@ -26,7 +26,7 @@
 
 // This PIC24 programming datasheet suggests using a packed data format for faster programming and
 // reading. However, due to the fact that using the packed format then requires extra instructions
-// for (un)packing the data, it actually does not result in any savings.
+// for (un)packing the data, it actually hardly results in any savings.
 
 Status Pic24Controller::Open() {
   RETURN_IF_ERROR(driver_->Open());
@@ -64,9 +64,6 @@ Status Pic24Controller::Read(Section, uint32_t start_address, uint32_t end_addre
   // Add a NOP because we will be using the register in the next command for addressing.
   RETURN_IF_ERROR(WriteCommand(NOP));
 
-  // FIXME: reading can be sped up by using the repeated read functionality of the driver. This does
-  // require updating that functionality to allow specifying multiple locations within the string
-  // to read from.
   uint32_t current_address = start_address;
 
   Datastring read_sequence;
@@ -193,9 +190,11 @@ Status Pic24Controller::Write(Section section, uint32_t address, const Datastrin
   return Status::OK;
 }
 
-Status Pic24Controller::ChipErase(const DeviceInfo &) {
-  RETURN_IF_ERROR(ExecuteErase(0x4064));
-  return ExecuteErase(0x4050);
+Status Pic24Controller::ChipErase(const DeviceInfo &device_info) {
+  for (const uint16_t command : device_info.chip_erase_sequence) {
+    RETURN_IF_ERROR(ExecuteErase(command));
+  }
+  return Status::OK;
 }
 
 Status Pic24Controller::SectionErase(Section, const DeviceInfo &) {

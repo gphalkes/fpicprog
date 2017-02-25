@@ -22,9 +22,9 @@ DEFINE_string(handshake, "lvp",
               "PGM drives a high-voltage, nmclr-first or pgm-first can be used to determine which "
               "pin should raise first.");
 
-Datastring PicSequenceGenerator::GenerateBitSequenceLsbUpDown(uint32_t data, int bits) const {
+Datastring PicSequenceGenerator::GenerateBitSequenceLsbUpDown(uint32_t data, int bits,
+                                                              uint8_t base) const {
   Datastring result;
-  const uint8_t base = nMCLR | PGM;
   for (int i = 0; i < bits; ++i) {
     bool bit_set = (data >> i) & 1;
     result.push_back(base | PGC | (bit_set ? PGD : 0));
@@ -33,9 +33,9 @@ Datastring PicSequenceGenerator::GenerateBitSequenceLsbUpDown(uint32_t data, int
   return result;
 }
 
-Datastring PicSequenceGenerator::GenerateBitSequenceMsbUpDown(uint32_t data, int bits) const {
+Datastring PicSequenceGenerator::GenerateBitSequenceMsbUpDown(uint32_t data, int bits,
+                                                              uint8_t base) const {
   Datastring result;
-  const uint8_t base = nMCLR | PGM;
   for (int i = bits - 1; i >= 0; --i) {
     bool bit_set = (data >> i) & 1;
     result.push_back(base | PGC | (bit_set ? PGD : 0));
@@ -44,9 +44,9 @@ Datastring PicSequenceGenerator::GenerateBitSequenceMsbUpDown(uint32_t data, int
   return result;
 }
 
-Datastring PicSequenceGenerator::GenerateBitSequenceLsbDownUp(uint32_t data, int bits) const {
+Datastring PicSequenceGenerator::GenerateBitSequenceLsbDownUp(uint32_t data, int bits,
+                                                              uint8_t base) const {
   Datastring result;
-  const uint8_t base = nMCLR | PGM;
   for (int i = 0; i < bits; ++i) {
     bool bit_set = (data >> i) & 1;
     result.push_back(base | (bit_set ? PGD : 0));
@@ -66,7 +66,7 @@ Datastring PicSequenceGenerator::GenerateBitSequenceMsbDownUp(uint32_t data, int
   return result;
 }
 
-std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
+std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence(bool down_up) const {
   std::vector<TimedStep> result;
   if (FLAGS_handshake == "nmclr-first") {
     result.push_back(TimedStep{{0}, MicroSeconds(100)});
@@ -84,11 +84,20 @@ std::vector<TimedStep> PicSequenceGenerator::GenerateInitSequence() const {
     // of having only a single sequence.
     result.push_back(TimedStep{{0, nMCLR, 0}, MilliSeconds(10)});
     {
-      Datastring magic = GenerateBitSequenceMsbDownUp(0x4D434850, 32, 0);  // MCHP
+      Datastring magic;
+      if (down_up) {
+        magic = GenerateBitSequenceMsbDownUp(0x4D434850, 32, 0);  // MCHP
+      } else {
+        magic = GenerateBitSequenceMsbUpDown(0x4D434850, 32, 0);  // MCHP
+      }
       // Needs to be held for 40ns for the three-pin sequence, but for several microseconds for
       // the two-pin version.
       magic.push_back(PGM);
       result.push_back(TimedStep{magic, MicroSeconds(20)});
+    }
+    if (!down_up) {
+      // Don't raise nMCLR for the non-down_up sequence.
+      return result;
     }
   }
   result.push_back(TimedStep{{PGM | nMCLR}, MicroSeconds(400)});
@@ -227,18 +236,18 @@ std::vector<TimedStep> Pic16SequenceGenerator::TimedSequenceFromDatastring16(
 //==================================================================================================
 
 Datastring PicNew8BitSequenceGenerator::GetCommandSequence(PicNew8BitCommand command,
-                                                           uint16_t payload) const {
+                                                           uint32_t payload) const {
   Datastring result;
-  result += GenerateBitSequenceMsbUpDown(static_cast<uint32_t>(command), 8);
-  result += GenerateBitSequenceMsbUpDown(0, 9);
-  result += GenerateBitSequenceMsbUpDown(payload, 14);
-  result += GenerateBitSequenceMsbUpDown(0, 1);
+  result += GenerateBitSequenceMsbUpDown(static_cast<uint32_t>(command), 8, PGM);
+  result += GenerateBitSequenceMsbUpDown(0, 1, PGM);
+  result += GenerateBitSequenceMsbUpDown(payload, 22, PGM);
+  result += GenerateBitSequenceMsbUpDown(0, 1, PGM);
   return result;
 }
 
 Datastring PicNew8BitSequenceGenerator::GetCommandSequence(PicNew8BitCommand command) const {
   Datastring result;
-  result += GenerateBitSequenceMsbUpDown(static_cast<uint32_t>(command), 8);
+  result += GenerateBitSequenceMsbUpDown(static_cast<uint32_t>(command), 8, PGM);
   return result;
 }
 
@@ -246,7 +255,7 @@ std::vector<TimedStep> PicNew8BitSequenceGenerator::GetTimedSequence(
     TimedSequenceType type, const DeviceInfo *device_info) const {
   switch (type) {
     case INIT_SEQUENCE:
-      return GenerateInitSequence();
+      return GenerateInitSequence(false);
     case CHIP_ERASE_SEQUENCE: {
       std::vector<TimedStep> result;
       result.push_back(
@@ -264,6 +273,9 @@ std::vector<TimedStep> PicNew8BitSequenceGenerator::GetTimedSequence(
     case WRITE_SEQUENCE:
       return {TimedStep{GetCommandSequence(PicNew8BitCommand::BEGIN_PROGRAMMING_INT_TIMED),
                         device_info->block_write_timing}};
+    case CONFIG_WRITE_SEQUENCE:
+      return {TimedStep{GetCommandSequence(PicNew8BitCommand::BEGIN_PROGRAMMING_INT_TIMED),
+                        device_info->config_write_timing}};
     default:
       FATAL("Requested unimplemented sequence %d\n", type);
   }

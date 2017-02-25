@@ -209,6 +209,9 @@ Status DeviceDb::Load(const std::string &name) {
       } else if (key == "block_write_timing") {
         RETURN_IF_ERROR_WITH_APPEND(DurationValue(value, &last_info.block_write_timing),
                                     strings::Cat(" in device database at line ", i + 1));
+      } else if (key == "config_write_timing") {
+        RETURN_IF_ERROR_WITH_APPEND(DurationValue(value, &last_info.config_write_timing),
+                                    strings::Cat(" in device database at line ", i + 1));
       } else if (key == "missing_locations") {
         std::vector<std::string> sequence = strings::Split<std::string>(value, ' ', false);
         for (const auto &single_value : sequence) {

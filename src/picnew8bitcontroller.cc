@@ -56,7 +56,7 @@ Status PicNew8BitController::Write(Section section, uint32_t address, const Data
       PrintProgress(write_count, data.size());
       RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::LOAD_DATA_INC, data[write_count]));
       RETURN_IF_ERROR(
-          WriteTimedSequence(PicNew8BitSequenceGenerator::WRITE_SEQUENCE, &device_info));
+          WriteTimedSequence(PicNew8BitSequenceGenerator::CONFIG_WRITE_SEQUENCE, &device_info));
     }
     return Status::OK;
   }
@@ -86,7 +86,10 @@ Status PicNew8BitController::Write(Section section, uint32_t address, const Data
       datum |= data[write_count + step];
       RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::LOAD_DATA_INC, datum));
     }
-    RETURN_IF_ERROR(WriteTimedSequence(PicNew8BitSequenceGenerator::WRITE_SEQUENCE, &device_info));
+    RETURN_IF_ERROR(WriteTimedSequence(section == FLASH
+                                           ? PicNew8BitSequenceGenerator::WRITE_SEQUENCE
+                                           : PicNew8BitSequenceGenerator::CONFIG_WRITE_SEQUENCE,
+                                       &device_info));
   }
   return Status::OK;
 }
@@ -99,7 +102,7 @@ Status PicNew8BitController::SectionErase(Section, const DeviceInfo &) {
   return Status(UNIMPLEMENTED, "Section erase not implemented");
 }
 
-Status PicNew8BitController::WriteCommand(PicNew8BitCommand command, uint16_t payload) {
+Status PicNew8BitController::WriteCommand(PicNew8BitCommand command, uint32_t payload) {
   return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command, payload));
 }
 
@@ -107,7 +110,7 @@ Status PicNew8BitController::ReadWithCommand(PicNew8BitCommand command, uint32_t
                                              Datastring16 *result) {
   result->clear();
   RETURN_IF_ERROR(driver_->ReadWithSequence(sequence_generator_->GetCommandSequence(command, 0),
-                                            {12}, 8, count, result, /* lsb_first = */ false));
+                                            {15}, 16, count, result, /* lsb_first = */ false));
   return Status::OK;
 }
 

@@ -7,15 +7,8 @@ config_size = 12
 config_address = 300000h
 eeprom_size = 256
 eeprom_address = 310000h
-
-# Unchecked values!
 write_block_size = 64
-chip_erase_sequence = 0f8fh
-user_id_erase_sequence = 0088h
-eeprom_erase_sequence = 0084h
-config_erase_sequence = 0082h
-flash_erase_sequence = 0081h 0180h 0280h 0480h 0880h
-bulk_erase_timing = 16ms
-missing_locations = 300004h 300007h
-
+bulk_erase_timing = 26ms
+block_write_timing = 3ms
+config_write_timing = 6ms
 

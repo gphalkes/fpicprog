@@ -48,7 +48,7 @@ class PicNew8BitController : public Controller {
   Status SectionErase(Section section, const DeviceInfo &device_info) override;
 
  protected:
-  Status WriteCommand(PicNew8BitCommand command, uint16_t payload);
+  Status WriteCommand(PicNew8BitCommand command, uint32_t payload);
   Status ReadWithCommand(PicNew8BitCommand command, uint32_t count, Datastring16 *result);
   Status WriteTimedSequence(PicNew8BitSequenceGenerator::TimedSequenceType type,
                             const DeviceInfo *device_info);

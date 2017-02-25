@@ -32,10 +32,13 @@ class PicSequenceGenerator {
   virtual ~PicSequenceGenerator() = default;
 
  protected:
-  std::vector<TimedStep> GenerateInitSequence() const;
-  Datastring GenerateBitSequenceLsbUpDown(uint32_t data, int bits) const;
-  Datastring GenerateBitSequenceMsbUpDown(uint32_t data, int bits) const;
-  Datastring GenerateBitSequenceLsbDownUp(uint32_t data, int bits) const;
+  std::vector<TimedStep> GenerateInitSequence(bool down_up = true) const;
+  Datastring GenerateBitSequenceLsbUpDown(uint32_t data, int bits,
+                                          uint8_t base = nMCLR | PGM) const;
+  Datastring GenerateBitSequenceMsbUpDown(uint32_t data, int bits,
+                                          uint8_t base = nMCLR | PGM) const;
+  Datastring GenerateBitSequenceLsbDownUp(uint32_t data, int bits,
+                                          uint8_t base = nMCLR | PGM) const;
   Datastring GenerateBitSequenceMsbDownUp(uint32_t data, int bits,
                                           uint8_t base = nMCLR | PGM) const;
 };
@@ -81,9 +84,10 @@ class PicNew8BitSequenceGenerator : public PicSequenceGenerator {
     INIT_SEQUENCE,
     CHIP_ERASE_SEQUENCE,
     WRITE_SEQUENCE,
+    CONFIG_WRITE_SEQUENCE,
   };
 
-  Datastring GetCommandSequence(PicNew8BitCommand command, uint16_t payload) const;
+  Datastring GetCommandSequence(PicNew8BitCommand command, uint32_t payload) const;
   Datastring GetCommandSequence(PicNew8BitCommand command) const;
   std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
                                           const DeviceInfo *device_info) const;

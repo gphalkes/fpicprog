@@ -133,6 +133,11 @@ Status FtdiSbDriver::FlushOutput() {
     // We use the maximum value of 128 bytes here. This does lose sync more often than when using
     // the smaller size of 64, but it increases read speed nonetheless.
     int size = std::min<int>(128, output_buffer_.size());
+    if (will_print(10)) {
+      for (int i = 0; i < size; ++i) {
+        print_msg(10, "%s ", HexByte(output_buffer_[i]).c_str());
+      }
+    }
     if (ftdi_write_data(&ftdic_, const_cast<uint8_t *>(output_buffer_.data()), size) != size) {
       return Status(Code::USB_WRITE_ERROR,
                     strings::Cat("Write failed: ", ftdi_get_error_string(&ftdic_)));

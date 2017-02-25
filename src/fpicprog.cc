@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     std::unique_ptr<PicNew8BitSequenceGenerator> sequence_generator(
         new PicNew8BitSequenceGenerator);
     controller.reset(new PicNew8BitController(std::move(driver), std::move(sequence_generator),
-                                              PicNew8BitController::PIC16NEW));
+                                              PicNew8BitController::PIC18NEW));
     device_db = std::make_unique<DeviceDb>(1, 1, Datastring{0xff},
                                            [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic10" || FLAGS_family == "pic12" || FLAGS_family == "pic16") {

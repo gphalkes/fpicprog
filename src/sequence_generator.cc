@@ -226,8 +226,8 @@ std::vector<TimedStep> Pic16SequenceGenerator::TimedSequenceFromDatastring16(
 
 //==================================================================================================
 
-Datastring Pic16NewSequenceGenerator::GetCommandSequence(Pic16NewCommand command,
-                                                         uint16_t payload) const {
+Datastring PicNew8BitSequenceGenerator::GetCommandSequence(PicNew8BitCommand command,
+                                                           uint16_t payload) const {
   Datastring result;
   result += GenerateBitSequenceMsbUpDown(static_cast<uint32_t>(command), 8);
   result += GenerateBitSequenceMsbUpDown(0, 9);
@@ -236,29 +236,33 @@ Datastring Pic16NewSequenceGenerator::GetCommandSequence(Pic16NewCommand command
   return result;
 }
 
-Datastring Pic16NewSequenceGenerator::GetCommandSequence(Pic16NewCommand command) const {
+Datastring PicNew8BitSequenceGenerator::GetCommandSequence(PicNew8BitCommand command) const {
   Datastring result;
   result += GenerateBitSequenceMsbUpDown(static_cast<uint32_t>(command), 8);
   return result;
 }
 
-std::vector<TimedStep> Pic16NewSequenceGenerator::GetTimedSequence(
+std::vector<TimedStep> PicNew8BitSequenceGenerator::GetTimedSequence(
     TimedSequenceType type, const DeviceInfo *device_info) const {
   switch (type) {
     case INIT_SEQUENCE:
       return GenerateInitSequence();
-    case CHIP_ERASE_SEQUENCE:
-      // FIXME: the second step is only necessary if the device has EEPROM memory.
-      return {
-          TimedStep{GetCommandSequence(Pic16NewCommand::LOAD_PC, 0x8000) +
-                        GetCommandSequence(Pic16NewCommand::BULK_ERASE),
-                    device_info->bulk_erase_timing},
-          TimedStep{GetCommandSequence(Pic16NewCommand::LOAD_PC, 0xF000) +
-                        GetCommandSequence(Pic16NewCommand::BULK_ERASE),
-                    device_info->bulk_erase_timing},
-      };
+    case CHIP_ERASE_SEQUENCE: {
+      std::vector<TimedStep> result;
+      result.push_back(
+          TimedStep{GetCommandSequence(PicNew8BitCommand::LOAD_PC, device_info->config_address) +
+                        GetCommandSequence(PicNew8BitCommand::BULK_ERASE),
+                    device_info->bulk_erase_timing});
+      if (device_info->eeprom_address != 0) {
+        result.push_back(
+            TimedStep{GetCommandSequence(PicNew8BitCommand::LOAD_PC, device_info->eeprom_address) +
+                          GetCommandSequence(PicNew8BitCommand::BULK_ERASE),
+                      device_info->bulk_erase_timing});
+      }
+      return result;
+    }
     case WRITE_SEQUENCE:
-      return {TimedStep{GetCommandSequence(Pic16NewCommand::BEGIN_PROGRAMMING_INT_TIMED),
+      return {TimedStep{GetCommandSequence(PicNew8BitCommand::BEGIN_PROGRAMMING_INT_TIMED),
                         device_info->block_write_timing}};
     default:
       FATAL("Requested unimplemented sequence %d\n", type);

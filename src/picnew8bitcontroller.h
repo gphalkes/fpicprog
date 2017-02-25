@@ -11,8 +11,8 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef PIC16ENHANCEDCONTROLLER_H_
-#define PIC16ENHANCEDCONTROLLER_H_
+#ifndef PICNEW8BITCONTROLLER_H_
+#define PICNEW8BITCONTROLLER_H_
 
 #include <map>
 #include <memory>
@@ -23,11 +23,19 @@
 #include "driver.h"
 #include "program.h"
 
-class Pic16NewController : public Controller {
+class PicNew8BitController : public Controller {
  public:
-  Pic16NewController(std::unique_ptr<Driver> driver,
-                     std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator)
-      : driver_(std::move(driver)), sequence_generator_(std::move(sequence_generator)) {}
+  enum DeviceType {
+    PIC16NEW,
+    PIC18NEW,
+  };
+
+  PicNew8BitController(std::unique_ptr<Driver> driver,
+                       std::unique_ptr<PicNew8BitSequenceGenerator> sequence_generator,
+                       DeviceType device_type)
+      : driver_(std::move(driver)),
+        sequence_generator_(std::move(sequence_generator)),
+        device_type_(device_type) {}
 
   Status Open() override;
   void Close() override;
@@ -40,14 +48,16 @@ class Pic16NewController : public Controller {
   Status SectionErase(Section section, const DeviceInfo &device_info) override;
 
  protected:
-  Status WriteCommand(Pic16NewCommand command, uint16_t payload);
-  Status ReadWithCommand(Pic16NewCommand command, uint32_t count, Datastring16 *result);
-  Status WriteTimedSequence(Pic16NewSequenceGenerator::TimedSequenceType type,
+  Status WriteCommand(PicNew8BitCommand command, uint16_t payload);
+  Status ReadWithCommand(PicNew8BitCommand command, uint32_t count, Datastring16 *result);
+  Status WriteTimedSequence(PicNew8BitSequenceGenerator::TimedSequenceType type,
                             const DeviceInfo *device_info);
 
  private:
   std::unique_ptr<Driver> driver_;
-  std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator_;
+  std::unique_ptr<PicNew8BitSequenceGenerator> sequence_generator_;
+
+  DeviceType device_type_;
 };
 
 #endif

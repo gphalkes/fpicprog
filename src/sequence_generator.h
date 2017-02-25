@@ -75,7 +75,7 @@ class Pic16SequenceGenerator : public PicSequenceGenerator {
                                                        Duration timing) const;
 };
 
-class Pic16NewSequenceGenerator : public PicSequenceGenerator {
+class PicNew8BitSequenceGenerator : public PicSequenceGenerator {
  public:
   enum TimedSequenceType {
     INIT_SEQUENCE,
@@ -83,8 +83,8 @@ class Pic16NewSequenceGenerator : public PicSequenceGenerator {
     WRITE_SEQUENCE,
   };
 
-  Datastring GetCommandSequence(Pic16NewCommand command, uint16_t payload) const;
-  Datastring GetCommandSequence(Pic16NewCommand command) const;
+  Datastring GetCommandSequence(PicNew8BitCommand command, uint16_t payload) const;
+  Datastring GetCommandSequence(PicNew8BitCommand command) const;
   std::vector<TimedStep> GetTimedSequence(TimedSequenceType type,
                                           const DeviceInfo *device_info) const;
 };

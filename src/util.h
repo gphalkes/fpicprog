@@ -20,6 +20,7 @@
 #include <functional>
 #include <set>
 #include <type_traits>
+#include <vector>
 
 typedef std::basic_string<uint8_t> Datastring;
 typedef std::basic_string<uint16_t> Datastring16;
@@ -48,7 +49,7 @@ enum class Pic16Command {
   INCREMENT_ADDRESS = 6,
 };
 
-enum class Pic16NewCommand {
+enum class PicNew8BitCommand {
   LOAD_PC = 0x80,
   BULK_ERASE = 0x18,
   ROW_ERASE = 0xf0,

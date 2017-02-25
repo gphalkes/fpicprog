@@ -22,9 +22,9 @@
 #include "driver.h"
 #include "high_level_controller.h"
 #include "pic16controller.h"
-#include "pic16newcontroller.h"
 #include "pic18controller.h"
 #include "pic24controller.h"
+#include "picnew8bitcontroller.h"
 #include "program.h"
 #include "sequence_generator.h"
 #include "status.h"
@@ -121,6 +121,13 @@ int main(int argc, char **argv) {
     controller.reset(new Pic18Controller(std::move(driver), std::move(sequence_generator)));
     device_db = std::make_unique<DeviceDb>(1, 1, Datastring{0xff},
                                            [](const Datastring16 &) { return Status::OK; });
+  } else if (FLAGS_family == "pic18-new") {
+    std::unique_ptr<PicNew8BitSequenceGenerator> sequence_generator(
+        new PicNew8BitSequenceGenerator);
+    controller.reset(new PicNew8BitController(std::move(driver), std::move(sequence_generator),
+                                              PicNew8BitController::PIC16NEW));
+    device_db = std::make_unique<DeviceDb>(1, 1, Datastring{0xff},
+                                           [](const Datastring16 &) { return Status::OK; });
   } else if (FLAGS_family == "pic10" || FLAGS_family == "pic12" || FLAGS_family == "pic16") {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
     controller.reset(new Pic16MidrangeController(std::move(driver), std::move(sequence_generator)));
@@ -139,8 +146,10 @@ int main(int argc, char **argv) {
                                      return Pic16SequenceGenerator::ValidateSequence(sequence);
                                    });
   } else if (FLAGS_family == "pic16-new") {
-    std::unique_ptr<Pic16NewSequenceGenerator> sequence_generator(new Pic16NewSequenceGenerator);
-    controller.reset(new Pic16NewController(std::move(driver), std::move(sequence_generator)));
+    std::unique_ptr<PicNew8BitSequenceGenerator> sequence_generator(
+        new PicNew8BitSequenceGenerator);
+    controller.reset(new PicNew8BitController(std::move(driver), std::move(sequence_generator),
+                                              PicNew8BitController::PIC16NEW));
     device_db =
         std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f},
                                    [](const Datastring16 &sequence) {

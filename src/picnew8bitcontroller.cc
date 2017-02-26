@@ -27,18 +27,19 @@ Status PicNew8BitController::Read(Section section, uint32_t start_address, uint3
   if (device_type_ == PIC16NEW) {
     pc /= 2;
   }
-
+  print_msg(3, "Reading data from %06X to %06X in section %d\n", start_address, end_address,
+            section);
   RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::LOAD_PC, pc));
   Datastring16 words;
   if (device_type_ == PIC18NEW && section == EEPROM) {
     RETURN_IF_ERROR(
-        ReadWithCommand(PicNew8BitCommand::READ_DATA_INC, start_address - end_address, &words));
+        ReadWithCommand(PicNew8BitCommand::READ_DATA_INC, end_address - start_address, &words));
     for (uint16_t word : words) {
       result->push_back(word & 0xff);
     }
   } else {
     RETURN_IF_ERROR(ReadWithCommand(PicNew8BitCommand::READ_DATA_INC,
-                                    (start_address - end_address) / 2, &words));
+                                    (end_address - start_address) / 2, &words));
     for (uint16_t word : words) {
       result->push_back(word & 0xff);
       result->push_back(word >> 8);
@@ -54,9 +55,10 @@ Status PicNew8BitController::Write(Section section, uint32_t address, const Data
     RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::LOAD_PC, address));
     for (size_t write_count = 0; write_count < data.size(); ++write_count) {
       PrintProgress(write_count, data.size());
-      RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::LOAD_DATA_INC, data[write_count]));
+      RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::LOAD_DATA, data[write_count]));
       RETURN_IF_ERROR(
           WriteTimedSequence(PicNew8BitSequenceGenerator::CONFIG_WRITE_SEQUENCE, &device_info));
+      RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::INCREMENT_ADDRESS));
     }
     return Status::OK;
   }
@@ -84,12 +86,15 @@ Status PicNew8BitController::Write(Section section, uint32_t address, const Data
       uint16_t datum = data[write_count + step + 1];
       datum <<= 8;
       datum |= data[write_count + step];
-      RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::LOAD_DATA_INC, datum));
+      RETURN_IF_ERROR(WriteCommand(
+          step == block_size - 2 ? PicNew8BitCommand::LOAD_DATA : PicNew8BitCommand::LOAD_DATA_INC,
+          datum));
     }
     RETURN_IF_ERROR(WriteTimedSequence(section == FLASH
                                            ? PicNew8BitSequenceGenerator::WRITE_SEQUENCE
                                            : PicNew8BitSequenceGenerator::CONFIG_WRITE_SEQUENCE,
                                        &device_info));
+    RETURN_IF_ERROR(WriteCommand(PicNew8BitCommand::INCREMENT_ADDRESS));
   }
   return Status::OK;
 }
@@ -100,6 +105,10 @@ Status PicNew8BitController::ChipErase(const DeviceInfo &device_info) {
 
 Status PicNew8BitController::SectionErase(Section, const DeviceInfo &) {
   return Status(UNIMPLEMENTED, "Section erase not implemented");
+}
+
+Status PicNew8BitController::WriteCommand(PicNew8BitCommand command) {
+  return driver_->WriteDatastring(sequence_generator_->GetCommandSequence(command));
 }
 
 Status PicNew8BitController::WriteCommand(PicNew8BitCommand command, uint32_t payload) {

@@ -305,8 +305,7 @@ Status HighLevelController::ReadData(Section section, Datastring *data, uint32_t
     fflush(stderr);
   });
   data->reserve(target_size);
-  print_msg(2, "Starting read at address %06X to read %06X bytes\n",
-            (uint32_t)(base_address + data->size()), target_size);
+  print_msg(2, "Starting read at address %06X to read %06X bytes\n", base_address, target_size);
   while (data->size() < target_size) {
     print_msg(1, "\r%.0f%%", 100.0 * data->size() / target_size);
     fflush(stderr);

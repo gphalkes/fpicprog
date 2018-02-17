@@ -20,6 +20,15 @@ pins of the FT232 chip to drive a high voltage, and thereby also use fpicprog
 for High-Voltage programming, but this requires extra circuitry which is not
 described in this document.
 
+Supported chips
+===============
+
+fpicprog supports chips in the following families: PIC10, PIC12, PIC16, PIC18
+and PIC24. Most chips supporting Low-Voltage Programming from these families
+can simply be added to the device database by copying the relevant parameters
+from the datasheet. See the documentation in man/fpicprod-devlist.5.txt and the
+device_db folder for more details.
+
 Compiling fpicprog
 ==================
 

@@ -49,6 +49,8 @@ VCC using a pull-up resistor. You may also want to add capacitors between the
 VDD and VSS pins as recommended by Microchip, although I have been able to
 reliably program chips without any of these additional components.
 
-An example of wiring up a PIC18F45K50 is in the picture below.
+An example of wiring up a PIC18F45K50 is in the picture below. Note that the
+order of the pins on the USB-to-serial converter is model dependent, so you will
+have to check your specific board for the exact pin layout.
 
 ![Example](https://github.com/gphalkes/fpicprog/raw/master/example.jpg)

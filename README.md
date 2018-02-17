@@ -51,4 +51,4 @@ reliably program chips without any of these additional components.
 
 An example of wiring up a PIC18F45K50 is in the picture below.
 
-[[https://github.com/gphalkes/fpicprog/blob/master/img/example.jpg|alt=example]]
+![Example](https://github.com/gphalkes/fpicprog/raw/master/example.jpg)

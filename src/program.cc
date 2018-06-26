@@ -23,15 +23,15 @@ DEFINE_int32(ihex_bytes_per_line, 16, "Number of bytes to write per line in an I
 
 class IHexChecksum {
  public:
-  IHexChecksum &operator<<(int data) {
+  IHexChecksum &operator<<(unsigned data) {
     checksum_ += data & 0xff;
     return *this;
   }
 
-  int Get() { return (-checksum_) & 0xff; }
+  unsigned Get() { return (-checksum_) & 0xff; }
 
  private:
-  int32_t checksum_ = 0;
+  unsigned checksum_ = 0;
 };
 
 static Status ReadAsciiByte(int line_number, FILE *in, uint8_t *byte) {

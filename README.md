@@ -13,6 +13,8 @@ internet, often costing no more than a handful of dollars. These are typically
 not in a housing, but instead provide a circuit board with a USB connector on
 one end and a bare PCB header on the other. These are easily used with a
 breadboard to connect the PCB header to the appropriate pins of the PIC chip.
+Make sure however, that the converter uses the appropriate voltage for your
+PIC chip. There are versions at 5V and at 3.3V.
 
 Note that fpicprog is designed to work with chips which provide Low-Voltage
 Programming, or Single-Supply programming. It is possible to use one of the

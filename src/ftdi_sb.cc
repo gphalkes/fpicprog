@@ -129,6 +129,7 @@ Status FtdiSbDriver::SetPins(uint8_t pins) {
 
 Status FtdiSbDriver::FlushOutput() {
   Status status;
+  int drain_size = 0;
   while (!output_buffer_.empty()) {
     // We use the maximum value of 128 bytes here. This does lose sync more often than when using
     // the smaller size of 64, but it increases read speed nonetheless.
@@ -143,7 +144,14 @@ Status FtdiSbDriver::FlushOutput() {
                     strings::Cat("Write failed: ", ftdi_get_error_string(&ftdic_)));
     }
     output_buffer_.erase(0, size);
-    status.Update(DrainInput(size));
+    drain_size += size;
+    if (drain_size > 128) {
+      status.Update(DrainInput(drain_size));
+      drain_size = 0;
+    }
+  }
+  if (drain_size > 0) {
+    status.Update(DrainInput(drain_size));
   }
   return status;
 }
@@ -209,7 +217,7 @@ uint8_t FtdiSbDriver::PinNameToValue(const std::string &name) {
 }
 
 Status FtdiSbDriver::DrainInput(int expected_size) {
-  uint8_t buffer[128];
+  uint8_t buffer[256];
   int total_bytes_read = 0;
   int bytes_read;
   int retries = 0;

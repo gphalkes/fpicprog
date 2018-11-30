@@ -76,7 +76,12 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
   if (data.size() % block_size) {
     return Status(Code::INVALID_ARGUMENT,
                   strings::Cat("Data must be a multiple of the block size (", data.size(), " / ",
-                               device_info.write_block_size, ")"));
+                               block_size, ")"));
+  }
+  if (address % block_size != 0) {
+    return Status(Code::INVALID_ARGUMENT,
+                  strings::Cat("Write address must be a multiple of the block size (", address,
+                               " / ", block_size, ")"));
   }
   if (section == FLASH || section == USER_ID) {
     if (block_size % 2 != 0 || block_size < 2) {

@@ -14,7 +14,7 @@
 #ifndef FTDI_SB_H_
 #define FTDI_SB_H_
 
-#include <ftdi.h>
+#include <libftdi1/ftdi.h>
 
 #include "driver.h"
 

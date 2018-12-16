@@ -75,6 +75,7 @@ Status FtdiSbDriver::Open() {
     return Status(INIT_FAILED,
                   strings::Cat("Couldn't set bitbang mode: ", ftdi_get_error_string(&ftdic_)));
   }
+  ftdi_set_latency_timer(&ftdic_, 1);
   open_ = true;
   return Status::OK;
 }
@@ -129,7 +130,8 @@ Status FtdiSbDriver::SetPins(uint8_t pins) {
 
 Status FtdiSbDriver::FlushOutput() {
   Status status;
-  int drain_size = -256;
+  static constexpr int kDrainLag = 256;
+  int drain_size = -kDrainLag;
   while (!output_buffer_.empty()) {
     // We use the maximum value of 128 bytes here. This does lose sync more often than when using
     // the smaller size of 64, but it increases read speed nonetheless.
@@ -150,7 +152,7 @@ Status FtdiSbDriver::FlushOutput() {
       drain_size = 0;
     }
   }
-  drain_size += 256;
+  drain_size += kDrainLag;
   if (drain_size > 0) {
     status.Update(DrainInput(drain_size));
   }

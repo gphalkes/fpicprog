@@ -131,6 +131,8 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
       RETURN_IF_ERROR(LoadEepromAddress(address));
       // MOVLW <data>
       RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x0E00 | byte));
+      // MOVWF EEDATA
+      RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x6EA8));
       // BSF EECON1, WREN
       RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x84A6));
       // BSF EECON1, WREN
@@ -142,8 +144,8 @@ Status Pic18Controller::Write(Section section, uint32_t address, const Datastrin
 
       Datastring value;
       do {
-        // MOVF EEDATA, W, 0
-        RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x50A8));
+        // MOVF EECON1, W, 0
+        RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x50A6));
         // MOVWF TABLAT
         RETURN_IF_ERROR(WriteCommand(Pic18Command::CORE_INST, 0x6EF5));
         // NOP

@@ -144,4 +144,6 @@ void PrintProgress(size_t done, size_t total);
 
 std::string Dirname(const std::string &str);
 
+std::vector<Section> ParseSections(const std::string &sections_str);
+
 #endif

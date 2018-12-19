@@ -27,7 +27,8 @@ DEFINE_string(family, "",
 DEFINE_string(device, "", "Name of the device to write a test program for.");
 
 DEFINE_string(output, "", "File to write the Intel HEX data to.");
-DEFINE_string(device_db, "", "Device DB file to load. Defaults to "
+DEFINE_string(device_db, "",
+              "Device DB file to load. Defaults to "
 #if defined(DEVICE_DB_PATH)
               DEVICE_DB_PATH "/<family>.lst.");
 #else
@@ -37,8 +38,13 @@ DEFINE_string(device_db, "", "Device DB file to load. Defaults to "
 DEFINE_string(config_data, "",
               "Configuration data to write into the program. This can not be auto-generated "
               "because setting the wrong bits may turn on code protection etc.");
+DEFINE_string(sections, "",
+              "Comma separate list of sections to operate on. Possible values: either all "
+              "or a combination of flash, user-id, config, eeprom.");
 
-// FIXME: add test data for User ID and allow to specify data for config words.
+static bool HasSection(const std::vector<Section> &sections, Section section) {
+  return std::find(sections.begin(), sections.end(), section) != sections.end();
+}
 
 int main(int argc, char *argv[]) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -46,6 +52,8 @@ int main(int argc, char *argv[]) {
   if (FLAGS_device.empty()) {
     fatal("--device must be specified.\n");
   }
+
+  std::vector<Section> sections = ParseSections(FLAGS_sections);
 
   std::unique_ptr<DeviceDb> device_db;
   if (FLAGS_family.empty()) {
@@ -87,27 +95,29 @@ int main(int argc, char *argv[]) {
   // Get the block filler to use as a bitmask for the programming data.
   Datastring block_filler = device_db->GetBlockFillter();
 
-  Datastring program_memory_data(device_info.program_memory_size, 0);
-  for (uint32_t i = 0; i < device_info.program_memory_size; ++i) {
-    program_memory_data[i] = i & block_filler[i % block_filler.size()];
+  if (HasSection(sections, FLASH)) {
+    Datastring program_memory_data(device_info.program_memory_size, 0);
+    for (uint32_t i = 0; i < device_info.program_memory_size; ++i) {
+      program_memory_data[i] = i & block_filler[i % block_filler.size()];
+    }
+    test_program[0] = std::move(program_memory_data);
   }
-  test_program[0] = std::move(program_memory_data);
 
-  if (device_info.user_id_size > 0) {
+  if (HasSection(sections, USER_ID) && device_info.user_id_size > 0) {
     Datastring user_id_data(device_info.user_id_size, 0);
     for (uint32_t i = 0; i < device_info.user_id_size; ++i) {
       user_id_data[i] = i & block_filler[i % block_filler.size()];
     }
     test_program[device_info.user_id_address] = std::move(user_id_data);
   }
-  if (device_info.eeprom_size > 0) {
+  if (HasSection(sections, EEPROM) && device_info.eeprom_size > 0) {
     Datastring eeprom_memory_data(device_info.eeprom_size * device_db->GetBlockSizeMultiple(), 0);
     for (uint32_t i = 0; i < device_info.eeprom_size; ++i) {
       eeprom_memory_data[i * device_db->GetBlockSizeMultiple()] = i;
     }
     test_program[device_info.eeprom_address] = std::move(eeprom_memory_data);
   }
-  if (!FLAGS_config_data.empty()) {
+  if (HasSection(sections, CONFIGURATION) && !FLAGS_config_data.empty()) {
     if (FLAGS_config_data.size() % (2 * device_db->GetBlockSizeMultiple())) {
       fatal("--config_data has wrong size (must be mutiple of %d bytes)\n",
             device_db->GetBlockSizeMultiple());

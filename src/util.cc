@@ -26,6 +26,8 @@
 #include <thread>
 #endif
 
+#include "strings.h"
+
 DEFINE_int32(verbosity, 1, "Verbosity level. 0 for no output, higher number for more output.");
 
 void fatal(const char *fmt, ...) {
@@ -151,4 +153,31 @@ std::string Dirname(const std::string &str) {
   std::vector<char> buffer(str.begin(), str.end());
   return dirname(buffer.data());
 #endif
+}
+
+std::vector<Section> ParseSections(const std::string &sections_str) {
+  std::vector<Section> sections;
+  if (sections_str == "all" || sections_str.empty()) {
+    return {FLASH, USER_ID, CONFIGURATION, EEPROM};
+  }
+
+  auto section_names = strings::Split<std::string>(sections_str, ',', false);
+  for (const auto &section_name : section_names) {
+    Section section;
+    if (section_name == "flash") {
+      section = FLASH;
+    } else if (section_name == "user-id") {
+      section = USER_ID;
+    } else if (section_name == "config") {
+      section = CONFIGURATION;
+    } else if (section_name == "eeprom") {
+      section = EEPROM;
+    } else {
+      fatal("Unknown section name %s.\n", section_name.c_str());
+    }
+    if (std::find(sections.begin(), sections.end(), section) == sections.end()) {
+      sections.push_back(section);
+    }
+  }
+  return sections;
 }

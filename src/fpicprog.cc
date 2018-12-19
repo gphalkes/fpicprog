@@ -49,39 +49,13 @@ DEFINE_string(device, "",
 DEFINE_string(output, "", "File to write the Intel HEX data to (--action=dump-program).");
 DEFINE_string(input, "", "Intel HEX file to read and program. (--action=write-program)");
 DEFINE_string(erase_mode, "chip", "Erase mode for writing. One of chip, section, none.");
-DEFINE_string(device_db, "", "Device DB file to load. Defaults to "
+DEFINE_string(device_db, "",
+              "Device DB file to load. Defaults to "
 #if defined(DEVICE_DB_PATH)
               DEVICE_DB_PATH "/<family>.lst.");
 #else
               "<path to binary>/device_db/<family>.lst.");
 #endif
-
-static std::vector<Section> ParseSections() {
-  std::vector<Section> sections;
-  if (FLAGS_sections == "all" || FLAGS_sections.empty()) {
-    return {FLASH, USER_ID, CONFIGURATION, EEPROM};
-  }
-
-  auto section_names = strings::Split<std::string>(FLAGS_sections, ',', false);
-  for (const auto &section_name : section_names) {
-    Section section;
-    if (section_name == "flash") {
-      section = FLASH;
-    } else if (section_name == "user-id") {
-      section = USER_ID;
-    } else if (section_name == "config") {
-      section = CONFIGURATION;
-    } else if (section_name == "eeprom") {
-      section = EEPROM;
-    } else {
-      fatal("Unknown section name %s.\n", section_name.c_str());
-    }
-    if (std::find(sections.begin(), sections.end(), section) == sections.end()) {
-      sections.push_back(section);
-    }
-  }
-  return sections;
-}
 
 static EraseMode ParseEraseMode() {
   if (FLAGS_erase_mode == "chip") {
@@ -132,29 +106,26 @@ int main(int argc, char **argv) {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
     controller.reset(new Pic16MidrangeController(std::move(driver), std::move(sequence_generator)));
     device_db =
-        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f},
-                                   [](const Datastring16 &sequence) {
-                                     return Pic16SequenceGenerator::ValidateSequence(sequence);
-                                   });
+        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f}, [](const Datastring16 &sequence) {
+          return Pic16SequenceGenerator::ValidateSequence(sequence);
+        });
   } else if (FLAGS_family == "pic10-small" || FLAGS_family == "pic12-small" ||
              FLAGS_family == "pic16-small") {
     std::unique_ptr<Pic16SequenceGenerator> sequence_generator(new Pic16SequenceGenerator);
     controller.reset(new Pic16BaselineController(std::move(driver), std::move(sequence_generator)));
     device_db =
-        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x0f},
-                                   [](const Datastring16 &sequence) {
-                                     return Pic16SequenceGenerator::ValidateSequence(sequence);
-                                   });
+        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x0f}, [](const Datastring16 &sequence) {
+          return Pic16SequenceGenerator::ValidateSequence(sequence);
+        });
   } else if (FLAGS_family == "pic16-new") {
     std::unique_ptr<PicNew8BitSequenceGenerator> sequence_generator(
         new PicNew8BitSequenceGenerator);
     controller.reset(new PicNew8BitController(std::move(driver), std::move(sequence_generator),
                                               PicNew8BitController::PIC16NEW));
     device_db =
-        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f},
-                                   [](const Datastring16 &sequence) {
-                                     return Pic16SequenceGenerator::ValidateSequence(sequence);
-                                   });
+        std::make_unique<DeviceDb>(2, 2, Datastring{0xff, 0x3f}, [](const Datastring16 &sequence) {
+          return Pic16SequenceGenerator::ValidateSequence(sequence);
+        });
   } else if (FLAGS_family == "pic24") {
     std::unique_ptr<Pic24SequenceGenerator> sequence_generator(new Pic24SequenceGenerator);
     controller.reset(new Pic24Controller(std::move(driver), std::move(sequence_generator)));
@@ -185,11 +156,11 @@ int main(int argc, char **argv) {
     } else if (FLAGS_sections == "all") {
       CHECK_OK(high_level_controller.ChipErase());
     } else {
-      CHECK_OK(high_level_controller.SectionErase(ParseSections()));
+      CHECK_OK(high_level_controller.SectionErase(ParseSections(FLAGS_sections)));
     }
   } else if (FLAGS_action == "dump-program") {
     Program program;
-    CHECK_OK(high_level_controller.ReadProgram(ParseSections(), &program));
+    CHECK_OK(high_level_controller.ReadProgram(ParseSections(FLAGS_sections), &program));
     FILE *out = fopen(FLAGS_output.c_str(), "w+b");
     if (!out) {
       fatal("Could not open file '%s': %s\n", FLAGS_output.c_str(), strerror(errno));
@@ -206,7 +177,8 @@ int main(int argc, char **argv) {
       fatal("Could not open file '%s': %s\n", FLAGS_input.c_str(), strerror(errno));
     }
     CHECK_OK(ReadIhex(&program, in));
-    CHECK_OK(high_level_controller.WriteProgram(ParseSections(), program, ParseEraseMode()));
+    CHECK_OK(high_level_controller.WriteProgram(ParseSections(FLAGS_sections), program,
+                                                ParseEraseMode()));
   } else if (FLAGS_action == "identify") {
     CHECK_OK(high_level_controller.Identify());
   } else {

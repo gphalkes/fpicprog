@@ -45,10 +45,10 @@ Status FtdiSbDriver::Open() {
     return Status(Code::INIT_FAILED,
                   strings::Cat("Couldn't open FTDI device: ", ftdi_get_error_string(&ftdic_)));
   }
-  // Setting this to higher values than 100'000 does not seem to yield faster data transfers. This
+  // Setting this to higher values than 1000'000 does not seem to yield faster data transfers. This
   // is probably due to the round-tripping that has to be done for the reads, and the limited size
   // of the receive buffer.
-  if (ftdi_set_baudrate(&ftdic_, 100000)) {
+  if (ftdi_set_baudrate(&ftdic_, 1000000)) {
     AutoClosureRunner deinit([this] { ftdi_deinit(&ftdic_); });
     return Status(Code::INIT_FAILED,
                   strings::Cat("Couldn't set baud rate: ", ftdi_get_error_string(&ftdic_)));
@@ -130,26 +130,32 @@ Status FtdiSbDriver::SetPins(uint8_t pins) {
 
 Status FtdiSbDriver::FlushOutput() {
   Status status;
-  static constexpr int kDrainLag = 256;
+  static constexpr int kDrainLag = 0;
   int drain_size = -kDrainLag;
   while (!output_buffer_.empty()) {
-    // We use the maximum value of 128 bytes here. This does lose sync more often than when using
-    // the smaller size of 64, but it increases read speed nonetheless.
-    int size = std::min<int>(128, output_buffer_.size());
+    // Values larger than 384 don't work, at least for the FT232RL. Likely they cause a receive
+    // buffer overflow in the FTDI chip.
+    int size = std::min<int>(384, output_buffer_.size());
     if (will_print(10)) {
       for (int i = 0; i < size; ++i) {
         print_msg(10, "%s ", HexByte(output_buffer_[i]).c_str());
       }
     }
-    if (ftdi_write_data(&ftdic_, const_cast<uint8_t *>(output_buffer_.data()), size) != size) {
+    ftdi_transfer_control *control =
+        ftdi_write_data_submit(&ftdic_, const_cast<uint8_t *>(output_buffer_.data()), size);
+    if (!control) {
       return Status(Code::USB_WRITE_ERROR,
                     strings::Cat("Write failed: ", ftdi_get_error_string(&ftdic_)));
     }
     output_buffer_.erase(0, size);
-    drain_size += size;
     if (drain_size > 0) {
       status.Update(DrainInput(drain_size));
       drain_size = 0;
+    }
+    drain_size += size;
+    if (ftdi_transfer_data_done(control) < 0) {
+      return Status(Code::USB_WRITE_ERROR,
+                    strings::Cat("Write failed: ", ftdi_get_error_string(&ftdic_)));
     }
   }
   drain_size += kDrainLag;

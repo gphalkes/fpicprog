@@ -81,7 +81,8 @@ enum Pins {
   nMCLR = (1 << 0),
   PGM = (1 << 1),
   PGC = (1 << 2),
-  PGD = (1 << 3),
+  PGD_in = (1 << 4),
+  PGD_out = (1 << 3),
 };
 
 typedef std::chrono::nanoseconds Duration;

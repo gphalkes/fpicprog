@@ -20,7 +20,7 @@
 
 DEFINE_string(ftdi_nMCLR, "TxD", "Pin to use for inverted MCLR.");
 DEFINE_string(ftdi_PGC, "DTR", "Pin to use for PGC");
-DEFINE_string(ftdi_PGD_in, "RTS", "Pin to use for PGD input");
+DEFINE_string(ftdi_PGD_in, "RxD", "Pin to use for PGD input"); //Should be RTS if data signal is split
 DEFINE_string(ftdi_PGD_out, "RxD", "Pin to use for PGD output");
 DEFINE_string(ftdi_PGM, "CTS", "Pin to use for PGM");
 DEFINE_int32(ftdi_vendor_id, 0, "Vendor ID of the device to open. Defaults to FTDI vendor ID.");

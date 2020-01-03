@@ -27,8 +27,8 @@ Datastring PicSequenceGenerator::GenerateBitSequenceLsbUpDown(uint32_t data, int
   Datastring result;
   for (int i = 0; i < bits; ++i) {
     bool bit_set = (data >> i) & 1;
-    result.push_back(base | PGC | (bit_set ? PGD : 0));
-    result.push_back(base | (bit_set ? PGD : 0));
+    result.push_back(base | PGC | (bit_set ? PGD_out : 0));
+    result.push_back(base | (bit_set ? PGD_out : 0));
   }
   return result;
 }
@@ -38,8 +38,8 @@ Datastring PicSequenceGenerator::GenerateBitSequenceMsbUpDown(uint32_t data, int
   Datastring result;
   for (int i = bits - 1; i >= 0; --i) {
     bool bit_set = (data >> i) & 1;
-    result.push_back(base | PGC | (bit_set ? PGD : 0));
-    result.push_back(base | (bit_set ? PGD : 0));
+    result.push_back(base | PGC | (bit_set ? PGD_out : 0));
+    result.push_back(base | (bit_set ? PGD_out : 0));
   }
   return result;
 }
@@ -49,8 +49,8 @@ Datastring PicSequenceGenerator::GenerateBitSequenceLsbDownUp(uint32_t data, int
   Datastring result;
   for (int i = 0; i < bits; ++i) {
     bool bit_set = (data >> i) & 1;
-    result.push_back(base | (bit_set ? PGD : 0));
-    result.push_back(base | PGC | (bit_set ? PGD : 0));
+    result.push_back(base | (bit_set ? PGD_out : 0));
+    result.push_back(base | PGC | (bit_set ? PGD_out : 0));
   }
   return result;
 }
@@ -60,8 +60,8 @@ Datastring PicSequenceGenerator::GenerateBitSequenceMsbDownUp(uint32_t data, int
   Datastring result;
   for (int i = bits - 1; i >= 0; --i) {
     bool bit_set = (data >> i) & 1;
-    result.push_back(base | (bit_set ? PGD : 0));
-    result.push_back(base | PGC | (bit_set ? PGD : 0));
+    result.push_back(base | (bit_set ? PGD_out : 0));
+    result.push_back(base | PGC | (bit_set ? PGD_out : 0));
   }
   return result;
 }

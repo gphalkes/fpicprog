@@ -47,7 +47,7 @@ class FtdiSbDriver : public Driver {
 
   static Pin pins_[];
 
-  uint8_t translate_pins_[16];
+  uint8_t translate_pins_[32];
   ftdi_context ftdic_;
   bool write_mode_ = true;
   bool open_ = false;

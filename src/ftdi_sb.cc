@@ -20,7 +20,8 @@
 
 DEFINE_string(ftdi_nMCLR, "TxD", "Pin to use for inverted MCLR.");
 DEFINE_string(ftdi_PGC, "DTR", "Pin to use for PGC");
-DEFINE_string(ftdi_PGD, "RxD", "Pin to use for PGD");
+DEFINE_string(ftdi_PGD_in, "RxD", "Pin to use for PGD input"); //Should be RTS if data signal is split
+DEFINE_string(ftdi_PGD_out, "RxD", "Pin to use for PGD output");
 DEFINE_string(ftdi_PGM, "CTS", "Pin to use for PGM");
 DEFINE_int32(ftdi_vendor_id, 0, "Vendor ID of the device to open. Defaults to FTDI vendor ID.");
 DEFINE_int32(ftdi_product_id, 0, "Product ID of the device to open. Defaults to FT232 product ID.");
@@ -61,16 +62,17 @@ Status FtdiSbDriver::Open() {
   memset(translate_pins_, 0, sizeof(translate_pins_));
   translate_pins_[nMCLR] = FLAGS_ftdi_nMCLR == "NC" ? 0 : PinNameToValue(FLAGS_ftdi_nMCLR);
   translate_pins_[PGC] = PinNameToValue(FLAGS_ftdi_PGC);
-  translate_pins_[PGD] = PinNameToValue(FLAGS_ftdi_PGD);
+  translate_pins_[PGD_in] = PinNameToValue(FLAGS_ftdi_PGD_in);
+  translate_pins_[PGD_out] = PinNameToValue(FLAGS_ftdi_PGD_out);
   translate_pins_[PGM] = FLAGS_ftdi_PGM == "NC" ? 0 : PinNameToValue(FLAGS_ftdi_PGM);
   for (int i = 0; i < 16; ++i) {
-    for (int j : {nMCLR, PGC, PGD, PGM}) {
+    for (int j : {nMCLR, PGC, PGD_in, PGD_out, PGM}) {
       if (i & j) {
         translate_pins_[i] |= translate_pins_[j];
       }
     }
   }
-  if (ftdi_set_bitmode(&ftdic_, translate_pins_[nMCLR | PGC | PGD | PGM], BITMODE_SYNCBB) < 0) {
+  if (ftdi_set_bitmode(&ftdic_, translate_pins_[nMCLR | PGC | PGD_out | PGM], BITMODE_SYNCBB) < 0) {
     AutoClosureRunner deinit([this] { ftdi_deinit(&ftdic_); });
     return Status(INIT_FAILED,
                   strings::Cat("Couldn't set bitbang mode: ", ftdi_get_error_string(&ftdic_)));
@@ -240,7 +242,7 @@ Status FtdiSbDriver::DrainInput(int expected_size) {
           received_data_.push_back(0);
           received_data_bit_offset_ = 0;
         }
-        int bit = (buffer[i] & translate_pins_[PGD]) ? 1 : 0;
+        int bit = (buffer[i] & translate_pins_[PGD_in]) ? 1 : 0;
         bit <<= received_data_bit_offset_;
         received_data_.back() |= bit;
       }

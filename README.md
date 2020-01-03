@@ -33,14 +33,21 @@ device_db folder for more details.
 
 Compiling fpicprog
 ==================
-
 To compile fpicprog from the github repository, clone the gphalkes/fpicprog
-and the gphalkes/makesys repositories in the same directory. Also make sure
-you have the development package for libftdi (commonly called libftdi1-dev or
-libftdi-devel) and the google-gflags development package installed. Then
-run `make -C fpicprog/src COMPILER=gcc` to build fpicprog. Note that if clang++
-is installed, the COMPILER=gcc can be left out to build with clang++ instead of
-g++.
+inlcuding the makesys submodule. Also make sure that you have the development 
+package for libftdi (commonly called libftdi1-dev or libftdi-devel) and the 
+google-gflags development package installed. 
+
+Then build fpicprog. Note that if clang++ is installed, the COMPILER=gcc can 
+be left out to build with clang++ instead of g++.
+
+```bash
+git clone https://github.com/gphalkes/fpicprog
+cd fpicprog/
+git submodule update --init --recursive
+cd ../
+make -C fpicprog/src COMPILER=gcc
+```
 
 Connecting the programmer
 =========================

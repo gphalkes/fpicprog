@@ -1,0 +1,3 @@
+[submodule "makesys"]
+	path = makesys
+	url = https://github.com/gphalkes/makesys

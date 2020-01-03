@@ -15,7 +15,7 @@ CXXTARGETS := fpicprog testgen formathex
 #================================================#
 # NO RULES SHOULD BE DEFINED BEFORE THIS INCLUDE #
 #================================================#
-include ../../makesys/rules.mk
+include ../makesys/rules.mk
 #================================================#
 
 CXXFLAGS += -std=c++14

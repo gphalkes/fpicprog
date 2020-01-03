@@ -26,6 +26,7 @@ DEFINE_int32(ftdi_vendor_id, 0, "Vendor ID of the device to open. Defaults to FT
 DEFINE_int32(ftdi_product_id, 0, "Product ID of the device to open. Defaults to FT232 product ID.");
 DEFINE_string(ftdi_description, "", "Product description to select which FTDI device to use.");
 DEFINE_string(ftdi_serial, "", "Serial number to select which FTDI device to use.");
+DEFINE_int32(ftdi_program_interface, 1, " Programming interface to use from FTDI (1=A,2=B,3=C,4=D)");
 
 FtdiSbDriver::Pin FtdiSbDriver::pins_[] = {
     {"TxD", 0}, {"RxD", 1}, {"RTS", 2}, {"CTS", 3}, {"DTR", 4}, {"DSR", 5}, {"DCD", 6}, {"RI", 7},
@@ -37,6 +38,13 @@ Status FtdiSbDriver::Open() {
   if ((init_result = ftdi_init(&ftdic_)) < 0) {
     return Status(Code::INIT_FAILED, strings::Cat("Couldn't initialize ftdi_context struct: ",
                                                   ftdi_get_error_string(&ftdic_)));
+  }
+  if (ftdi_set_interface(&ftdic_, ftdi_interface(( (FLAGS_ftdi_program_interface < 1) ||
+                                                         (FLAGS_ftdi_program_interface > 4) )
+                                                     ? 1
+                                                     : FLAGS_ftdi_program_interface)) < 0) {
+    return Status(Code::INIT_FAILED,
+                  strings::Cat("Couldn't set FTDI interface: ", ftdi_get_error_string(&ftdic_)));
   }
   if (ftdi_usb_open_desc(&ftdic_, FLAGS_ftdi_vendor_id == 0 ? 0x0403 : FLAGS_ftdi_vendor_id,
                          FLAGS_ftdi_product_id == 0 ? 0x6001 : FLAGS_ftdi_product_id,

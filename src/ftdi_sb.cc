@@ -58,7 +58,7 @@ Status FtdiSbDriver::Open() {
     return Status(Code::INIT_FAILED,
                   strings::Cat("Couldn't open FTDI device: ", ftdi_get_error_string(&ftdic_)));
   }
-  // Setting this to higher values than 1000'000 does not seem to yield faster data transfers. This
+  // Setting this to higher values than 1'000'000 does not seem to yield faster data transfers. This
   // is probably due to the round-tripping that has to be done for the reads, and the limited size
   // of the receive buffer.
   if (ftdi_set_baudrate(&ftdic_, 1000000)) {

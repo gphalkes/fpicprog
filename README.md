@@ -28,7 +28,7 @@ Supported chips
 fpicprog supports chips in the following families: PIC10, PIC12, PIC16, PIC18
 and PIC24. Most chips supporting Low-Voltage Programming from these families
 can simply be added to the device database by copying the relevant parameters
-from the datasheet. See the documentation in man/fpicprod-devlist.5.txt and the
+from the datasheet. See the documentation in man/fpicprog-devlist.5.txt and the
 device\_db folder for more details.
 
 Compiling fpicprog
@@ -54,6 +54,35 @@ cd fpicprog
 git submodule init
 git submodule update
 ```
+
+Setting up access to the USB devices for non-root users
+=======================================================
+
+On Linux systems, by default the programmers typically are only accessible by
+root. To make fpicprog able to access the programmers as a regular user, use
+udev rules to set the permissions on the programmer. The following example
+makes the programmers (with USB Product ID 0x6001) accessible to all users:
+
+SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", MODE="0666"
+
+Depending on the device you are using, you may need to set the product ID
+to 6001, 6010, 6011, 6014 or 6015
+
+Finding the programmer
+======================
+
+To list the attached devices that fpicprog supports run the following command:
+
+```bash
+fpicprog/src/fpicprog --action=list-programmers
+```
+
+This requires that the programmers are accessible as the user the command is
+run as (see the previous section on how to set this up). To select the device
+to use, supply at least the `--ftdi_product_id` flag with the value that is
+shown in the listing (except for 0x6001, which is the default). If there is
+more than one device with the same product ID, also provide the serial number
+to the `--ftdi_serial` flag.
 
 Connecting the programmer
 =========================

@@ -103,11 +103,11 @@ for the chip you are using), attempting to do so results in too low signal
 voltages and reading invalid values.
 
 To overcome both these issues, it is possible to split the PGD pin use in an
-input pin and an output pin. To enable this, the --ftdi\_PGD\_in flag can be
+input pin and an output pin. To enable this, the `--ftdi_PGD_in` flag can be
 used the specify a different pin to use for reading the PGD pin. In this case,
 a series resistor of approximately 470 ohms must be connected in series with
 the driving pin of the programmer module, i.e. the pin specified by the
---ftdi\_PGD flag.
+`--ftdi_PGD` flag.
 
 An example of wiring up a PIC18F25K42 with the seperated PGD signal to a
 FT4232H Mini Module on Channel A can be seen in
@@ -115,4 +115,4 @@ FT4232H Mini Module on Channel A can be seen in
 The example uses the RTS pin, which is not available on most FT232 modules.
 However, if the PIC chip doesn't need have a PGM pin, the CTS pin on the FT232
 module can be used. This required the following flag combination:
---ftdi\_PGM=NC --ftdi\_PGD\_in=CTS.
+`--ftdi_PGM=NC --ftdi_PGD_in=CTS`.

@@ -41,7 +41,7 @@ DEFINE_string(sections, "",
               "or a combination of flash, user-id, config, eeprom.");
 DEFINE_string(family, "",
               "Device family to use. One of pic10, pic10-baseline, pic12, pic12-baseline, pic16, "
-              "pic16-baseline, pic16-new, pic18.");
+              "pic16-baseline, pic16-new, pic18, pic18-new.");
 DEFINE_string(device, "",
               "Exact device name. Required for devices which don't provide a device ID. Devices "
               "which have a device ID should be detectable using the identify action.");

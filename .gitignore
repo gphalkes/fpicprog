@@ -5,3 +5,8 @@ experiment/
 man/output/
 src/testgen
 src/formathex
+fpicprog.config
+fpicprog.creator
+fpicprog.creator.user
+fpicprog.files
+fpicprog.includes

@@ -48,10 +48,29 @@ Connecting the programmer
 Each PIC chip has a different pin layout, and there are different versions of
 Low-Voltage programming, thus wiring up the chip will require checking the
 datasheet for the chip you wish to program. However, in general you will need
-to at least make the following connections: VCC -> VDD, GND -> VSS,
-TxD -> !MCLR, DTR -> PGC, and RxD -> PGD. If the PIC chip you wish to program
-has a separate PGM pin, rather than activating the Low-Voltage Programming mode
-through a handshake on the !MCLR pin, you need to connect CTS -> PGM as well.
+to at least make the following connections: 
+
+| Programmer  | Target | Remark |
+| :---------: | :----: | :----- |
+| VCC         | VDD    |
+| GND         | VSS    |
+| TxD         | !MCLR  |
+| DTR         | PGC    |
+| RxD         | PGD    |
+| RTS         | PGD    | #1     |
+| CTS         | PGM    | #2     |Only for non Low-Voltage Programming modes |
+
+#1 A series resistor of approximately 470 ohms must be connected in series with 
+the driving pin of the programmer module. Both the PIC and the programmer can 
+drive the PGD pin at the same time resulting in a signal which operates in the
+TTL indeterminate region. (Note: Increasing the PIC supply voltage is a possible
+solution however, results in high driving currents and possible damage to either 
+the target and/or programmer. Seperation of the signal is more recommended.)
+
+#2 If the PIC chip you wish to program has a separate PGM pin, rather 
+than activating the Low-Voltage Programming mode through a handshake on the 
+!MCLR pin, you need to connect CTS -> PGM as well.
+
 (Note that this is for the default settings. You can instruct fpicprog to use
 different pins instead, if that make wiring easier.)
 
@@ -59,6 +78,10 @@ Although not strictly necessary, it is recommended to connect the !MCLR pin to
 VCC using a pull-up resistor. You may also want to add capacitors between the
 VDD and VSS pins as recommended by Microchip, although I have been able to
 reliably program chips without any of these additional components.
+
+An example of wiring up a PIC18F25K42 with the seperated PGD signal to a 
+FT4232H Mini Module on Channel A can be seen in the picture 
+"FT4232H_Mini_Module_Example.jpg" in the main project folder.
 
 An example of wiring up a PIC18F45K50 is in the picture below. Note that the
 order of the pins on the USB-to-serial converter is model dependent, so you will

@@ -12,3 +12,16 @@ bulk_erase_timing = 26ms
 block_write_timing = 3ms
 config_write_timing = 6ms
 
+[18F25K42]
+device_id = 6C80h
+program_memory_size = 8000h
+user_id_size = 16
+user_id_address = 200000h
+config_size = 10
+config_address = 300000h
+eeprom_size = 256
+eeprom_address = 310000h
+write_block_size = 64
+bulk_erase_timing = 26ms
+block_write_timing = 3ms
+config_write_timing = 6ms

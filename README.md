@@ -59,7 +59,7 @@ to at least make the following connections:
 | RxD         | PGD    |
 
 (Note that this is for the default settings. You can instruct fpicprog to use
-different pins instead, if that make wiring easier.)
+different pins instead, if that makes wiring easier.)
 
 Although not strictly necessary, it is recommended to connect the !MCLR pin to
 VCC using a pull-up resistor. You may also want to add capacitors between the
@@ -98,7 +98,7 @@ the driving pin of the programmer module, i.e. the pin specified by the
 
 An example of wiring up a PIC18F25K42 with the seperated PGD signal to a
 FT4232H Mini Module on Channel A can be seen in
-[this example](https://github.com/gphalkes/fpicprog/raw/master/example.jpg).
+[this example](https://github.com/gphalkes/fpicprog/raw/master/FT4232H_Mini_Module_Example.jpg).
 The example uses the RTS pin, which is not available on most FT232 modules.
 However, if the PIC chip doesn't need have a PGM pin, the CTS pin on the FT232
 module can be used. This required the following flag combination:

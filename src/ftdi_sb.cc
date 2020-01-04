@@ -27,6 +27,9 @@ DEFINE_int32(ftdi_vendor_id, 0, "Vendor ID of the device to open. Defaults to FT
 DEFINE_int32(ftdi_product_id, 0, "Product ID of the device to open. Defaults to FT232 product ID.");
 DEFINE_string(ftdi_description, "", "Product description to select which FTDI device to use.");
 DEFINE_string(ftdi_serial, "", "Serial number to select which FTDI device to use.");
+DEFINE_string(ftdi_program_interface, "A",
+              "Interface to use on the FTDI device, for devices which have multiple interfaces "
+              "(e.g. FT4232H). Possible values are A, B, C, or D.");
 
 FtdiSbDriver::Pin FtdiSbDriver::pins_[] = {
     {"TxD", 0}, {"RxD", 1}, {"RTS", 2}, {"CTS", 3}, {"DTR", 4}, {"DSR", 5}, {"DCD", 6}, {"RI", 7},
@@ -34,10 +37,19 @@ FtdiSbDriver::Pin FtdiSbDriver::pins_[] = {
 
 Status FtdiSbDriver::Open() {
   if (open_) return Status(INIT_FAILED, "Device already open");
-  int init_result;
-  if ((init_result = ftdi_init(&ftdic_)) < 0) {
+  if (ftdi_init(&ftdic_) < 0) {
     return Status(Code::INIT_FAILED, strings::Cat("Couldn't initialize ftdi_context struct: ",
                                                   ftdi_get_error_string(&ftdic_)));
+  }
+  if (FLAGS_ftdi_program_interface.size() != 1 || FLAGS_ftdi_program_interface[0] < 'A' ||
+      FLAGS_ftdi_program_interface[0] > 'D') {
+    return Status(Code::INVALID_ARGUMENT,
+                  strings::Cat("Invalid interface '", FLAGS_ftdi_program_interface, "' specified"));
+  }
+  if (ftdi_set_interface(
+          &ftdic_, static_cast<ftdi_interface>(FLAGS_ftdi_program_interface[0] - 'A' + 1)) < 0) {
+    return Status(Code::INIT_FAILED,
+                  strings::Cat("Couldn't set FTDI interface: ", ftdi_get_error_string(&ftdic_)));
   }
   if (ftdi_usb_open_desc(&ftdic_, FLAGS_ftdi_vendor_id == 0 ? 0x0403 : FLAGS_ftdi_vendor_id,
                          FLAGS_ftdi_product_id == 0 ? 0x6001 : FLAGS_ftdi_product_id,
@@ -95,9 +107,8 @@ void FtdiSbDriver::Close() {
 }
 
 Status FtdiSbDriver::List(std::vector<std::string> *list) const {
-  int init_result;
   ftdi_context ftdic;
-  if ((init_result = ftdi_init(&ftdic)) < 0) {
+  if (ftdi_init(&ftdic) < 0) {
     return Status(Code::INIT_FAILED, strings::Cat("Couldn't initialize ftdi_context struct: ",
                                                   ftdi_get_error_string(&ftdic)));
   }
